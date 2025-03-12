@@ -1,0 +1,134 @@
+Quick reference to PetaLinux documentation
+
+/////////////////////////////////////////////////////////////////////////////////////
+///         Configuring, Compiling, and Packaging a bootable Linux Kernel         ///
+/// (Petalinux Reference Guide, UG1144: Chapters 2[last two pages], 3, 4, and 5)  ///
+/////////////////////////////////////////////////////////////////////////////////////
+
+1) Set up paths to petalinux tools: Must be done each time you open a Terminal
+source /remote/petalinux/settings.sh
+
+2) make a directory to place Linux development.  For example:
+mkdir mp3-linux-development
+
+3) cd into the directory you created:
+cd mp3-linux-development
+
+4) Create a petalinux project based on the Avnet provided Zedboard BSP
+petalinux-create -t project -s /remote/petalinux/BSPs/avnet-digilent-zedboard-v2020.1-final.bsp
+
+5) After the command completes, cd into the directory that is created:
+cd avnet-digilent-zedboard-2020.1
+
+6) Read over the README file located in this directory
+
+7) Configure the project to use a specific VIVADO hardware platform (xsa).
+You will start with a simple project that has been provided.
+It just has the Zedboard Switches, Buttons, and LEDs connected to GPIO IP blocks.
+
+Note 1: Near the end of this step a menu will appear: Update the Yocto Settings -> TEMPDIR to a sub directory of the /tmp drive, /tmp/<some unique label for this project>/tmp If you do not do this you will get an error about the TEMPDIR can't be located on an nfs.  Make sure the name you select does not match a sub-directory already on the /tmp drive.  
+Note 2: We have placed an xsa and bitfile in the MP-3.zip release you downloaded from the course website
+
+petalinux-config --get-hw-description <location-of-xsa-file>
+
+// Assuming you placed your xsa and bitfile in a direcotry called xsa-file two levels above your current location
+example: petalinux-config --get-hw-description ../../xsa-file/
+
+8) [~15 minutes]: Configure the Linux kernel using menuconfig to enable the following Device Driver USB feature: "USB announce new devices" 
+petalinux-config -c kernel
+
+9) [~15 minutes]: Build the Linux Kernel. Note: This also produces resources required for compiling your Device Driver
+petalinux-build -c kernel
+
+10) [~5 minutes]: Build the entire project to produce the files needed for booting Linux:
+petalinux-build
+
+11) Package the complied Linux kernel into a bootable BOOT.BIN
+petalinux-package --boot --force --fpga <path-to-your-bitfile>/<bitfile-name>.bit --fsbl --u-boot
+
+// Assuming you placed your xsa and bitfile in a direcotry called xsa-file two levels above your current location
+Example: petalinux-package --boot --force --fpga ../../xsa-file/sw_btn_led_wrapper.bit --fsbl --u-boot
+
+12) The directory given below is where petalinux places its grenerated files. Copy the files required to boot Linux from the Zedboard's SD card to the folder where you are gathering these file (e.g., I called my folder mp3-sdcard-files).
+<project root>/images/linux/
+
+13) See the MP-3.pdf directions for booting Linux on the Zedboard from an SD card.
+
+////////////////////////////////////////////////////////////////////////////////
+///      Compiling, and installing your Linux Device Driver                  ///
+///      (Petalinux Reference Guide, UG1144: Chapters 8)                     ///
+////////////////////////////////////////////////////////////////////////////////
+
+1) Create a template for developing your Device driver. Note the difference from the Pentalinux documentation, as --enable has been removed from the command, since you will install and load your driver after Linux boots (i.e. dynamically). Run from your project top directory:
+petalinux-create -t modules --name launcher-driver
+
+2) Go to the autognerated driver template .c file called, "launcher-driver.c", located here:
+project-spec/meta-user/recipes-modules/launcher-driver/files/
+
+3) Read over the README file located one directory above the files directory
+
+4) Replace the body of this .c file with the driver code you are developing
+
+5) Compile your diver  (Note: If you skipped building the Linux kernel, then the Linux kernel will be compiled before compiling your driver code):
+petalinux-build -c launcher-driver
+
+6) A driver kernel object .ko file, called launcher-driver.ko will be placed here:
+build/tmp/sysroots-components/zedboard_zynq7/launcher-driver/lib/modules/5.4.0-xilinx-v2020.1/extra/
+
+7) copy launcher-driver.ko to the directory you are using to collect the 
+files that will be placed on an SD card for booting Linux.  Let's call this directory mp3-sdcard-files
+
+8) Follow the MP-3 direction for installing your driver for the USB Nerf Launcher.
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+///      Compiling, and installing your User Applications                    ///
+///      (Petalinux Reference Guide, UG1144: Chapters 8)                     ///
+////////////////////////////////////////////////////////////////////////////////
+
+
+***Options 1:  Compile your app, then configure the rootfs to store your app in /usr/bin
+
+1) Create an application template: For example, call it myapp.  Note: It is OK if --enable is not used, just later you will need to run  petalinux-config -c rootfs to enable your app through menuconfig, like-wise you can disable using menuconfig. 
+petalinux-create -t apps --name myapp --enable
+
+2) Update the template c file in the "files" directory, located here, with your your C code
+<project-root>/project-spec/meta-user/recipes-apps/myapp/files
+
+3) Compile your application
+petalinux-build -c myapp
+
+3) Build the rootfile system
+petalinux-build -c rootfs
+
+4) Copy the updated "image.ub" file, located here, to your sdcard:
+<project-root>/images/linux/image.ub
+
+
+***Options 2:  Compile your app, then copy your executable to the SD card, or use RX to copy the executable to the Zedboard while it is running Linux (See class wiki for how to set up and use RX)
+
+1) Create an application template: We will call it myapp. 
+petalinux-create -t apps --name myapp
+
+2) Update the template c file in the "files" directory, located here, with your your C code
+<project-root>/project-spec/meta-user/recipes-apps/myapp/files
+
+3) Compile your application:
+petalinux-build -c myapp -x compile
+
+4) Copy the executable to the SD card, or use RX to copy the executable to the Zedboard while it is running Linux.  Note: You can find the executable here:
+<proj-top>/build/tmp/work/cortexa9t2hf-neon-xilinx-linux-gnueabi/myapp/1.0-r0/myapp
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////
+////    Installing Third Party Tools into your Linux Kernel                //////
+/////////////////////////////////////////////////////////////////////////////////
+
+1) PetaLinux gives you the ability to add third-party packages, such as OpenCV. See the PetaLinux Reference Guide for more details.  It will involve downloading the package you want from the Xilinx Petalinux website, and then configuring the root file system using:
+petalinux-config -c rootfs
