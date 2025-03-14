@@ -7,6 +7,9 @@
 - [ ] Describe the operation of the `launcher_fire.c` file.
 - [ ] Describe algorithm used to detect the target.
 
+
+# In your writeup, briefly explain how this Make process was configured to appropriately use a cross-compiler targeting the ARM architecture.
+
 ## `launcher_fire.c` Makefile
 
 This Makefile is configured to build both a Linux kernel module (`launcher_driver.ko`) and a user-space program (`launcher_fire`) using a cross-compiler for ARM architecture. Let me explain the key components:
