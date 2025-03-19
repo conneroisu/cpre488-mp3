@@ -78,6 +78,7 @@
           zig
           zls
           clang-tools
+          ccls
 
           (script "dx" ''
             $EDITOR $REPO_ROOT/flake.nix

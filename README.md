@@ -12,7 +12,7 @@
 
 ## `launcher_fire.c` Makefile
 
-This Makefile is configured to build both a Linux kernel module (`launcher_driver.ko`) and a user-space program (`launcher_fire`) using a cross-compiler for ARM architecture. Let me explain the key components:
+This Makefile is configured to build both a Linux kernel module (`launcher_driver.ko`) and a user-space program (`launcher_fire`) using a cross-compiler for ARM architecture. 
 
 ### Cross-Compilation Setup
 
