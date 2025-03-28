@@ -35,32 +35,34 @@ MODULE_DEVICE_TABLE(usb, launcher_table);
 
 /* our private defines. if this grows any larger, use your own .h file */
 #define MAX_TRANSFER (PAGE_SIZE - 512)
-/* MAX_TRANSFER is chosen so that the VM is not stressed by
-   allocations > PAGE_SIZE and the number of packets in a page
-   is an integer 512 is the largest possible packet on EHCI */
+/*
+ *  MAX_TRANSFER is chosen so that the VM is not stressed by
+ *  allocations > PAGE_SIZE and the number of packets in a page
+ *  is an integer 512 is the largest possible packet on EHCI
+ */
 #define WRITES_IN_FLIGHT 8
 /* arbitrarily chosen */
 
 /* Structure to hold all of our device specific stuff */
 struct usb_launcher {
-  struct usb_device *udev;         /* the usb device for this device */
-  struct usb_interface *interface; /* the interface for this device */
-  struct semaphore limit_sem;  /* limiting the number of writes in progress */
-  struct usb_anchor submitted; /* in case we need to retract our submissions */
-  struct urb *bulk_in_urb;     /* the urb to read data with */
-  unsigned char *bulk_in_buffer; /* the buffer to receive data */
-  size_t bulk_in_size;           /* the size of the receive buffer */
-  size_t bulk_in_filled;         /* number of bytes in the buffer */
-  size_t bulk_in_copied;         /* already copied to user space */
-  __u8 bulk_in_endpointAddr;     /* the address of the bulk in endpoint */
-  __u8 bulk_out_endpointAddr;    /* the address of the bulk out endpoint */
-  int errors;                    /* the last request tanked */
-  bool ongoing_read;             /* a read is going on */
-  bool processed_urb;            /* indicates we haven't processed the urb */
-  spinlock_t err_lock;           /* lock for errors */
+  struct usb_device *udev;         // the usb device for this device
+  struct usb_interface *interface; // the interface for this device
+  struct semaphore limit_sem;      // limiting the number of writes in progress
+  struct usb_anchor submitted;     // in case we need to retract our submissions
+  struct urb *bulk_in_urb;         // the urb to read data with
+  unsigned char *bulk_in_buffer;   // the buffer to receive data
+  size_t bulk_in_size;             // the size of the receive buffer
+  size_t bulk_in_filled;           // number of bytes in the buffer
+  size_t bulk_in_copied;           // already copied to user space
+  __u8 bulk_in_endpointAddr;       // the address of the bulk in endpoint
+  __u8 bulk_out_endpointAddr;      // the address of the bulk out endpoint
+  int errors;                      // the last request tanked
+  bool ongoing_read;               // a read is going on
+  bool processed_urb;              // indicates we haven't processed the urb
+  spinlock_t err_lock;             // lock for errors
   struct kref kref;
-  struct mutex io_mutex;                /* synchronize I/O with disconnect */
-  struct completion bulk_in_completion; /* to wait for an ongoing read */
+  struct mutex io_mutex;                // synchronize I/O with disconnect
+  struct completion bulk_in_completion; // to wait for an ongoing read
 };
 #define to_launcher_dev(d) container_of(d, struct usb_launcher, kref)
 
@@ -209,8 +211,12 @@ static int launcher_do_read_io( //
   /* do it */
   rv = usb_submit_urb(dev->bulk_in_urb, GFP_KERNEL);
   if (rv < 0) {
-    dev_err(&dev->interface->dev, "%s - failed submitting read urb, error %d\n",
-            __func__, rv);
+    dev_err(                                           //
+        &dev->interface->dev,                          //
+        "%s - failed submitting read urb, error %d\n", //
+        __func__,                                      //
+        rv                                             //
+    );
     dev->bulk_in_filled = 0;
     rv = (rv == -ENOMEM) ? rv : -EIO;
     spin_lock_irq(&dev->err_lock);
@@ -313,20 +319,25 @@ retry:
        * actual IO needs to be done
        */
       rv = launcher_do_read_io(dev, count);
-      if (rv < 0)
+      if (rv < 0) {
         goto exit;
-      else
+      } else {
         goto retry;
+      }
     }
     /*
      * data is available
      * chunk tells us how much shall be copied
      */
-
-    if (copy_to_user(buffer, dev->bulk_in_buffer + dev->bulk_in_copied, chunk))
+    if (copy_to_user(                                  //
+            buffer,                                    //
+            dev->bulk_in_buffer + dev->bulk_in_copied, //
+            chunk                                      //
+            )) {
       rv = -EFAULT;
-    else
+    } else {
       rv = chunk;
+    }
 
     dev->bulk_in_copied += chunk;
 
@@ -339,10 +350,11 @@ retry:
   } else {
     /* no data in the buffer */
     rv = launcher_do_read_io(dev, count);
-    if (rv < 0)
+    if (rv < 0) {
       goto exit;
-    else if (!(file->f_flags & O_NONBLOCK))
+    } else if (!(file->f_flags & O_NONBLOCK)) {
       goto retry;
+    }
     rv = -EAGAIN;
   }
 exit:
@@ -359,9 +371,12 @@ static void launcher_write_bulk_callback(struct urb *urb) {
   if (urb->status) {
     if (!(urb->status == -ENOENT || urb->status == -ECONNRESET ||
           urb->status == -ESHUTDOWN))
-      dev_err(&dev->interface->dev,
-              "%s - nonzero write bulk status received: %d\n", __func__,
-              urb->status);
+      dev_err(                                             //
+          &dev->interface->dev,                            //
+          "%s - nonzero write bulk status received: %d\n", //
+          __func__,                                        //
+          urb->status                                      //
+      );
 
     spin_lock(&dev->err_lock);
     dev->errors = urb->status;
@@ -629,15 +644,20 @@ static void launcher_disconnect(struct usb_interface *interface) {
   /* decrement our usage count */
   kref_put(&dev->kref, launcher_delete);
 
-  dev_info(&interface->dev, "USB Launcher #%d now disconnected", minor);
+  dev_info(                                //
+      &interface->dev,                     //
+      "USB Launcher #%d now disconnected", //
+      minor                                //
+  );
 }
 
 static void launcher_draw_down(struct usb_launcher *dev) {
   int time;
 
   time = usb_wait_anchor_empty_timeout(&dev->submitted, 1000);
-  if (!time)
+  if (!time) {
     usb_kill_anchored_urbs(&dev->submitted);
+  }
   usb_kill_urb(dev->bulk_in_urb);
 }
 
