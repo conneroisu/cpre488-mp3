@@ -69,6 +69,11 @@ struct usb_launcher {
 static struct usb_driver launcher_driver;
 static void launcher_draw_down(struct usb_launcher *dev);
 
+/* Add missing function declarations in case we're using older kernel headers */
+#ifndef usb_free_urb
+extern void usb_free_urb(struct urb *urb);
+#endif
+
 static void launcher_delete(struct kref *kref) {
   struct usb_launcher *dev = to_launcher_dev(kref);
 
@@ -408,8 +413,9 @@ static ssize_t launcher_write( //
   dev = file->private_data;
 
   /* verify that we actually have some data to write */
-  if (count == 0)
+  if (count == 0) {
     goto exit;
+  }
 
   /*
    * limit the number of URBs in flight to stop a user from using up all
@@ -713,3 +719,5 @@ static struct usb_driver launcher_driver = {
 module_usb_driver(launcher_driver);
 
 MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Conner Ohnesorge");
+MODULE_DESCRIPTION("USB Launcher Driver");
