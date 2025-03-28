@@ -406,10 +406,9 @@ static ssize_t launcher_write( //
 ) {
   struct usb_launcher *dev;
   int retval = 0;
-  struct urb *urb = NULL;
-  char *buf = NULL;
-  size_t writesize = min(count, (size_t)MAX_TRANSFER);
-
+  char command_byte = 0;
+  unsigned char ctrl_buffer[LAUNCHER_CTRL_BUFFER_SIZE] = { 0 };
+  
   dev = file->private_data;
 
   /* verify that we actually have some data to write */
@@ -445,29 +444,17 @@ static ssize_t launcher_write( //
   if (retval < 0)
     goto error;
 
-  /* create a urb, and a buffer for it, and copy the data to the urb */
-  urb = usb_alloc_urb(0, GFP_KERNEL);
-  if (!urb) {
-    retval = -ENOMEM;
-    goto error;
-  }
-
-  buf = usb_alloc_coherent( //
-      dev->udev,            //
-      writesize,            //
-      GFP_KERNEL,           //
-      &urb->transfer_dma    //
-  );
-  if (!buf) {
-    retval = -ENOMEM;
-    goto error;
-  }
-
-  if (copy_from_user(buf, user_buffer, writesize)) {
+  /* Get the command byte from user space */
+  if (copy_from_user(&command_byte, user_buffer, 1)) {
     retval = -EFAULT;
     goto error;
   }
 
+  /* Setup the 8-byte control message buffer */
+  ctrl_buffer[0] = LAUNCHER_CTRL_COMMAND_PREFIX;  /* First byte is 0x02 */
+  ctrl_buffer[1] = command_byte;                  /* Second byte is the command */
+  /* Remaining bytes are already set to 0x0 during initialization */
+  
   /* this lock makes sure we don't submit URBs to gone devices */
   mutex_lock(&dev->io_mutex);
   if (!dev->interface) { /* disconnect() was called */
@@ -476,50 +463,32 @@ static ssize_t launcher_write( //
     goto error;
   }
 
-  /* initialize the urb properly */
-  usb_fill_bulk_urb(                                          //
-      urb,                                                    //
-      dev->udev,                                              //
-      usb_sndbulkpipe(dev->udev, dev->bulk_out_endpointAddr), //
-      buf,                                                    //
-      writesize,                                              //
-      launcher_write_bulk_callback,                           //
-      dev                                                     //
+  /* Send the control message to the device */
+  retval = usb_control_msg(
+      dev->udev,                          /* USB device */
+      usb_sndctrlpipe(dev->udev, 0),      /* Endpoint pipe */
+      LAUNCHER_CTRL_REQUEST,              /* Request type (0x09) */
+      LAUNCHER_CTRL_REQUEST_TYPE,         /* Request (0x21) */
+      LAUNCHER_CTRL_VALUE,                /* Value (0x0) */
+      LAUNCHER_CTRL_INDEX,                /* Index (0x0) */
+      ctrl_buffer,                        /* Data buffer */
+      LAUNCHER_CTRL_BUFFER_SIZE,          /* Data length (8 bytes) */
+      1000                                /* Timeout (1 second) */
   );
-  urb->transfer_flags |= URB_NO_TRANSFER_DMA_MAP;
-  usb_anchor_urb(urb, &dev->submitted);
 
-  /* send the data out the bulk port */
-  retval = usb_submit_urb(urb, GFP_KERNEL);
   mutex_unlock(&dev->io_mutex);
-  if (retval) {
+  if (retval < 0) {
     dev_err(&dev->interface->dev,
-            "%s - failed submitting write urb, error %d\n", __func__, retval);
-    goto error_unanchor;
+            "%s - failed submitting control message, error %d\n", __func__, retval);
+    goto error;
   }
 
-  /*
-   * release our reference to this urb, the USB core will eventually free
-   * it entirely
-   */
-  usb_free_urb(urb);
-
-  return writesize;
-
-error_unanchor:
-  usb_unanchor_urb(urb);
-error:
-  if (urb) {
-    usb_free_coherent(    //
-        dev->udev,        //
-        writesize,        //
-        buf,              //
-        urb->transfer_dma //
-    );
-    usb_free_urb(urb);
-  }
+  /* Successfully sent the control message */
   up(&dev->limit_sem);
+  return 1; /* Return 1 byte as processed (the command byte) */
 
+error:
+  up(&dev->limit_sem);
 exit:
   return retval;
 }
@@ -702,6 +671,12 @@ static int launcher_post_reset( //
   mutex_unlock(&dev->io_mutex);
 
   return 0;
+}
+
+/* Define the llseek operation (used in file_operations) */
+static loff_t launcher_llseek(struct file *file, loff_t offset, int whence)
+{
+  return -EINVAL; /* Seeking is not supported */
 }
 
 static struct usb_driver launcher_driver = {
