@@ -1,0 +1,17 @@
+recipe-sysroot-native/usr/bin/checkmk
+recipe-sysroot-native/usr/share/aclocal/check.m4
+recipe-sysroot-native/usr/include/check_stdint.h
+recipe-sysroot-native/usr/include/check.h
+recipe-sysroot-native/usr/lib/libcheck.so.0.0.0
+recipe-sysroot-native/usr/lib/libcheck.so.0
+recipe-sysroot-native/usr/lib/libcheck.so
+recipe-sysroot-native/usr/lib/pkgconfig/check.pc
+recipe-sysroot-native/sysroot-providers/libcheck-native
+recipe-sysroot-native/usr/lib/pkgconfig/
+recipe-sysroot-native/usr/share/aclocal/
+recipe-sysroot-native/sysroot-providers/
+recipe-sysroot-native/usr/include/
+recipe-sysroot-native/usr/share/
+recipe-sysroot-native/usr/lib/
+recipe-sysroot-native/usr/bin/
+recipe-sysroot-native/usr/

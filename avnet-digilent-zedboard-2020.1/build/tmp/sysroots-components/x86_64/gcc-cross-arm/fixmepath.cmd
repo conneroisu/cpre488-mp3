@@ -1,0 +1,1 @@
+sed -e 's:^:FIXMEFINALSSTATEINST:g' /tmp/cpre488-mp3/avnet-digilent-zedboard-2020.1/build/tmp/sysroots-components/x86_64/gcc-cross-arm/fixmepath | xargs sed -i -e 's:FIXMESTAGINGDIRTARGET:FIXMEFINALSSTATETARGET:g; s:FIXMESTAGINGDIRHOST:FIXMEFINALSSTATEHOST:g' -e 's:FIXME_HOSTTOOLS_DIR:/tmp/cpre488-mp3/avnet-digilent-zedboard-2020.1/build/tmp/hosttools:g'

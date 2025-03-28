@@ -1,0 +1,8 @@
+recipe-sysroot-native/usr/bin/crossscripts/ncursesw5-config
+recipe-sysroot-native/usr/bin/crossscripts/ncursesw6-config
+recipe-sysroot-native/usr/bin/crossscripts/ncurses6-config
+recipe-sysroot-native/usr/bin/crossscripts/ncurses5-config
+recipe-sysroot-native/usr/bin/ncursesw5-config
+recipe-sysroot-native/usr/bin/ncursesw6-config
+recipe-sysroot-native/usr/bin/ncurses6-config
+recipe-sysroot-native/usr/bin/ncurses5-config

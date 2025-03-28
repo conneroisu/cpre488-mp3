@@ -1,0 +1,5 @@
+recipe-sysroot-native/usr/bin/aclocal
+recipe-sysroot-native/usr/bin/automake-1.16
+recipe-sysroot-native/usr/bin/aclocal-1.16
+recipe-sysroot-native/usr/bin/automake
+recipe-sysroot-native/usr/share/automake-1.16/Automake/Config.pm

@@ -1,0 +1,3 @@
+recipe-sysroot-native/usr/bin/xml2-config
+recipe-sysroot-native/usr/bin/crossscripts/xml2-config
+recipe-sysroot-native/usr/lib/xml2Conf.sh

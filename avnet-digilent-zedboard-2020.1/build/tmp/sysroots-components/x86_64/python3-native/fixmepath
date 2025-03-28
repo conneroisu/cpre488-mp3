@@ -1,0 +1,4 @@
+recipe-sysroot-native/usr/lib/python3.7/_sysconfigdata_m_linux_x86_64-linux-gnu.py
+recipe-sysroot-native/usr/lib/python3.7/config-3.7m-x86_64-linux-gnu/Makefile
+recipe-sysroot-native/usr/lib/python3.7/config-3.7m-x86_64-linux-gnu/python-config.py
+recipe-sysroot-native/usr/lib/python-sysconfigdata/_sysconfigdata.py

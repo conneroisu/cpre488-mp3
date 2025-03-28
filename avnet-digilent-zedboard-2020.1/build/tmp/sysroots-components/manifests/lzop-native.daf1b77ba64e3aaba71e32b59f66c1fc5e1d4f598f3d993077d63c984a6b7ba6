@@ -1,0 +1,6 @@
+recipe-sysroot-native/usr/bin/lzop
+recipe-sysroot-native/sysroot-providers/lzop-native
+recipe-sysroot-native/sysroot-providers/
+recipe-sysroot-native/usr/share/
+recipe-sysroot-native/usr/bin/
+recipe-sysroot-native/usr/
