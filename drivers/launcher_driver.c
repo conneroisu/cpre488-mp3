@@ -1,17 +1,3 @@
-/*
- * USB Launcher driver - 2.2
- *
- * Copyright (C) 2001-2004 Greg Kroah-Hartman (greg@kroah.com)
- *
- *	This program is free software; you can redistribute it and/or
- *	modify it under the terms of the GNU General Public License as
- *	published by the Free Software Foundation, version 2.
- *
- * This driver is based on the 2.6.3 version of drivers/usb/usb-skeleton.c
- * but has been rewritten to be easier to read and use.
- *
- */
-
 #include "launcher_commands.h"
 #include <linux/errno.h>
 #include <linux/init.h>
@@ -516,8 +502,7 @@ static struct usb_class_driver launcher_class = {
 static int launcher_probe(           //
     struct usb_interface *interface, //
     const struct usb_device_id *id   //
-) {
-  struct usb_launcher *dev;
+) { struct usb_launcher *dev;
   struct usb_host_interface *iface_desc;
   struct usb_endpoint_descriptor *endpoint;
   size_t buffer_size;
