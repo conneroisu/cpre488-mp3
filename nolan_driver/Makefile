@@ -1,5 +1,5 @@
 KERNEL_PATH = /lib/modules/$(shell uname -r)/build
-obj-m = launcher_driver.o
+obj-m = launcher-driver.o
 
 all:
 	make -C $(KERNEL_PATH) M=$(shell pwd) modules
