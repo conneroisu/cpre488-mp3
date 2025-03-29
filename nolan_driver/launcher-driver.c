@@ -267,7 +267,7 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
                              LAUNCHER_CTRL_VALUE,
                              LAUNCHER_CTRL_INDEX,
                              buf,
-                             sizeof(buf),
+                             writesize,
                              0); // TODO: Pick a better timeout value, this waits forever as of now.
 
     mutex_unlock(&dev->io_mutex);
