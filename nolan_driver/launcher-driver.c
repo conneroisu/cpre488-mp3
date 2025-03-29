@@ -266,7 +266,7 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
                              LAUNCHER_CTRL_REQUEST_TYPE,
                              LAUNCHER_CTRL_VALUE,
                              LAUNCHER_CTRL_INDEX,
-                             &buf,
+                             buf,
                              sizeof(buf),
                              0); // TODO: Pick a better timeout value, this waits forever as of now.
 
@@ -274,7 +274,7 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
     if (retval)
     {
         dev_err(&dev->interface->dev,
-                "%s - failed writing control URB, error %d\n",
+                "%s - ERROR: Failed writing control URB. Error Code: %d\n",
                 __func__, retval);
         goto error;
     }
