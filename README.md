@@ -4,7 +4,7 @@
 - [x] Explanatory annotation of the boot messages that print as PetaLinux starts up. 
 - [x] Include the kernel messages that result from the plugging in the of the usb missle launcher.
 - [ ] Describe changes made to the usb driver `usb-skeletion.c`
-- [ ] Describe the operation of the `launcher_fire.c` file.
+- [x] Describe the operation of the `launcher_fire.c` file.
 - [x] Describe algorithm used to detect the target.
 
 
