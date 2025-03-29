@@ -435,8 +435,10 @@ We do this mainly by:
    }
    ```
 For optimal performance, we needed to calibrate these values:
-`TARGET_ACTUAL_DIAMETER_CM` - Measure actual target's diameter
-`CAMERA_FOV_HORIZONTAL_DEG` - Check camera's specifications
+
+- `TARGET_ACTUAL_DIAMETER_CM` - Measure actual target's diameter
+- `CAMERA_FOV_HORIZONTAL_DEG` - Check camera's specifications
+
 The compensation factor in adjust_aim_for_depth() - You may need to adjust the 0.5f factor based on experimentation
 
 ### Targeting Adjustments for Depth
