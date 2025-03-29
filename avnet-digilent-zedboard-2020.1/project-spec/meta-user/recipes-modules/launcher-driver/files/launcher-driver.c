@@ -251,6 +251,8 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
         goto error;
     }
 
+    pr_err("Value Read From User: %d\n", *buf);
+
     /* this lock makes sure we don't submit URBs to gone devices */
     mutex_lock(&dev->io_mutex);
     if (!dev->interface)
