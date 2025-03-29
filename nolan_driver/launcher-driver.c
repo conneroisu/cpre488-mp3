@@ -237,7 +237,7 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
     buf = kmalloc(writesize, GFP_KERNEL);
 
     // Zeroize the newly allocated space.
-    memset(&buf, 0, writesize);
+    memset(buf, 0, writesize);
 
     if (!buf)
     {
