@@ -3,6 +3,7 @@
  *
  * Advanced target detection using OpenCV for the USB missile launcher
  * sentry system. This implementation provides more robust detection methods.
+ * Added Z-position (depth) estimation for improved targeting.
  */
 
 #include <errno.h>
@@ -55,6 +56,13 @@ enum TargetColor {
 // Selected target color (change to your preferred color)
 #define SELECTED_TARGET TARGET_RED
 
+// Z-position (depth) estimation parameters
+#define TARGET_ACTUAL_DIAMETER_CM 15.0  // Actual target diameter in cm (adjust based on your target)
+#define CAMERA_FOV_HORIZONTAL_DEG 60.0  // Camera field of view in degrees
+#define MIN_TARGET_DISTANCE_CM 50.0     // Minimum expected target distance
+#define MAX_TARGET_DISTANCE_CM 300.0    // Maximum expected target distance
+#define FOCAL_LENGTH_PIXELS ((FB_WIDTH * 0.5) / tan((CAMERA_FOV_HORIZONTAL_DEG * 0.5) * M_PI / 180.0))
+
 // Function prototypes
 int open_launcher_device();
 int move_launcher(int launcher_fd, unsigned char direction);
@@ -62,13 +70,15 @@ int fire_launcher(int launcher_fd);
 int stop_launcher(int launcher_fd);
 void delay_ms(int ms);
 int aim_launcher(int launcher_fd, int current_x, int current_y, int target_x,
-                 int target_y);
+                 int target_y, float target_z);
 cv::Point detect_target_hsv(cv::Mat &frame, TargetColor target_color,
-                            bool &detected);
+                            bool &detected, float &estimated_z);
 cv::Point detect_target_shape(cv::Mat &frame, TargetColor target_color,
-                              bool &detected);
+                              bool &detected, float &estimated_z);
 void setup_color_thresholds(TargetColor color, cv::Scalar &lower,
                             cv::Scalar &upper);
+float estimate_z_position(double apparent_diameter_pixels);
+int adjust_aim_for_depth(int launcher_fd, float target_z);
 
 /**
  * Main function
@@ -79,8 +89,9 @@ int main() {
   void *fb_mem;
   bool target_detected = false;
   cv::Point target_point;
+  float target_z = 0.0;  // Z-position (depth) in cm
 
-  printf("Starting USB Missile Launcher Sentry with OpenCV...\n");
+  printf("Starting USB Missile Launcher Sentry with OpenCV and Z-position estimation...\n");
 
   // Open /dev/mem for framebuffer access
   mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
@@ -118,21 +129,21 @@ int main() {
 
     // Detect target using HSV color filtering (primary method)
     target_point =
-        detect_target_hsv(frame_copy, SELECTED_TARGET, target_detected);
+        detect_target_hsv(frame_copy, SELECTED_TARGET, target_detected, target_z);
 
     // If HSV detection fails, try shape-based detection as fallback
     if (!target_detected) {
       target_point =
-          detect_target_shape(frame_copy, SELECTED_TARGET, target_detected);
+          detect_target_shape(frame_copy, SELECTED_TARGET, target_detected, target_z);
     }
 
     if (target_detected) {
-      printf("Target detected at position (%d, %d)\n", target_point.x,
-             target_point.y);
+      printf("Target detected at position (%d, %d, %.2f cm)\n", target_point.x,
+             target_point.y, target_z);
 
       // Aim launcher at the target
       ret = aim_launcher(launcher_fd, LAUNCHER_CENTER_X, LAUNCHER_CENTER_Y,
-                         target_point.x, target_point.y);
+                         target_point.x, target_point.y, target_z);
 
       if (ret == 0) {
         printf("Target locked, firing!\n");
@@ -271,14 +282,38 @@ void setup_color_thresholds(TargetColor color, cv::Scalar &lower,
 }
 
 /**
+ * Estimates the Z-position (depth) based on the apparent size of the target
+ * Returns estimated distance in centimeters
+ */
+float estimate_z_position(double apparent_diameter_pixels) {
+  // Using the pinhole camera model: Z = (F * W) / P
+  // Where F is focal length in pixels, W is actual object size, P is apparent object size in pixels
+  if (apparent_diameter_pixels <= 0) {
+    return MAX_TARGET_DISTANCE_CM;  // Default to max distance if object is too small
+  }
+  
+  float estimated_distance = (FOCAL_LENGTH_PIXELS * TARGET_ACTUAL_DIAMETER_CM) / apparent_diameter_pixels;
+  
+  // Clamp the estimated distance to reasonable values
+  if (estimated_distance < MIN_TARGET_DISTANCE_CM) {
+    estimated_distance = MIN_TARGET_DISTANCE_CM;
+  } else if (estimated_distance > MAX_TARGET_DISTANCE_CM) {
+    estimated_distance = MAX_TARGET_DISTANCE_CM;
+  }
+  
+  return estimated_distance;
+}
+
+/**
  * Detects a target using HSV color filtering
- * Returns the center point of the detected target and sets detected flag
+ * Returns the center point of the detected target, sets detected flag, and updates estimated_z
  */
 cv::Point detect_target_hsv(cv::Mat &frame, TargetColor target_color,
-                            bool &detected) {
+                            bool &detected, float &estimated_z) {
   cv::Scalar lower_thresh, upper_thresh;
   cv::Point target_center(0, 0);
   detected = false;
+  estimated_z = MAX_TARGET_DISTANCE_CM;  // Default to max distance
 
   // Convert the frame from BGR to HSV color space
   cv::Mat hsv_frame;
@@ -326,9 +361,13 @@ cv::Point detect_target_hsv(cv::Mat &frame, TargetColor target_color,
         target_center.y = int(moments.m01 / moments.m00);
         detected = true;
 
+        // Calculate the equivalent diameter for z-position estimation
+        double equivalent_diameter = 2 * sqrt(largest_area / M_PI);
+        estimated_z = estimate_z_position(equivalent_diameter);
+
         // Draw the contour and center point (for debugging)
-        // cv::drawContours(frame, contours, largest_idx, cv::Scalar(0, 255, 0),
-        // 2); cv::circle(frame, target_center, 5, cv::Scalar(0, 0, 255), -1);
+        // cv::drawContours(frame, contours, largest_idx, cv::Scalar(0, 255, 0), 2);
+        // cv::circle(frame, target_center, 5, cv::Scalar(0, 0, 255), -1);
       }
     }
   }
@@ -339,12 +378,13 @@ cv::Point detect_target_hsv(cv::Mat &frame, TargetColor target_color,
 /**
  * Detects a target using shape detection (circles/ellipses)
  * This is a fallback method if HSV color detection fails
- * Returns the center point of the detected target and sets detected flag
+ * Returns the center point of the detected target, sets detected flag, and updates estimated_z
  */
 cv::Point detect_target_shape(cv::Mat &frame, TargetColor target_color,
-                              bool &detected) {
+                              bool &detected, float &estimated_z) {
   cv::Point target_center(0, 0);
   detected = false;
+  estimated_z = MAX_TARGET_DISTANCE_CM;  // Default to max distance
 
   // Convert to grayscale
   cv::Mat gray;
@@ -382,6 +422,11 @@ cv::Point detect_target_shape(cv::Mat &frame, TargetColor target_color,
       target_center.y = cvRound(circles[best_circle][1]);
       detected = true;
 
+      // Use the detected circle radius for z-position estimation
+      float radius = circles[best_circle][2];
+      float diameter = 2.0f * radius;
+      estimated_z = estimate_z_position(diameter);
+
       // Draw the circle (for debugging)
       // cv::circle(frame, target_center, cvRound(circles[best_circle][2]),
       //           cv::Scalar(0, 255, 0), 2);
@@ -393,18 +438,48 @@ cv::Point detect_target_shape(cv::Mat &frame, TargetColor target_color,
 }
 
 /**
- * Aims the launcher at the target coordinates
+ * Makes adjustments to launcher targeting based on the target's depth
+ * Returns 0 on success, -1 on error
+ */
+int adjust_aim_for_depth(int launcher_fd, float target_z) {
+  // Simple adjustment based on depth - adjust trajectory for gravity
+  // The further away the target, the more we need to aim higher to compensate
+  
+  // Skip adjustment for close targets
+  if (target_z <= 100.0f) {
+    return 0;
+  }
+  
+  // Calculate adjustment time - more adjustment for distant targets
+  // This is a simplified model that can be refined with actual testing
+  int adjustment_ms = (int)((target_z - 100.0f) * 0.5f);
+  
+  if (adjustment_ms > 0) {
+    printf("Depth adjustment: Moving UP for %d ms to compensate for distance\n", adjustment_ms);
+    move_launcher(launcher_fd, LAUNCHER_UP);
+    delay_ms(adjustment_ms);
+    stop_launcher(launcher_fd);
+    return 0;
+  }
+  
+  return 0;
+}
+
+/**
+ * Aims the launcher at the target coordinates with depth consideration
  * Returns 0 when aiming is complete, -1 on error
  */
 int aim_launcher(int launcher_fd, int current_x, int current_y, int target_x,
-                 int target_y) {
+                 int target_y, float target_z) {
   int dx = target_x - current_x;
   int dy = target_y - current_y;
   int ret;
 
   // If target is already centered (within dead zone), we're done
   if (abs(dx) < LAUNCHER_DEAD_ZONE && abs(dy) < LAUNCHER_DEAD_ZONE) {
-    return 0;
+    // Apply depth-based adjustments
+    ret = adjust_aim_for_depth(launcher_fd, target_z);
+    return ret;
   }
 
   // Handle horizontal movement first
@@ -477,13 +552,16 @@ int aim_launcher(int launcher_fd, int current_x, int current_y, int target_x,
       (abs(dx) > LAUNCHER_DEAD_ZONE || abs(dy) > LAUNCHER_DEAD_ZONE)) {
     aim_attempts++;
     int result =
-        aim_launcher(launcher_fd, current_x, current_y, target_x, target_y);
+        aim_launcher(launcher_fd, current_x, current_y, target_x, target_y, target_z);
     aim_attempts = 0; // Reset attempts counter
     return result;
   }
 
+  // Apply depth-based adjustments (after X-Y positioning is complete)
+  ret = adjust_aim_for_depth(launcher_fd, target_z);
+
   aim_attempts = 0; // Reset attempts counter
-  return 0;         // We're close enough
+  return ret;       // Return the result of the depth adjustment
 }
 
 /**

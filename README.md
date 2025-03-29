@@ -306,3 +306,77 @@ hid-generic 0003:2123:1010.0001: device has no listeners, quitting
 5. `usb 1-1: Manufacturer: Syntek` - The manufacturer is identified as Syntek.
 
 6. `hid-generic 0003:2123:1010.0001: device has no listeners, quitting` - This is expected since the device needs a specific driver.
+
+## Operation of Initial `launcher_fire.c`
+
+The code defines a set of command constants that correspond to different actions the missile launcher can perform, such as:
+
+LAUNCHER_FIRE (0x10): Fires a dart/missile
+LAUNCHER_STOP (0x20): Stops all movement
+LAUNCHER_UP (0x02), DOWN (0x01), LEFT (0x04), RIGHT (0x08): Directional controls
+Combined directions like UP_LEFT, DOWN_RIGHT, etc.
+
+The program relies on the Linux character device driver properly translating these simple commands into the appropriate USB control messages that the missile launcher hardware can understand.
+
+The main logic is implemented through:
+
+The `launcher_cmd()` function which:
+1. Takes a file descriptor and command as input
+2. Attempts to write the command to the device file
+3. Handles error conditions if the write fails
+4. Adds a 5-second delay after firing to allow the launcher to complete its firing sequence
+The main() function which:
+1. Opens the device file "/dev/launcher0" with read/write permissions
+2. Sets the command to LAUNCHER_FIRE (this is fixed, not user-controlled)
+3. Sends the fire command to the launcher
+4. Waits for a specified duration (500ms)
+5. Sends the stop command
+6. Closes the file descriptor
+
+This particular functionality is quite simple - it just fires the missile launcher once when executed. 
+
+## Algorithm to detect Target
+
+### Z/Distance estimation
+
+This approach works by using the apparent size of detected objects to estimate their distance from the camera.
+
+We do this mainly by:
+1. Defining some Parameters and Constants
+   ```cpp
+   // Z-position (depth) estimation parameters
+   #define TARGET_ACTUAL_DIAMETER_CM 15.0  // Actual target diameter in cm
+   #define CAMERA_FOV_HORIZONTAL_DEG 60.0  // Camera field of view in degrees
+   #define MIN_TARGET_DISTANCE_CM 50.0     // Minimum expected target distance
+   #define MAX_TARGET_DISTANCE_CM 300.0    // Maximum expected target distance
+   #define FOCAL_LENGTH_PIXELS ((FB_WIDTH * 0.5) / tan((CAMERA_FOV_HORIZONTAL_DEG * 0.5) * M_PI / 180.0))
+   ```
+   These parameters calibrate the depth estimation algorithm and can be adjusted based on your specific setup.
+2. Creating a new function for estimating the z given the detected diameter of the target.
+   ```cpp
+   float estimate_z_position(double apparent_diameter_pixels) {
+   // Using the pinhole camera model: Z = (F * W) / P
+   // Where F is focal length in pixels, W is actual object size, P is apparent object size in pixels
+   if (apparent_diameter_pixels <= 0) {
+      return MAX_TARGET_DISTANCE_CM;  // Default to max distance if object is too small
+   }
+   
+   float estimated_distance = (FOCAL_LENGTH_PIXELS * TARGET_ACTUAL_DIAMETER_CM) / apparent_diameter_pixels;
+   
+   // Clamp the estimated distance to reasonable values
+   if (estimated_distance < MIN_TARGET_DISTANCE_CM) {
+      estimated_distance = MIN_TARGET_DISTANCE_CM;
+   } else if (estimated_distance > MAX_TARGET_DISTANCE_CM) {
+      estimated_distance = MAX_TARGET_DISTANCE_CM;
+   }
+   
+   return estimated_distance;
+   }
+   ```
+
+For optimal performance, we needed to calibrate these values:
+
+`TARGET_ACTUAL_DIAMETER_CM` - Measure actual target's diameter
+`CAMERA_FOV_HORIZONTAL_DEG` - Check camera's specifications
+
+The compensation factor in adjust_aim_for_depth() - You may need to adjust the 0.5f factor based on experimentation
