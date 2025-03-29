@@ -485,8 +485,14 @@ while (1) {
 
   if (target_detected) {
     // Aim launcher at the target with z-position consideration
-    ret = aim_launcher(launcher_fd, LAUNCHER_CENTER_X, LAUNCHER_CENTER_Y,
-                       target_point.x, target_point.y, target_z);
+    ret = aim_launcher(
+      launcher_fd,
+      LAUNCHER_CENTER_X,
+      LAUNCHER_CENTER_Y,
+      target_point.x,
+      target_point.y,
+      target_z
+   );
   }
 }
 ```
