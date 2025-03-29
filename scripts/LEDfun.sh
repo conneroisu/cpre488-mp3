@@ -26,20 +26,18 @@ LED_INV_PASS=0
 # devmem <addr> <size> <write data>
 set_mem()
 {
-    # $(devmem $1 32 $2)
-    echo setting $1 to $2
+    $(devmem $1 32 $2)
 }
 
 get_mem()
 {
-    # return $(devmem $1 32)
-    echo getting $1
+    return $(($(devmem $1 32)))
 }
 
 # GPIO setup
 # Buttons and switches need to be inputs.
-set_mem $BTN_ADDR 0x1
-set_mem $SW_ADDR 0x1
+set_mem $(($BTN_ADDR + $TRI_OFFSET)) 0x1
+set_mem $(($SW_ADDR + $TRI_OFFSET)) 0x1
 
 # Main loop
 while :
@@ -75,6 +73,5 @@ do
         LED_VAL=0xFF
     fi
 
-    echo LED Val: $LED_VAL
-
+    set_mem $(($LED_ADDR + $DATA_OFFSET)) $LED_VAL
 done
