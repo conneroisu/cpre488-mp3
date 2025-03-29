@@ -1,0 +1,28 @@
+[INFO] building project
+[INFO] sourcing build environment
+SDK environment now set up; additionally you may now run devtool to perform development tasks.
+Run devtool --help for further details.
+INFO: sourcing build tools
+
+### Shell environment set up for builds. ###
+
+You can now run 'bitbake <target>'
+
+Common targets are:
+    core-image-minimal
+    core-image-sato
+    meta-toolchain
+    meta-ide-support
+
+You can also run generated qemu images with a command like 'runqemu qemux86'.
+
+Other commonly useful commands are:
+ - 'devtool' and 'recipetool' handle common recipe tasks
+ - 'bitbake-layers' handles common layer tasks
+ - 'oe-pkgdata-util' handles common target package tasks
+[INFO] generating user layers
+[INFO] generating workspace directory
+NOTE: Starting bitbake server...
+INFO: Specified workspace already set up, leaving as-is
+ERROR: Force building is not supported for image targets
+ERROR: Failed to build project

@@ -1,0 +1,6 @@
+recipe-sysroot/usr/bin/crossscripts/qemuwrapper
+recipe-sysroot/sysroot-providers/qemuwrapper-cross
+recipe-sysroot/usr/bin/crossscripts/
+recipe-sysroot/sysroot-providers/
+recipe-sysroot/usr/bin/
+recipe-sysroot/usr/

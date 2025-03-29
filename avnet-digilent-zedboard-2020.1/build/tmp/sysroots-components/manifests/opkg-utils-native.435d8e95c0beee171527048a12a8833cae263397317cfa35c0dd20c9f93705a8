@@ -1,0 +1,17 @@
+recipe-sysroot-native/usr/bin/opkg.py
+recipe-sysroot-native/usr/bin/opkg-compare-indexes
+recipe-sysroot-native/usr/bin/opkg-show-deps
+recipe-sysroot-native/usr/bin/opkg-diff
+recipe-sysroot-native/usr/bin/opkg-extract-file
+recipe-sysroot-native/usr/bin/opkg-build
+recipe-sysroot-native/usr/bin/update-alternatives
+recipe-sysroot-native/usr/bin/opkg-list-fields
+recipe-sysroot-native/usr/bin/opkg-buildpackage
+recipe-sysroot-native/usr/bin/arfile.py
+recipe-sysroot-native/usr/bin/opkg-unbuild
+recipe-sysroot-native/usr/bin/opkg-make-index
+recipe-sysroot-native/sysroot-providers/opkg-utils-native
+recipe-sysroot-native/sysroot-providers/
+recipe-sysroot-native/usr/share/
+recipe-sysroot-native/usr/bin/
+recipe-sysroot-native/usr/

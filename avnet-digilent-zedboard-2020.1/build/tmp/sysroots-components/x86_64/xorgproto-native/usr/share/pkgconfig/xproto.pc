@@ -1,0 +1,9 @@
+prefix=${pcfiledir}/../../../usr
+exec_prefix=${pcfiledir}/../../../usr
+includedir=${pcfiledir}/../../../usr/include
+includex11dir=${pcfiledir}/../../../usr/include/X11
+ 
+Name: Xproto
+Description: Xproto headers
+Version: 7.0.32
+Cflags: -I${includedir}

@@ -1,0 +1,4 @@
+recipe-sysroot-native/sbin/e2scrub
+recipe-sysroot-native/sbin/e2scrub_all
+recipe-sysroot-native/usr/bin/compile_et
+recipe-sysroot-native/usr/bin/mk_cmds

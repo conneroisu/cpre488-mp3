@@ -1,0 +1,13 @@
+prefix=${pcfiledir}/../../../usr
+exec_prefix=${pcfiledir}/../../../usr
+libdir=${pcfiledir}/../../../usr/lib
+includedir=${pcfiledir}/../../../usr/include
+
+Name: Python
+Description: Python library
+Requires: 
+Version: 2.7
+Libs.private: -lpthread -ldl  -lutil
+Libs: -L${libdir} -lpython2.7
+Cflags: -I${includedir}/python2.7 
+

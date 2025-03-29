@@ -1,0 +1,13 @@
+recipe-sysroot-native/usr/bin/gtkdoc-depscan
+recipe-sysroot-native/usr/bin/gtkdoc-scangobj
+recipe-sysroot-native/usr/bin/gtkdoc-fixxref
+recipe-sysroot-native/usr/bin/gtkdoc-mkpdf
+recipe-sysroot-native/usr/bin/gtkdoc-mkman
+recipe-sysroot-native/usr/bin/gtkdoc-mkhtml
+recipe-sysroot-native/usr/bin/gtkdoc-mkhtml2
+recipe-sysroot-native/usr/bin/gtkdoc-rebase
+recipe-sysroot-native/usr/bin/gtkdoc-scan
+recipe-sysroot-native/usr/bin/gtkdoc-check
+recipe-sysroot-native/usr/bin/gtkdoc-mkdb
+recipe-sysroot-native/usr/bin/gtkdocize
+recipe-sysroot-native/usr/share/gtk-doc/python/gtkdoc/config.py

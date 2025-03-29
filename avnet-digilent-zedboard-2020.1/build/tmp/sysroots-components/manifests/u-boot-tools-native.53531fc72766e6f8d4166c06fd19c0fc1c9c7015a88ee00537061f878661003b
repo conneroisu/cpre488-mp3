@@ -1,0 +1,14 @@
+recipe-sysroot-native/usr/bin/mkimage
+recipe-sysroot-native/usr/bin/mkenvimage
+recipe-sysroot-native/usr/bin/uboot-mkenvimage
+recipe-sysroot-native/usr/bin/fit_check_sign
+recipe-sysroot-native/usr/bin/uboot-fit_check_sign
+recipe-sysroot-native/usr/bin/uboot-mkimage
+recipe-sysroot-native/usr/bin/dumpimage
+recipe-sysroot-native/usr/bin/uboot-dumpimage
+recipe-sysroot-native/sysroot-providers/u-boot-mkimage-native
+recipe-sysroot-native/sysroot-providers/u-boot-mkenvimage-native
+recipe-sysroot-native/sysroot-providers/u-boot-tools-native
+recipe-sysroot-native/sysroot-providers/
+recipe-sysroot-native/usr/bin/
+recipe-sysroot-native/usr/

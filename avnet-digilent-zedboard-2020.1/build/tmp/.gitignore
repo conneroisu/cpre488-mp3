@@ -1,0 +1,11 @@
+
+buildstats/
+cache/
+deploy/
+hosttools/
+log/
+pkgdata/
+sstate-control/
+stamps/
+work/
+work-shared/

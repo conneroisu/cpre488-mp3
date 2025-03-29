@@ -1,0 +1,8 @@
+recipe-sysroot/boot/device-tree.bif
+recipe-sysroot/boot/device-tree-AUTOINC+bc84458333.dtb
+recipe-sysroot/boot/devicetree/system-top.dtb
+recipe-sysroot/sysroot-providers/device-tree
+recipe-sysroot/sysroot-providers/virtual_dtb
+recipe-sysroot/sysroot-providers/
+recipe-sysroot/boot/devicetree/
+recipe-sysroot/boot/

@@ -1,0 +1,3 @@
+recipe-sysroot-native/usr/bin/g-ir-scanner
+recipe-sysroot-native/usr/bin/postinst-ldsoconf-gobject-introspection-native
+recipe-sysroot-native/usr/bin/g-ir-annotation-tool

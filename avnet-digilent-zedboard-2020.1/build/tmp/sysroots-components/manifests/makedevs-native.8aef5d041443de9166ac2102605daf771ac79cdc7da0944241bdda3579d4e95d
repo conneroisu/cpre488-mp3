@@ -1,0 +1,4 @@
+recipe-sysroot-native/sysroot-providers/makedevs-native
+recipe-sysroot-native/sbin/makedevs
+recipe-sysroot-native/sysroot-providers/
+recipe-sysroot-native/sbin/

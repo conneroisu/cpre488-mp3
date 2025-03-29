@@ -1,0 +1,18 @@
+#!/bin/sh
+# Expected to be called as: depmodwrapper -a KERNEL_VERSION
+if [ "$1" != "-a" -o "$2" != "-b" ]; then
+    echo "Usage: depmodwrapper -a -b rootfs KERNEL_VERSION" >&2
+    exit 1
+fi
+
+kernelabi=""
+if [ -r "FIXME_PKGDATA_DIR/kernel-depmod/kernel-abiversion" ]; then
+    kernelabi=$(cat "FIXME_PKGDATA_DIR/kernel-depmod/kernel-abiversion")
+fi
+
+if [ ! -r FIXME_PKGDATA_DIR/kernel-depmod/System.map-$4 ] || [ "$kernelabi" != "$4" ]; then
+    echo "Unable to read: FIXME_PKGDATA_DIR/kernel-depmod/System.map-$4" >&2
+    exec env depmod "$1" "$2" "$3" "$4"
+else
+    exec env depmod "$1" "$2" "$3" -F "FIXME_PKGDATA_DIR/kernel-depmod/System.map-$4" "$4"
+fi

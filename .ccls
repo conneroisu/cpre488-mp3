@@ -6,6 +6,10 @@ clang
 %h %hpp --include=./Vitis/eclipse_workspace/TPG/zynq_fsbl/*.h
 %h %hpp --include=./Vitis/eclipse_workspace/TPG/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/include/*.h
 %h %hpp --include=./Vitis/eclipse_workspace/TPG/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/libsrc/**/**/*.h
+%h %hpp --include=/nix/store/qknvb50awgixvc1jb6n2rzhd5mcp1gqh-linux-6.12.20-dev/lib/modules/6.12.20/source/include/**/*.h
+%h %hpp --include=/nix/store/qknvb50awgixvc1jb6n2rzhd5mcp1gqh-linux-6.12.20-dev/lib/modules/6.12.20/source/include/linux/*.h
+%h %hpp --include=/nix/store/qknvb50awgixvc1jb6n2rzhd5mcp1gqh-linux-6.12.20-dev/lib/modules/6.12.20/source/include/uapi/**/*.h
+%h %hpp --include=/nix/store/qknvb50awgixvc1jb6n2rzhd5mcp1gqh-linux-6.12.20-dev/lib/modules/6.12.20/source/arch/arm/include/**/*.h
 
 -Iinc
 -DMACRO
@@ -14,3 +18,13 @@ clang
 -I./Vitis/eclipse_workspace/TPG/zynq_fsbl
 -I./Vitis/eclipse_workspace/TPG/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/include
 -I./Vitis/eclipse_workspace/TPG/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/libsrc
+
+# Linux kernel headers for driver development
+-I/nix/store/qknvb50awgixvc1jb6n2rzhd5mcp1gqh-linux-6.12.20-dev/lib/modules/6.12.20/source/include
+-I/nix/store/qknvb50awgixvc1jb6n2rzhd5mcp1gqh-linux-6.12.20-dev/lib/modules/6.12.20/source/include/uapi
+-I/nix/store/qknvb50awgixvc1jb6n2rzhd5mcp1gqh-linux-6.12.20-dev/lib/modules/6.12.20/source/include/linux
+-I/nix/store/qknvb50awgixvc1jb6n2rzhd5mcp1gqh-linux-6.12.20-dev/lib/modules/6.12.20/source/include/asm-generic
+-I/nix/store/qknvb50awgixvc1jb6n2rzhd5mcp1gqh-linux-6.12.20-dev/lib/modules/6.12.20/source/arch/arm/include
+-I/nix/store/qknvb50awgixvc1jb6n2rzhd5mcp1gqh-linux-6.12.20-dev/lib/modules/6.12.20/source/arch/arm/include/generated
+-D__KERNEL__
+-DMODULE

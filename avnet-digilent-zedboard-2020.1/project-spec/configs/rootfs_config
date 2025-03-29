@@ -4005,6 +4005,11 @@ CONFIG_imagefeature-debug-tweaks=y
 # CONFIG_peekpoke is not set
 
 #
+# modules 
+#
+CONFIG_launcher-driver=y
+
+#
 # user packages 
 #
 

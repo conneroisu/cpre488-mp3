@@ -1,0 +1,4 @@
+SANITY_VERSION 1
+TMPDIR /tmp/cpre488-mp3/avnet-digilent-zedboard-2020.1/build/tmp
+SSTATE_DIR /tmp/cpre488-mp3/avnet-digilent-zedboard-2020.1/build/sstate-cache
+NATIVELSBSTRING rhel-8.10

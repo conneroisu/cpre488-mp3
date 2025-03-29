@@ -1,0 +1,5 @@
+recipe-sysroot-native/usr/bin/ldconfig
+recipe-sysroot-native/sysroot-providers/ldconfig-native
+recipe-sysroot-native/sysroot-providers/
+recipe-sysroot-native/usr/bin/
+recipe-sysroot-native/usr/

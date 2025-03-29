@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Install passwd.master and group.master to sysconfdir
+install -d -m 755 FIXMESTAGINGDIRTARGET/etc
+for i in passwd group; do
+	install -p -m 644 FIXMESTAGINGDIRTARGET/usr/share/base-passwd/$i.master 		FIXMESTAGINGDIRTARGET/etc/$i
+done
+
+# Run any useradd postinsts
+for script in FIXMESTAGINGDIRTARGET/usr/bin/postinst-useradd-*; do
+	if [ -f $script ]; then
+		$script
+	fi
+done
+

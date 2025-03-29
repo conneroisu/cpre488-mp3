@@ -1,0 +1,12 @@
+prefix=${pcfiledir}/../../../usr
+libdir=
+includedir=${pcfiledir}/../../../usr/include
+
+Name: createrepo_c
+Description: Library for manipulation with repodata.
+Version: 0.15.0
+Requires: glib-2.0 rpm libcurl sqlite3
+Requires.private: zlib libxml-2.0
+Libs: -L${libdir} -lcreaterepo_c
+Libs.private: -lmagic -lexpat -lbz2 -lzma
+Cflags: -I${includedir}

@@ -1,0 +1,8 @@
+recipe-sysroot/boot/u-boot-zedboard-zynq7-v2020.01-xilinx-v2020.1+gitAUTOINC+86c84c0d0f-r0.bin
+recipe-sysroot/boot/u-boot-xlnx-AUTOINC+86c84c0d0f.elf
+recipe-sysroot/boot/u-boot.bin
+recipe-sysroot/boot/u-boot.elf
+recipe-sysroot/sysroot-providers/virtual_bootloader
+recipe-sysroot/sysroot-providers/u-boot-xlnx
+recipe-sysroot/sysroot-providers/
+recipe-sysroot/boot/
