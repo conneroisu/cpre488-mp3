@@ -4,6 +4,7 @@
  * Headless version of target recognition system without GUI dependencies.
  * This version focuses on the computer vision aspects of target detection
  * and works without requiring a display or GUI components.
+ * Added Z-position (depth) estimation for improved 3D target localization.
  */
 
 #include <chrono>
@@ -41,21 +42,30 @@ enum TargetColor {
 #define MORPH_KERNEL_SIZE 5
 #define LAUNCHER_DEAD_ZONE 20
 
+// Z-position (depth) estimation parameters
+#define TARGET_ACTUAL_DIAMETER_CM 15.0   // Actual target diameter in cm (adjust based on your target)
+#define CAMERA_FOV_HORIZONTAL_DEG 60.0   // Camera field of view in degrees
+#define DEFAULT_FRAME_WIDTH 640          // Default frame width in pixels
+#define DEFAULT_FRAME_HEIGHT 480         // Default frame height in pixels
+#define MIN_TARGET_DISTANCE_CM 50.0      // Minimum expected target distance
+#define MAX_TARGET_DISTANCE_CM 300.0     // Maximum expected target distance
+
 // Output directory for saved images
 #define OUTPUT_DIR "output/"
 
 // Function Prototypes
-void setupColorThresholds(TargetColor color, cv::Scalar &lower,
-                          cv::Scalar &upper);
-cv::Point detectTargetHSV(cv::Mat &frame, cv::Mat &debug_frame,
-                          TargetColor target_color, bool &detected);
-cv::Point detectTargetShape(cv::Mat &frame, cv::Mat &debug_frame,
-                            TargetColor target_color, bool &detected);
+void setupColorThresholds(TargetColor color, cv::Scalar &lower, cv::Scalar &upper);
+cv::Point detectTargetHSV(cv::Mat &frame, cv::Mat &debug_frame, TargetColor target_color, 
+                         bool &detected, float &estimated_z);
+cv::Point detectTargetShape(cv::Mat &frame, cv::Mat &debug_frame, TargetColor target_color, 
+                           bool &detected, float &estimated_z);
 void processFrame(cv::Mat &frame, cv::Mat &debug_frame);
 void saveImage(const cv::Mat &image, const std::string &prefix);
 void displayHelp();
 std::string getColorName(TargetColor color);
 void ensureDirectoryExists(const std::string &dirPath);
+float estimateZPosition(double apparent_diameter_pixels, int frame_width);
+float calculateFocalLength(int frame_width);
 
 /**
  * Main function
@@ -102,8 +112,8 @@ int main(int argc, char *argv[]) {
     }
 
     // Set resolution if needed
-    cap.set(cv::CAP_PROP_FRAME_WIDTH, 640);
-    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, DEFAULT_FRAME_WIDTH);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, DEFAULT_FRAME_HEIGHT);
 
     std::cout << "Camera opened successfully." << std::endl;
   } else {
@@ -180,29 +190,67 @@ int main(int argc, char *argv[]) {
 }
 
 /**
+ * Calculate focal length in pixels based on frame width and camera FOV
+ */
+float calculateFocalLength(int frame_width) {
+  return (frame_width * 0.5f) / tan((CAMERA_FOV_HORIZONTAL_DEG * 0.5f) * M_PI / 180.0f);
+}
+
+/**
+ * Estimates the Z-position (depth) based on the apparent size of the target
+ * Returns estimated distance in centimeters
+ */
+float estimateZPosition(double apparent_diameter_pixels, int frame_width) {
+  // Using the pinhole camera model: Z = (F * W) / P
+  // Where F is focal length in pixels, W is actual object size, P is apparent object size in pixels
+  if (apparent_diameter_pixels <= 0) {
+    return MAX_TARGET_DISTANCE_CM;  // Default to max distance if object is too small
+  }
+  
+  // Calculate focal length based on the frame width
+  float focal_length_pixels = calculateFocalLength(frame_width);
+  
+  // Calculate the estimated distance
+  float estimated_distance = (focal_length_pixels * TARGET_ACTUAL_DIAMETER_CM) / apparent_diameter_pixels;
+  
+  // Clamp the estimated distance to reasonable values
+  if (estimated_distance < MIN_TARGET_DISTANCE_CM) {
+    estimated_distance = MIN_TARGET_DISTANCE_CM;
+  } else if (estimated_distance > MAX_TARGET_DISTANCE_CM) {
+    estimated_distance = MAX_TARGET_DISTANCE_CM;
+  }
+  
+  return estimated_distance;
+}
+
+/**
  * Process a frame for target detection
  */
 void processFrame(cv::Mat &frame, cv::Mat &debug_frame) {
   // Attempt target detection
   bool target_detected = false;
   cv::Point target_point;
+  float target_z = MAX_TARGET_DISTANCE_CM;  // Default to max distance
 
   // Try HSV-based detection first
   target_point =
-      detectTargetHSV(frame, debug_frame, SELECTED_TARGET, target_detected);
+      detectTargetHSV(frame, debug_frame, SELECTED_TARGET, target_detected, target_z);
 
   // If HSV detection fails, try shape-based detection
   if (!target_detected) {
     target_point =
-        detectTargetShape(frame, debug_frame, SELECTED_TARGET, target_detected);
+        detectTargetShape(frame, debug_frame, SELECTED_TARGET, target_detected, target_z);
   }
 
   // Add informational text to display
-  std::string status_text = target_detected
-                                ? "Target detected at: (" +
-                                      std::to_string(target_point.x) + ", " +
-                                      std::to_string(target_point.y) + ")"
-                                : "No target detected";
+  std::string status_text;
+  if (target_detected) {
+    status_text = "Target detected at: (" + std::to_string(target_point.x) + 
+                  ", " + std::to_string(target_point.y) + 
+                  ", " + std::to_string(int(target_z)) + " cm)";
+  } else {
+    status_text = "No target detected";
+  }
 
   cv::putText(debug_frame, status_text, cv::Point(10, 30),
               cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 0), 2);
@@ -216,11 +264,26 @@ void processFrame(cv::Mat &frame, cv::Mat &debug_frame) {
     cv::line(debug_frame, cv::Point(target_point.x, target_point.y - 20),
              cv::Point(target_point.x, target_point.y + 20),
              cv::Scalar(0, 0, 255), 2);
-    cv::circle(debug_frame, target_point, 30, cv::Scalar(0, 0, 255), 2);
+    
+    // Draw circle with radius relative to distance (smaller for further targets)
+    int circle_radius = 30;
+    if (target_z > 0) {
+      // Adjust circle radius based on distance (inversely proportional)
+      circle_radius = int(30 * (200.0f / target_z));
+      if (circle_radius < 15) circle_radius = 15;
+      if (circle_radius > 50) circle_radius = 50;
+    }
+    cv::circle(debug_frame, target_point, circle_radius, cv::Scalar(0, 0, 255), 2);
+
+    // Add depth information to visualization
+    std::string depth_text = "Distance: " + std::to_string(int(target_z)) + " cm";
+    cv::putText(debug_frame, depth_text, 
+                cv::Point(target_point.x + 20, target_point.y - 20),
+                cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0, 255, 255), 2);
 
     // Print target info to console
     std::cout << "Target detected at: (" << target_point.x << ", "
-              << target_point.y << ")" << std::endl;
+              << target_point.y << ", " << target_z << " cm)" << std::endl;
   } else {
     std::cout << "No target detected in this frame." << std::endl;
   }
@@ -272,13 +335,14 @@ void setupColorThresholds(TargetColor color, cv::Scalar &lower,
 /**
  * Detects a target using HSV color filtering
  * Returns the center point of the detected target and sets detected flag
- * Also adds visualization to the debug frame
+ * Also adds visualization to the debug frame and updates estimated_z
  */
 cv::Point detectTargetHSV(cv::Mat &frame, cv::Mat &debug_frame,
-                          TargetColor target_color, bool &detected) {
+                          TargetColor target_color, bool &detected, float &estimated_z) {
   cv::Scalar lower_thresh, upper_thresh;
   cv::Point target_center(0, 0);
   detected = false;
+  estimated_z = MAX_TARGET_DISTANCE_CM;  // Default to max distance
 
   // Convert the frame from BGR to HSV color space
   cv::Mat hsv_frame;
@@ -345,6 +409,10 @@ cv::Point detectTargetHSV(cv::Mat &frame, cv::Mat &debug_frame,
         target_center.y = int(moments.m01 / moments.m00);
         detected = true;
 
+        // Calculate the equivalent diameter for z-position estimation
+        double equivalent_diameter = 2 * sqrt(largest_area / M_PI);
+        estimated_z = estimateZPosition(equivalent_diameter, frame.cols);
+
         // Draw the contour and center point for visualization
         cv::drawContours(debug_frame, contours, largest_idx,
                          cv::Scalar(0, 255, 0), 2);
@@ -357,7 +425,8 @@ cv::Point detectTargetHSV(cv::Mat &frame, cv::Mat &debug_frame,
                     cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 1);
 
         std::cout << "HSV detection - Contour area: " << largest_area
-                  << std::endl;
+                  << ", Estimated diameter: " << equivalent_diameter 
+                  << "px, Distance: " << estimated_z << " cm" << std::endl;
       }
     }
   }
@@ -369,12 +438,13 @@ cv::Point detectTargetHSV(cv::Mat &frame, cv::Mat &debug_frame,
  * Detects a target using shape detection (circles/ellipses)
  * This is a fallback method if HSV color detection fails
  * Returns the center point of the detected target and sets detected flag
- * Also adds visualization to the debug frame
+ * Also adds visualization to the debug frame and updates estimated_z
  */
 cv::Point detectTargetShape(cv::Mat &frame, cv::Mat &debug_frame,
-                            TargetColor target_color, bool &detected) {
+                            TargetColor target_color, bool &detected, float &estimated_z) {
   cv::Point target_center(0, 0);
   detected = false;
+  estimated_z = MAX_TARGET_DISTANCE_CM;  // Default to max distance
 
   // Convert to grayscale
   cv::Mat gray;
@@ -435,20 +505,24 @@ cv::Point detectTargetShape(cv::Mat &frame, cv::Mat &debug_frame,
       target_center.y = cvRound(circles[best_circle][1]);
       detected = true;
 
+      // Use the detected circle radius for z-position estimation
+      float radius = circles[best_circle][2];
+      float diameter = 2.0f * radius;
+      estimated_z = estimateZPosition(diameter, frame.cols);
+
       // Draw the circle for visualization
       cv::circle(debug_frame, target_center, cvRound(circles[best_circle][2]),
                  cv::Scalar(255, 0, 0), 2);
       cv::circle(debug_frame, target_center, 3, cv::Scalar(0, 0, 255), -1);
 
       // Draw radius information
-      std::string radius_text =
-          "Radius: " + std::to_string(cvRound(circles[best_circle][2]));
+      std::string radius_text = "Radius: " + std::to_string(cvRound(circles[best_circle][2]));
       cv::putText(debug_frame, radius_text,
                   cv::Point(target_center.x + 10, target_center.y + 30),
                   cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 1);
 
-      std::cout << "Shape detection - Circle radius: "
-                << circles[best_circle][2] << std::endl;
+      std::cout << "Shape detection - Circle radius: " << circles[best_circle][2]
+                << "px, Distance: " << estimated_z << " cm" << std::endl;
     }
   }
 
@@ -476,9 +550,9 @@ void saveImage(const cv::Mat &image, const std::string &prefix) {
  * Display help information
  */
 void displayHelp() {
-  std::cout << "Headless Target Recognition - Command Line Options:"
+  std::cout << "Headless Target Recognition with Z-Position - Command Line Options:"
             << std::endl;
-  std::cout << "------------------------------------------------" << std::endl;
+  std::cout << "---------------------------------------------------------------" << std::endl;
   std::cout << "-i <file>   - Use image file instead of webcam" << std::endl;
   std::cout << "-c <id>     - Specify camera ID (default: 0)" << std::endl;
   std::cout << "-f <num>    - Number of frames to capture (default: 10)"

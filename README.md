@@ -5,7 +5,7 @@
 - [x] Include the kernel messages that result from the plugging in the of the usb missle launcher.
 - [ ] Describe changes made to the usb driver `usb-skeletion.c`
 - [ ] Describe the operation of the `launcher_fire.c` file.
-- [ ] Describe algorithm used to detect the target.
+- [x] Describe algorithm used to detect the target.
 
 
 # In your writeup, briefly explain how this Make process was configured to appropriately use a cross-compiler targeting the ARM architecture.
@@ -306,3 +306,187 @@ hid-generic 0003:2123:1010.0001: device has no listeners, quitting
 5. `usb 1-1: Manufacturer: Syntek` - The manufacturer is identified as Syntek.
 
 6. `hid-generic 0003:2123:1010.0001: device has no listeners, quitting` - This is expected since the device needs a specific driver.
+
+## Operation of Initial `launcher_fire.c`
+
+The code defines a set of command constants that correspond to different actions the missile launcher can perform, such as:
+
+- LAUNCHER_FIRE (`0x10`): Fires a dart/missile
+- LAUNCHER_STOP (`0x20`): Stops all movement
+- LAUNCHER_UP (`0x02`), DOWN (`0x01`), LEFT (`0x04`), RIGHT (`0x08`): Directional controls
+- Combined directions like UP_LEFT, DOWN_RIGHT, etc.
+
+The program relies on the Linux character device driver properly translating these simple commands into the appropriate USB control messages that the missile launcher hardware can understand.
+
+The main logic is implemented through:
+
+The `launcher_cmd()` function which:
+1. Takes a file descriptor and command as input
+2. Attempts to write the command to the device file
+3. Handles error conditions if the write fails
+4. Adds a 5-second delay after firing to allow the launcher to complete its firing sequence
+The `main()` function which:
+1. Opens the device file `/dev/launcher0` with read/write permissions
+2. Sets the command to LAUNCHER_FIRE (this is fixed, not user-controlled)
+3. Sends the fire command to the launcher
+4. Waits for a specified duration (500ms)
+5. Sends the stop command
+6. Closes the file descriptor
+
+This particular functionality is quite simple - it just fires the missile launcher once when executed. 
+
+## Algorithm to detect Target
+
+The system uses two detection methods, with one functioning as a fallback if the primary method fails:
+
+### 1. Primary Method: HSV Color Filtering
+
+This method detects targets based on their color:
+
+```cpp
+cv::Point detect_target_hsv(cv::Mat &frame, TargetColor target_color,
+                          bool &detected, float &estimated_z) {
+  // Convert the frame from BGR to HSV color space
+  cv::Mat hsv_frame;
+  cv::cvtColor(frame, hsv_frame, cv::COLOR_BGR2HSV);
+
+  // Set color thresholds based on selected target color
+  setup_color_thresholds(target_color, lower_thresh, upper_thresh);
+
+  // Create a binary mask for the selected color range
+  cv::Mat mask;
+  cv::inRange(hsv_frame, lower_thresh, upper_thresh, mask);
+  
+  // Find contours in the mask
+  std::vector<std::vector<cv::Point>> contours;
+  cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+  
+  // Calculate the center of the largest contour
+  cv::Moments moments = cv::moments(contours[largest_idx]);
+  target_center.x = int(moments.m10 / moments.m00);
+  target_center.y = int(moments.m01 / moments.m00);
+}
+```
+
+Example: For red targets, the system applies these HSV thresholds:
+```cpp
+lower = cv::Scalar(160, 100, 100);
+upper = cv::Scalar(179, 255, 255);
+```
+
+### 2. Fallback Method: Shape Detection
+
+If color-based detection fails, the system falls back to shape detection:
+
+```cpp
+cv::Point detect_target_shape(cv::Mat &frame, TargetColor target_color,
+                            bool &detected, float &estimated_z) {
+  // Convert to grayscale
+  cv::Mat gray;
+  cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+
+  // Apply Gaussian blur
+  cv::GaussianBlur(gray, gray, cv::Size(9, 9), 2, 2);
+
+  // Use Hough Circle Transform to detect circles
+  std::vector<cv::Vec3f> circles;
+  cv::HoughCircles(gray, circles, cv::HOUGH_GRADIENT, 1,
+                 gray.rows / 8, 100, 30, 10, 100);
+                 
+  // Find the circle closest to the image center
+  // Calculate distance from target to z-position
+}
+```
+
+### Z/Distance estimation
+
+This approach works by using the apparent size of detected objects to estimate their distance from the camera.
+
+We do this mainly by:
+1. Defining some Parameters and Constants
+   ```cpp
+   // Z-position (depth) estimation parameters
+   #define TARGET_ACTUAL_DIAMETER_CM 15.0  // Actual target diameter in cm
+   #define CAMERA_FOV_HORIZONTAL_DEG 60.0  // Camera field of view in degrees
+   #define MIN_TARGET_DISTANCE_CM 50.0     // Minimum expected target distance
+   #define MAX_TARGET_DISTANCE_CM 300.0    // Maximum expected target distance
+   #define FOCAL_LENGTH_PIXELS ((FB_WIDTH * 0.5) / tan((CAMERA_FOV_HORIZONTAL_DEG * 0.5) * M_PI / 180.0))
+   ```
+   These parameters calibrate the depth estimation algorithm and can be adjusted based on your specific setup.
+2. Creating a new function for estimating the z given the detected diameter of the target.
+   ```cpp
+   float estimate_z_position(double apparent_diameter_pixels) {
+   // Using the pinhole camera model: Z = (F * W) / P
+   // Where F is focal length in pixels, W is actual object size, P is apparent object size in pixels
+   if (apparent_diameter_pixels <= 0) {
+      return MAX_TARGET_DISTANCE_CM;  // Default to max distance if object is too small
+   }
+   
+   float estimated_distance = (FOCAL_LENGTH_PIXELS * TARGET_ACTUAL_DIAMETER_CM) / apparent_diameter_pixels;
+   
+   // Clamp the estimated distance to reasonable values
+   if (estimated_distance < MIN_TARGET_DISTANCE_CM) {
+      estimated_distance = MIN_TARGET_DISTANCE_CM;
+   } else if (estimated_distance > MAX_TARGET_DISTANCE_CM) {
+      estimated_distance = MAX_TARGET_DISTANCE_CM;
+   }
+   
+   return estimated_distance;
+   }
+   ```
+For optimal performance, we needed to calibrate these values:
+`TARGET_ACTUAL_DIAMETER_CM` - Measure actual target's diameter
+`CAMERA_FOV_HORIZONTAL_DEG` - Check camera's specifications
+The compensation factor in adjust_aim_for_depth() - You may need to adjust the 0.5f factor based on experimentation
+
+### Targeting Adjustments for Depth
+
+The system uses the estimated z-position to adjust targeting:
+
+```cpp
+int adjust_aim_for_depth(int launcher_fd, float target_z) {
+  // Skip adjustment for close targets
+  if (target_z <= 100.0f) {
+    return 0;
+  }
+  
+  // Calculate adjustment time - more adjustment for distant targets
+  int adjustment_ms = (int)((target_z - 100.0f) * 0.5f);
+  
+  if (adjustment_ms > 0) {
+    move_launcher(launcher_fd, LAUNCHER_UP);
+    delay_ms(adjustment_ms);
+    stop_launcher(launcher_fd);
+    return 0;
+  }
+}
+```
+
+Example: For a target at 200cm, the adjustment would be:
+- `adjustment_ms = (200 - 100) * 0.5 = 50`
+- The launcher would move UP for 50ms to compensate for gravity over this distance
+
+### Main Detection Loop
+
+The detection methods are integrated in the main loop:
+
+```cpp
+while (1) {
+  // Create a copy of the framebuffer data
+  cv::Mat frame_copy = frame.clone();
+
+  // Try HSV detection first
+  target_point = detect_target_hsv(frame_copy, SELECTED_TARGET, target_detected, target_z);
+
+  // If HSV detection fails, try shape-based detection
+  if (!target_detected) {
+    target_point = detect_target_shape(frame_copy, SELECTED_TARGET, target_detected, target_z);
+  }
+
+  if (target_detected) {
+    // Aim launcher at the target with z-position consideration
+    ret = aim_launcher(launcher_fd, LAUNCHER_CENTER_X, LAUNCHER_CENTER_Y,
+                       target_point.x, target_point.y, target_z);
+  }
+}
+```
