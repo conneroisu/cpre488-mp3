@@ -22,7 +22,7 @@
 #include <linux/uaccess.h>
 #include <linux/usb.h>
 #include <linux/mutex.h>
-#include "launcher_commands.h"
+#include "launcher-commands.h"
 
 /* Define these values to match your devices */
 #define USB_MISS_LAUNCH_VENDOR_ID LAUNCHER_VENDOR_ID
