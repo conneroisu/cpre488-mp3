@@ -2,7 +2,7 @@
 
 - [x] Explain how this Make process was configured to appropriately use a cross-compiler targeting the ARM architecture.
 - [x] Explanatory annotation of the boot messages that print as PetaLinux starts up. 
-- [ ] Include the kernel messages that result from the plugging in the of the usb missle launcher.
+- [x] Include the kernel messages that result from the plugging in the of the usb missle launcher.
 - [ ] Describe changes made to the usb driver `usb-skeletion.c`
 - [ ] Describe the operation of the `launcher_fire.c` file.
 - [ ] Describe algorithm used to detect the target.
@@ -282,3 +282,27 @@ Starting tcf-agent: OK
 ```
 Starting various system services: internet services daemon, system logging, and TCF (Target Communication Framework) agent.
 
+
+## Kernel Messages For USB Device
+
+> Note: This is prior to setup of the kernel object device driver.
+
+```bash
+avnet-digilent-zedboard-2020_1:~$ usb 1-1: new low-speed USB device number 2 using ci_hdrc
+usb 1-1: New USB device found, idVendor=2123, idProduct=1010, bcdDevice= 0.01
+usb 1-1: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+usb 1-1: Product: USB Missile Launcher
+usb 1-1: Manufacturer: Syntek
+hid-generic 0003:2123:1010.0001: device has no listeners, quitting
+```
+1. `usb 1-1: new low-speed USB device number 2 using ci_hdrc` - This indicates a new USB device connecting at the low-speed USB specification (1.5 Mbps) and is being assigned device number 2. The "ci_hdrc" refers to the USB host controller driver.
+
+2. `usb 1-1: New USB device found, idVendor=2123, idProduct=1010, bcdDevice= 0.01` - The system has identified the USB device with its vendor ID (2123) and product ID (1010). These unique identifiers tell the system what device is connected. The bcdDevice value (0.01) indicates the device's firmware/version number.
+
+3. `usb 1-1: New USB device strings: Mfr=1, Product=2, SerialNumber=0` - This shows that the device provides manufacturer and product string descriptors but no serial number.
+
+4. `usb 1-1: Product: USB Missile Launcher` - The product string identifies it as the USB Missile Launcher.
+
+5. `usb 1-1: Manufacturer: Syntek` - The manufacturer is identified as Syntek.
+
+6. `hid-generic 0003:2123:1010.0001: device has no listeners, quitting` - This is expected since the device needs a specific driver.
