@@ -18,10 +18,8 @@ BTN_VAL=0
 SW_VAL=0
 
 # Modes
-EXIT=0
 LED_PASS=0
 LED_INV_PASS=0
-ALL_LED=0
 
 # Functions
 # devmem syntax
@@ -44,7 +42,7 @@ set_mem $BTN_ADDR 0x1
 set_mem $SW_ADDR 0x1
 
 # Main loop
-while [ $EXIT -eq 0 ]
+while :
 do
     # Get buttons and switches
     get_mem $BTN_ADDR
@@ -53,27 +51,30 @@ do
     get_mem $SW_ADDR
     SW_VAL=$?
 
-    BTN_VAL=0x0
-
     # Set modes
-    EXIT=$(($(($BTN_VAL & 0x2))-eq0x2))
-    LED_PASS=$(($BTN_VAL-eq0x0))
-    LED_INV_PASS=$(($BTN_VAL-eq0x1))
+    # Note that tests when pass return exit code of 0
+    # [ ] is a test, result gets set to $?
+    # Also, BTN_VAL evaluated in a subshell for hex parsing.
 
-    # Mode precedence:
-    # 1: Exit, 2: Inv Passthrough, 3: Passthrough
-    if [ $EXIT -eq 1 ]
-    then
-        echo Exiting LED Fun!
+    # Check if no buttons are being pressed
+    [ $(($BTN_VAL)) -eq 0 ]
+    LED_PASS=$?
 
-    elif [ $LED_INV_PASS -eq 1 ]
+    # Check if one button is being pressed
+    [ $(($BTN_VAL)) -eq 1 ] || [ $(($BTN_VAL)) -eq 2 ] || [ $(($BTN_VAL)) -eq 4 ] || [ $(($BTN_VAL)) -eq 8 ] || [ $(($BTN_VAL)) -eq 12 ]
+    LED_INV_PASS=$?
+
+    if [ "$LED_PASS" -eq 0 ]
     then
-        echo Inv pass
-    elif [ $LED_PASS -eq 1 ]
+        LED_VAL=$(($SW_VAL))
+
+    elif [ "$LED_INV_PASS" -eq 0 ]
     then
-        echo Pass
+        LED_VAL=$((~$SW_VAL & 0xFF))
     else
-        echo No command given, which should not happen!
+        LED_VAL=0xFF
     fi
+
+    echo LED Val: $LED_VAL
 
 done
