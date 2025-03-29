@@ -36,7 +36,7 @@ static const struct usb_device_id miss_launch_table[] = {
 MODULE_DEVICE_TABLE(usb, miss_launch_table);
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Missile launcher for CPRE488 MP-3");
-MODULE_AUTHOR("Eastburn and Ohnesorge");
+MODULE_AUTHOR("Eastburn, Ohnesorge");
 
 
 /* Get a minor range for your devices from the usb maintainer */

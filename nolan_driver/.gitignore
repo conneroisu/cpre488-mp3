@@ -1,6 +1,5 @@
 !*
 .vscode/*
-.vscode
 *.symvers
 *.order
 *.ko
@@ -8,3 +7,6 @@
 *.mod.*
 *.o
 *.cmd
+
+# Allow c_cpp_properties.json
+!.vscode/c_cpp_properties.json
