@@ -172,6 +172,69 @@
         EOF
                 fi
 
+        # Create linux directory if it doesn't exist
+        mkdir -p $REPO_ROOT/linux
+
+        # Link the Nix-provided kernel source to the expected path
+        if [ ! -d "$REPO_ROOT/linux/linux-xlnx" ]; then
+          ln -sfn ${pkgs.linux.dev} "$REPO_ROOT/linux/linux-xlnx"
+          echo "Created symlink from Nix kernel source to $REPO_ROOT/linux/linux-xlnx"
+        fi
+
+        # Set cross-compile environment variable for ARM target
+        export CROSS_COMPILE=armv7l-unknown-linux-gnueabihf-
+        export ARCH=arm
+
+        # Create symlinks for cross compiler tools if they don't exist
+        if ! command -v arm-linux-gnueabihf-gcc &> /dev/null; then
+          mkdir -p $HOME/.local/bin
+          for tool in gcc ld ar as objdump objcopy strip; do
+            ln -sf "$(which armv7l-unknown-linux-gnueabihf-$tool)" "$HOME/.local/bin/arm-linux-gnueabihf-$tool" 2>/dev/null || true
+          done
+          export PATH="$HOME/.local/bin:$PATH"
+        fi
+
+        # Set kernel source directory environment variable
+        export NIX_KERNEL_DIR="${pkgs.linux.dev}"
+
+        # Generate .ccls file with dynamic kernel paths
+        KERNEL_SOURCE_DIR=$(echo ${pkgs.linux.dev}/lib/modules/*/source)
+        cat > $REPO_ROOT/.ccls << EOF
+          clang
+          %c -std=c11
+          %cpp -std=c++2a
+          %h %hpp --include=./Vitis/eclipse_workspace/TPG/hw/*.h
+          %h %hpp --include=./Vitis/eclipse_workspace/MP2-TPG/src/lib/**/*.h
+          %h %hpp --include=./Vitis/eclipse_workspace/TPG/zynq_fsbl/*.h
+          %h %hpp --include=./Vitis/eclipse_workspace/TPG/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/include/*.h
+          %h %hpp --include=./Vitis/eclipse_workspace/TPG/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/libsrc/**/**/*.h
+          %h %hpp --include=$KERNEL_SOURCE_DIR/include/**/*.h
+          %h %hpp --include=$KERNEL_SOURCE_DIR/include/linux/*.h
+          %h %hpp --include=$KERNEL_SOURCE_DIR/include/uapi/**/*.h
+          %h %hpp --include=$KERNEL_SOURCE_DIR/arch/arm/include/**/*.h
+
+          -Iinc
+          -DMACRO
+          -I./Vitis/eclipse_workspace/TPG/hw
+          -I./Vitis/eclipse_workspace/MP2-TPG/src/lib
+          -I./Vitis/eclipse_workspace/TPG/zynq_fsbl
+          -I./Vitis/eclipse_workspace/TPG/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/include
+          -I./Vitis/eclipse_workspace/TPG/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/libsrc
+
+          # Linux kernel headers for driver development
+          -I$KERNEL_SOURCE_DIR/include
+          -I$KERNEL_SOURCE_DIR/include/uapi
+          -I$KERNEL_SOURCE_DIR/include/linux
+          -I$KERNEL_SOURCE_DIR/include/asm-generic
+          -I$KERNEL_SOURCE_DIR/arch/arm/include
+          -I$KERNEL_SOURCE_DIR/arch/arm/include/generated
+          -D__KERNEL__
+          -DMODULE
+          EOF
+
+                    echo "Kernel source available at: $NIX_KERNEL_DIR"
+                    echo "Generated .ccls file with kernel include paths"
+
                 echo "Environment setup complete."
                 echo "Use 'build-launcher' to build the camera application."
                 echo "Use 'build-kernel-module' to build the kernel module (requires KERNEL_SRC to be set)."
@@ -362,7 +425,7 @@
           pkgs.graphviz
         ];
 
-        packages = [
+        packages = with pkgs; [
           # Helper scripts for the environment
           setupEnvScript
           createMakefileScript
@@ -378,72 +441,6 @@
             $EDITOR $REPO_ROOT/flake.nix
           '')
 
-
-                    # Create linux directory if it doesn't exist
-                    mkdir -p $REPO_ROOT/linux
-
-                    # Link the Nix-provided kernel source to the expected path
-                    if [ ! -d "$REPO_ROOT/linux/linux-xlnx" ]; then
-                      ln -sfn ${pkgs.linux.dev} "$REPO_ROOT/linux/linux-xlnx"
-                      echo "Created symlink from Nix kernel source to $REPO_ROOT/linux/linux-xlnx"
-                    fi
-
-                    # Set cross-compile environment variable for ARM target
-                    export CROSS_COMPILE=armv7l-unknown-linux-gnueabihf-
-                    export ARCH=arm
-
-                    # Create symlinks for cross compiler tools if they don't exist
-                    if ! command -v arm-linux-gnueabihf-gcc &> /dev/null; then
-                      mkdir -p $HOME/.local/bin
-                      for tool in gcc ld ar as objdump objcopy strip; do
-                        ln -sf "$(which armv7l-unknown-linux-gnueabihf-$tool)" "$HOME/.local/bin/arm-linux-gnueabihf-$tool" 2>/dev/null || true
-                      done
-                      export PATH="$HOME/.local/bin:$PATH"
-                    fi
-
-                    # Set kernel source directory environment variable
-                    export NIX_KERNEL_DIR="${pkgs.linux.dev}"
-
-                    # Generate .ccls file with dynamic kernel paths
-                    KERNEL_SOURCE_DIR=$(echo ${pkgs.linux.dev}/lib/modules/*/source)
-                    cat > $REPO_ROOT/.ccls << EOF
-          clang
-          %c -std=c11
-          %cpp -std=c++2a
-          %h %hpp --include=./Vitis/eclipse_workspace/TPG/hw/*.h
-          %h %hpp --include=./Vitis/eclipse_workspace/MP2-TPG/src/lib/**/*.h
-          %h %hpp --include=./Vitis/eclipse_workspace/TPG/zynq_fsbl/*.h
-          %h %hpp --include=./Vitis/eclipse_workspace/TPG/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/include/*.h
-          %h %hpp --include=./Vitis/eclipse_workspace/TPG/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/libsrc/**/**/*.h
-          %h %hpp --include=$KERNEL_SOURCE_DIR/include/**/*.h
-          %h %hpp --include=$KERNEL_SOURCE_DIR/include/linux/*.h
-          %h %hpp --include=$KERNEL_SOURCE_DIR/include/uapi/**/*.h
-          %h %hpp --include=$KERNEL_SOURCE_DIR/arch/arm/include/**/*.h
-
-          -Iinc
-          -DMACRO
-          -I./Vitis/eclipse_workspace/TPG/hw
-          -I./Vitis/eclipse_workspace/MP2-TPG/src/lib
-          -I./Vitis/eclipse_workspace/TPG/zynq_fsbl
-          -I./Vitis/eclipse_workspace/TPG/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/include
-          -I./Vitis/eclipse_workspace/TPG/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/libsrc
-
-          # Linux kernel headers for driver development
-          -I$KERNEL_SOURCE_DIR/include
-          -I$KERNEL_SOURCE_DIR/include/uapi
-          -I$KERNEL_SOURCE_DIR/include/linux
-          -I$KERNEL_SOURCE_DIR/include/asm-generic
-          -I$KERNEL_SOURCE_DIR/arch/arm/include
-          -I$KERNEL_SOURCE_DIR/arch/arm/include/generated
-          -D__KERNEL__
-          -DMODULE
-          EOF
-
-                    echo "Kernel source available at: $NIX_KERNEL_DIR"
-                    echo "Generated .ccls file with kernel include paths"
-        '';
-
-        packages = with pkgs; [
           # Development tools
           alejandra
           nixd
