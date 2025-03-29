@@ -22,7 +22,16 @@
 #include <linux/uaccess.h>
 #include <linux/usb.h>
 #include <linux/mutex.h>
-#include "launcher-commands.h"
+#define LAUNCHER_VENDOR_ID              0x2123
+#define LAUNCHER_PRODUCT_ID             0x1010
+
+#define LAUNCHER_NODE                   "launcher"
+#define LAUNCHER_CTRL_BUFFER_SIZE       8
+#define LAUNCHER_CTRL_REQUEST_TYPE      0x21
+#define LAUNCHER_CTRL_REQUEST           0x09
+#define LAUNCHER_CTRL_VALUE             0x0        
+#define LAUNCHER_CTRL_INDEX             0x0
+#define LAUNCHER_CTRL_COMMAND_PREFIX    0x02
 
 /* Define these values to match your devices */
 #define USB_MISS_LAUNCH_VENDOR_ID LAUNCHER_VENDOR_ID
