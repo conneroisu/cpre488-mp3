@@ -1,9 +1,9 @@
 obj-m := launcher-driver.o
+SRC := $(shell pwd)
 
-MY_CFLAGS += -g -DDEBUG
+MY_CFLAGS += -g -DDEBUG -I $(SRC) 
 ccflags-y += ${MY_CFLAGS}
 
-SRC := $(shell pwd)
 
 all:
 	$(MAKE) -C $(KERNEL_SRC) M=$(SRC)
