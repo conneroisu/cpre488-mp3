@@ -22,7 +22,6 @@
 #include <linux/uaccess.h>
 #include <linux/usb.h>
 #include <linux/mutex.h>
-
 #define LAUNCHER_VENDOR_ID              0x2123
 #define LAUNCHER_PRODUCT_ID             0x1010
 
@@ -234,8 +233,12 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
         goto error;
     }
 
-    buf = usb_alloc_coherent(dev->udev, writesize, GFP_KERNEL,
-                             &urb->transfer_dma);
+    // Allocate space for buffer
+    buf = kmalloc(writesize, GFP_KERNEL);
+
+    // Zeroize the newly allocated space.
+    memset(&buf, 0, writesize);
+
     if (!buf)
     {
         retval = -ENOMEM;
@@ -288,12 +291,12 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
 error:
     if (urb)
     {
-        usb_free_coherent(dev->udev, writesize, buf, urb->transfer_dma);
         usb_free_urb(urb);
     }
     up(&dev->limit_sem);
 
 exit:
+    kfree(buf);
     return retval;
 }
 
