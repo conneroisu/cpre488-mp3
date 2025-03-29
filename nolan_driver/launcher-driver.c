@@ -271,7 +271,7 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
                              0); // TODO: Pick a better timeout value, this waits forever as of now.
 
     mutex_unlock(&dev->io_mutex);
-    if (retval)
+    if (retval < 0)
     {
         dev_err(&dev->interface->dev,
                 "%s - ERROR: Failed writing control URB. Error Code: %d\n",
