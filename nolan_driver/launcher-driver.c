@@ -287,7 +287,6 @@ error:
     up(&dev->limit_sem);
 
 exit:
-
     kfree(buf);
     return retval;
 }
