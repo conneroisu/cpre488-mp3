@@ -1,7 +1,7 @@
 obj-m := launcher-driver.o
 SRC := $(shell pwd)
 
-MY_CFLAGS += -g -DDEBUG -I $(SRC) 
+MY_CFLAGS += -g -DDEBUG
 ccflags-y += ${MY_CFLAGS}
 
 
