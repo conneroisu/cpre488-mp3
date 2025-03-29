@@ -1,8 +1,0 @@
-recipe-sysroot-native/usr/bin/autom4te
-recipe-sysroot-native/usr/bin/autoconf
-recipe-sysroot-native/usr/bin/ifnames
-recipe-sysroot-native/usr/bin/autoupdate
-recipe-sysroot-native/usr/bin/autoscan
-recipe-sysroot-native/usr/bin/autoheader
-recipe-sysroot-native/usr/bin/autoreconf
-recipe-sysroot-native/usr/share/autoconf/autom4te.cfg

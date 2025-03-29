@@ -1,8 +1,0 @@
-prefix=${pcfiledir}/../../../usr
-exec_prefix=${pcfiledir}/../../../usr
-includedir=${pcfiledir}/../../../usr/include
- 
-Name: DRI2Proto
-Description: DRI2 extension headers
-Version: 2.8
-Cflags: -I${includedir}

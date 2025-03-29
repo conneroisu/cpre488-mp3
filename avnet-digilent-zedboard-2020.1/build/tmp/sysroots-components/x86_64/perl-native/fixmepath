@@ -1,6 +1,0 @@
-recipe-sysroot-native/usr/lib/perl5/config.sh
-recipe-sysroot-native/usr/lib/perl5/5.30.0/x86_64-linux/CORE/config.h
-recipe-sysroot-native/usr/lib/perl5/5.30.0/x86_64-linux/Config_heavy.pl
-recipe-sysroot-native/usr/lib/perl5/5.30.0/x86_64-linux/.packlist
-recipe-sysroot-native/usr/lib/perl5/5.30.0/x86_64-linux/Config.pm
-recipe-sysroot-native/usr/lib/perl5/5.30.0/Config.pm

@@ -1,8 +1,0 @@
-recipe-sysroot-native/bin/cpio
-recipe-sysroot-native/usr/sbin/rmt
-recipe-sysroot-native/sysroot-providers/cpio-native
-recipe-sysroot-native/sysroot-providers/
-recipe-sysroot-native/usr/share/
-recipe-sysroot-native/usr/sbin/
-recipe-sysroot-native/usr/
-recipe-sysroot-native/bin/

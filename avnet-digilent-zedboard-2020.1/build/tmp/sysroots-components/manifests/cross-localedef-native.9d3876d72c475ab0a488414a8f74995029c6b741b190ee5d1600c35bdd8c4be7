@@ -1,6 +1,0 @@
-recipe-sysroot-native/usr/bin/cross-localedef-hardlink
-recipe-sysroot-native/usr/bin/cross-localedef
-recipe-sysroot-native/sysroot-providers/cross-localedef-native
-recipe-sysroot-native/sysroot-providers/
-recipe-sysroot-native/usr/bin/
-recipe-sysroot-native/usr/

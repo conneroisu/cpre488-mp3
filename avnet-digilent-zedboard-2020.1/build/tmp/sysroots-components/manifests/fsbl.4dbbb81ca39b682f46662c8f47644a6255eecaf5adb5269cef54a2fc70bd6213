@@ -1,6 +1,0 @@
-recipe-sysroot/boot/fsbl.bif
-recipe-sysroot/boot/fsbl-AUTOINC+6cbb920f4d.elf
-recipe-sysroot/sysroot-providers/fsbl
-recipe-sysroot/sysroot-providers/virtual_fsbl
-recipe-sysroot/sysroot-providers/
-recipe-sysroot/boot/

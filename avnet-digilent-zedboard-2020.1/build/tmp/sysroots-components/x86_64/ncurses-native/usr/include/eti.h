@@ -1,1 +1,0 @@
-ncurses/eti.h

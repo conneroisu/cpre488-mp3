@@ -1,8 +1,0 @@
-prefix=${pcfiledir}/../../../usr
-exec_prefix=${pcfiledir}/../../../usr
-includedir=${pcfiledir}/../../../usr/include
- 
-Name: XF86DGAProto
-Description: XF86DGA extension headers
-Version: 2.1
-Cflags: -I${includedir}

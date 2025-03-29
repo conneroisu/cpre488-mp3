@@ -1,8 +1,0 @@
-prefix=${pcfiledir}/../../../usr
-exec_prefix=${pcfiledir}/../../../usr
-includedir=${pcfiledir}/../../../usr/include
- 
-Name: KBProto
-Description: KB extension headers
-Version: 1.0.7
-Cflags: -I${includedir}

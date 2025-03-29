@@ -1,4 +1,0 @@
-recipe-sysroot-native/usr/bin/crossscripts/xslt-config
-recipe-sysroot-native/usr/bin/xslt-config
-recipe-sysroot-native/usr/include/libxslt/xsltconfig.h
-recipe-sysroot-native/usr/lib/xsltConf.sh

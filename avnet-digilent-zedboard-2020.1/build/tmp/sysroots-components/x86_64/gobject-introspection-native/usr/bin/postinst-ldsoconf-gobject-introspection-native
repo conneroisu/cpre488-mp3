@@ -1,4 +1,0 @@
-#!/bin/sh
-mkdir -p FIXMESTAGINGDIRHOST/etc
-echo FIXMESTAGINGDIRHOST/usr/lib >> FIXMESTAGINGDIRHOST/etc/ld.so.conf
-echo FIXMESTAGINGDIRHOST/usr/lib >> FIXMESTAGINGDIRHOST/etc/ld.so.conf

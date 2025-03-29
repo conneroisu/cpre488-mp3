@@ -1,6 +1,0 @@
-recipe-sysroot-native/usr/libexec/mtd-utils/fs_run_all.sh
-recipe-sysroot-native/usr/libexec/mtd-utils/runubitests.sh
-recipe-sysroot-native/usr/libexec/mtd-utils/ubi-stress-test.sh
-recipe-sysroot-native/usr/libexec/mtd-utils/fs_help_all.sh
-recipe-sysroot-native/usr/libexec/mtd-utils/fs_stress00.sh
-recipe-sysroot-native/usr/libexec/mtd-utils/fs_stress01.sh
