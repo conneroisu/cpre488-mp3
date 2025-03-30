@@ -9,6 +9,7 @@ INHIBIT_PACKAGE_STRIP = "1"
 
 SRC_URI = "file://Makefile \
            file://launcher-driver.c \
+           file://launcher-commands.h \
 	   file://COPYING \
           "
 

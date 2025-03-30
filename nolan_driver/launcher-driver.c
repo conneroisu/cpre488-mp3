@@ -22,16 +22,7 @@
 #include <linux/uaccess.h>
 #include <linux/usb.h>
 #include <linux/mutex.h>
-#define LAUNCHER_VENDOR_ID              0x2123
-#define LAUNCHER_PRODUCT_ID             0x1010
-
-#define LAUNCHER_NODE                   "launcher"
-#define LAUNCHER_CTRL_BUFFER_SIZE       8
-#define LAUNCHER_CTRL_REQUEST_TYPE      0x21
-#define LAUNCHER_CTRL_REQUEST           0x09
-#define LAUNCHER_CTRL_VALUE             0x0        
-#define LAUNCHER_CTRL_INDEX             0x0
-#define LAUNCHER_CTRL_COMMAND_PREFIX    0x02
+#include "launcher-commands.h"
 
 /* Define these values to match your devices */
 #define USB_MISS_LAUNCH_VENDOR_ID LAUNCHER_VENDOR_ID
@@ -179,9 +170,14 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
 {
     struct usb_miss_launch *dev;
     int retval = 0;
-    struct urb *urb = NULL;
-    char *buf = NULL;
-    size_t writesize = min(count, (size_t)MAX_TRANSFER);
+    char *user_data_buf = NULL;
+    char *command_buf = NULL;
+
+    // We only write a single byte at a time.
+    ssize_t user_data_size = 1;
+
+    // A command to the turret has to be 8 bytes
+    ssize_t command_size = 8;
 
     pr_alert("Attempting a write operation!\n");
 
@@ -225,47 +221,37 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
     if (retval < 0)
         goto error;
 
-    /* create a urb, and a buffer for it, and copy the data to the urb */
-    urb = usb_alloc_urb(0, GFP_KERNEL);
-    if (!urb)
-    {
-        retval = -ENOMEM;
-        goto error;
-    }
 
-    // Allocate space for buffer
-    buf = kmalloc(writesize, GFP_KERNEL);
+    // Allocate space for the buffers
+    user_data_buf = kmalloc(user_data_size, GFP_KERNEL);
+    command_buf = kmalloc(command_size, GFP_KERNEL);
 
     // Zeroize the newly allocated space.
-    // memset(buf, 0, writesize);
-    int i = 0;
-    for(i = 0; i < writesize; ++i)
-    {
-        buf[i] = (char) 0;
-    }
+    memset(user_data_buf, 0, user_data_size);
+    memset(command_buf, 0, command_size);
 
-    if (!buf)
+    if (!user_data_buf || !command_buf)
     {
         retval = -ENOMEM;
         goto error;
     }
 
-    if (copy_from_user(buf, user_buffer, writesize))
+    if (copy_from_user(user_data_buf, user_buffer, user_data_size))
     {
         retval = -EFAULT;
         goto error;
     }
 
-    pr_err("Value Read From User: %d\n", *buf);
-
-    /* this lock makes sure we don't submit URBs to gone devices */
-    mutex_lock(&dev->io_mutex);
     if (!dev->interface)
     { /* disconnect() was called */
-        mutex_unlock(&dev->io_mutex);
         retval = -ENODEV;
         goto error;
     }
+
+    // Format the command buffer.
+    // byte 0: command prefix (0x2), byte 1: command, others: 0x0
+    command_buf[0] = LAUNCHER_CTRL_COMMAND_PREFIX;
+    command_buf[1] = user_data_buf[0];
 
     retval = usb_control_msg(dev->udev,
                              usb_sndctrlpipe(dev->udev, 0),
@@ -273,11 +259,10 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
                              LAUNCHER_CTRL_REQUEST_TYPE,
                              LAUNCHER_CTRL_VALUE,
                              LAUNCHER_CTRL_INDEX,
-                             buf,
-                             writesize,
-                             0); // TODO: Pick a better timeout value, this waits forever as of now.
+                             command_buf,
+                             command_size,
+                             1000);
 
-    mutex_unlock(&dev->io_mutex);
     if (retval < 0)
     {
         dev_err(&dev->interface->dev,
@@ -286,24 +271,15 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
         goto error;
     }
 
-    /*
-     * release our reference to this urb, the USB core will eventually free
-     * it entirely
-     */
-    usb_free_urb(urb);
-
     pr_alert("Finished a write operation!\n");
 
-    return writesize;
+    return retval;
 error:
-    if (urb)
-    {
-        usb_free_urb(urb);
-    }
     up(&dev->limit_sem);
 
 exit:
-    kfree(buf);
+    kfree(user_data_buf);
+    kfree(command_buf);
     return retval;
 }
 
