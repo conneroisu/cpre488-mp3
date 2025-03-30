@@ -43,6 +43,15 @@
       # Cross-compilation toolchain for ARM (ZedBoard)
       armToolchain = pkgs.pkgsCross.armv7l-hf-multiplatform.buildPackages;
 
+      # Custom OpenCV with GUI support
+      opencvWithGUI = pkgs.opencv4.override {
+        enableGtk3 = true; # Enable GTK3 support for GUI
+        enableGStreamer = true; # Enable GStreamer support
+        enableFfmpeg = true; # Enable FFmpeg support
+        enableTbb = true; # Thread Building Blocks for performance
+        enableCuda = false; # Disable CUDA to avoid dependencies
+      };
+
       # Helper script for SSH to ZedBoard
       zedboardSshScript = script "zedboard-ssh" ''
         if [ -z "$1" ]; then
@@ -212,6 +221,7 @@
           %h %hpp --include=$KERNEL_SOURCE_DIR/include/linux/*.h
           %h %hpp --include=$KERNEL_SOURCE_DIR/include/uapi/**/*.h
           %h %hpp --include=$KERNEL_SOURCE_DIR/arch/arm/include/**/*.h
+          %h %hpp --include=${opencvWithGUI}/include
 
           -Iinc
           -DMACRO
@@ -220,6 +230,7 @@
           -I./Vitis/eclipse_workspace/TPG/zynq_fsbl
           -I./Vitis/eclipse_workspace/TPG/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/include
           -I./Vitis/eclipse_workspace/TPG/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/libsrc
+          -I${opencvWithGUI}/include
 
           # Linux kernel headers for driver development
           -I$KERNEL_SOURCE_DIR/include
@@ -352,6 +363,226 @@
                 chmod +x $REPO_ROOT/LEDfun.sh
                 echo "LED control script created at $REPO_ROOT/LEDfun.sh"
       '';
+
+      # Script to create a headless OpenCV example that doesn't require GUI support
+      createHeadlessOpenCVScript = script "create-headless-opencv" ''
+                export REPO_ROOT=$(git rev-parse --show-toplevel)
+
+                cat > $REPO_ROOT/headless_detector.cpp << 'EOF'
+        #include <opencv2/opencv.hpp>
+        #include <iostream>
+        #include <vector>
+        #include <chrono>
+        #include <thread>
+        #include <fstream>
+
+        // Target parameters
+        #define TARGET_ACTUAL_DIAMETER_CM 19.0f
+        #define CAMERA_FOCAL_LENGTH_MM 3.6f
+        #define CAMERA_SENSOR_WIDTH_MM 4.8f
+
+        // Simulated launcher commands
+        #define CMD_UP    0x01
+        #define CMD_DOWN  0x02
+        #define CMD_LEFT  0x04
+        #define CMD_RIGHT 0x08
+        #define CMD_FIRE  0x10
+        #define CMD_STOP  0x20
+
+        // Detection result struct
+        struct DetectionResult {
+            cv::Point2f center;
+            float radius;
+            float distance;
+            float confidence;
+            int64_t timestamp;
+        };
+
+        // Main detection function - doesn't use any GUI components
+        DetectionResult detectTarget(const cv::Mat& frame,
+                                     const cv::Scalar& hsvLower,
+                                     const cv::Scalar& hsvUpper,
+                                     const cv::Scalar& hsvLower2,
+                                     const cv::Scalar& hsvUpper2,
+                                     float focalLengthPixels) {
+
+            DetectionResult result;
+            result.center = cv::Point2f(frame.cols / 2, frame.rows / 2);
+            result.radius = 0;
+            result.distance = 0;
+            result.confidence = 0;
+            result.timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now().time_since_epoch()).count();
+
+            // Convert to HSV color space
+            cv::Mat hsvFrame;
+            cv::cvtColor(frame, hsvFrame, cv::COLOR_BGR2HSV);
+
+            // Threshold the image using both ranges
+            cv::Mat mask1, mask2, mask;
+            cv::inRange(hsvFrame, hsvLower, hsvUpper, mask1);
+            cv::inRange(hsvFrame, hsvLower2, hsvUpper2, mask2);
+            cv::bitwise_or(mask1, mask2, mask);
+
+            // Apply morphological operations
+            cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5));
+            cv::morphologyEx(mask, mask, cv::MORPH_OPEN, element);
+            cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, element);
+
+            // Find contours
+            std::vector<std::vector<cv::Point>> contours;
+            std::vector<cv::Vec4i> hierarchy;
+            cv::findContours(mask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+            // Find the best contour
+            float bestConfidence = 0;
+            for (size_t i = 0; i < contours.size(); i++) {
+                // Filter small contours
+                double area = cv::contourArea(contours[i]);
+                if (area < 100) continue;
+
+                // Fit circle
+                cv::Point2f center;
+                float radius;
+                cv::minEnclosingCircle(contours[i], center, radius);
+
+                // Calculate circularity
+                double perimeter = cv::arcLength(contours[i], true);
+                double circularity = 4 * M_PI * area / (perimeter * perimeter);
+
+                // Filter based on circularity
+                if (circularity < 0.7) continue;
+
+                // Estimate distance
+                float distance = TARGET_ACTUAL_DIAMETER_CM * focalLengthPixels / (2 * radius);
+
+                // Calculate confidence
+                float confidence = circularity * std::min(1.0f, radius / 30.0f);
+
+                if (confidence > bestConfidence) {
+                    bestConfidence = confidence;
+                    result.center = center;
+                    result.radius = radius;
+                    result.distance = distance;
+                    result.confidence = confidence;
+                }
+            }
+
+            return result;
+        }
+
+        // Save results to a CSV file for analysis
+        void saveResultToFile(const DetectionResult& result, const std::string& filename) {
+            bool fileExists = std::ifstream(filename).good();
+
+            std::ofstream file(filename, std::ios::app);
+            if (!file.is_open()) {
+                std::cerr << "Failed to open output file" << std::endl;
+                return;
+            }
+
+            // Write header if new file
+            if (!fileExists) {
+                file << "timestamp,x,y,radius,distance,confidence\n";
+            }
+
+            // Write data
+            file << result.timestamp << ","
+                << result.center.x << ","
+                << result.center.y << ","
+                << result.radius << ","
+                << result.distance << ","
+                << result.confidence << "\n";
+
+            file.close();
+        }
+
+        // Main function
+        int main(int argc, char** argv) {
+            // Parse command line arguments
+            std::string outputFile = "detection_results.csv";
+            if (argc > 1) {
+                outputFile = argv[1];
+            }
+
+            // Open camera
+            cv::VideoCapture cap(0);
+            if (!cap.isOpened()) {
+                std::cerr << "Failed to open camera" << std::endl;
+                return -1;
+            }
+
+            // Set camera properties
+            cap.set(cv::CAP_PROP_FRAME_WIDTH, 640);
+            cap.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
+
+            // Calculate focal length in pixels
+            int frameWidth = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+            int frameHeight = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+            float sensorWidthPixels = frameWidth;
+            float focalLengthMm = CAMERA_FOCAL_LENGTH_MM;
+            float sensorWidthMm = CAMERA_SENSOR_WIDTH_MM;
+            float focalLengthPixels = (focalLengthMm / sensorWidthMm) * sensorWidthPixels;
+
+            // Set color thresholds for red color (default)
+            cv::Scalar hsvLower(0, 100, 100);
+            cv::Scalar hsvUpper(10, 255, 255);
+            cv::Scalar hsvLower2(160, 100, 100);
+            cv::Scalar hsvUpper2(179, 255, 255);
+
+            std::cout << "Starting headless target detection..." << std::endl;
+            std::cout << "Results will be saved to " << outputFile << std::endl;
+            std::cout << "Press Ctrl+C to stop" << std::endl;
+
+            // Main loop
+            while (true) {
+                // Read frame
+                cv::Mat frame;
+                if (!cap.read(frame)) {
+                    std::cerr << "Failed to read frame" << std::endl;
+                    break;
+                }
+
+                // Detect target
+                DetectionResult result = detectTarget(frame, hsvLower, hsvUpper,
+                                                     hsvLower2, hsvUpper2,
+                                                     focalLengthPixels);
+
+                // Log results
+                if (result.confidence > 0.5) {
+                    std::cout << "Target detected! Distance: " << result.distance
+                              << " cm, Confidence: " << result.confidence << std::endl;
+
+                    // Save to file
+                    saveResultToFile(result, outputFile);
+                } else {
+                    std::cout << "No target detected" << std::endl;
+                }
+
+                // Wait a bit to avoid too many detections
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            }
+
+            return 0;
+        }
+        EOF
+
+                cat > $REPO_ROOT/build_headless.sh << 'EOF'
+        #!/bin/bash
+        export REPO_ROOT=$(git rev-parse --show-toplevel)
+        cd $REPO_ROOT
+
+        $CXX -std=c++14 headless_detector.cpp -o headless_detector \
+          $(pkg-config --cflags --libs opencv4)
+
+        echo "Headless OpenCV detector built successfully."
+        echo "Run with: ./headless_detector [output_file.csv]"
+        EOF
+
+                chmod +x $REPO_ROOT/build_headless.sh
+                echo "Headless OpenCV detector created at $REPO_ROOT/headless_detector.cpp"
+                echo "Build script created at $REPO_ROOT/build_headless.sh"
+      '';
     in {
       devShells.default = pkgs.mkShell {
         shellHook = ''
@@ -359,7 +590,7 @@
           export CC=${pkgs.gcc}/bin/gcc
           export CXX=${pkgs.gcc}/bin/g++
           export CROSS_COMPILE=${armToolchain.gcc}/bin/arm-linux-gnueabihf-
-          export PKG_CONFIG_PATH=${pkgs.opencv4}/lib/pkgconfig:$PKG_CONFIG_PATH
+          export PKG_CONFIG_PATH=${opencvWithGUI}/lib/pkgconfig:$PKG_CONFIG_PATH
 
           # Display welcome message
           echo "=== CPRE488 MP3 USB Launcher Development Environment ==="
@@ -373,6 +604,7 @@
           echo "  create-bootbin    - Create BOOT.BIN (set PETALINUX_DIR first)"
           echo "  zedboard-ssh      - SSH to ZedBoard"
           echo "  zedboard-copy     - Copy files to ZedBoard"
+          echo "  create-headless-opencv - Create headless OpenCV app (no GUI needed)"
           echo "  format            - Format C/C++ code"
           echo "  dx                - Edit flake.nix"
           echo "=================================================="
@@ -394,8 +626,14 @@
           armToolchain.gcc
           armToolchain.binutils
 
-          # OpenCV and image processing
-          pkgs.opencv4
+          # OpenCV with GUI support
+          opencvWithGUI
+
+          # GUI dependencies
+          pkgs.gtk3
+          pkgs.glib
+          pkgs.gst_all_1.gstreamer
+          pkgs.gst_all_1.gst-libav
 
           # USB development
           pkgs.libusb1
@@ -435,6 +673,7 @@
           createBootBinScript
           zedboardSshScript
           zedboardCopyScript
+          createHeadlessOpenCVScript
 
           # Original scripts
           (script "dx" ''
@@ -499,6 +738,15 @@
             export REPO_ROOT=$(git rev-parse --show-toplevel) # needed
             # format all files with clang-format
             find $REPO_ROOT -type f -name '*.c' -o -name '*.cpp' -o -name '*.h' -exec clang-format -i --verbose {} \;
+          '')
+          (script "run-headless-opencv" ''
+            export REPO_ROOT=$(git rev-parse --show-toplevel)
+            if [ ! -f "$REPO_ROOT/headless_detector" ]; then
+              echo "Building headless detector first..."
+              $REPO_ROOT/build_headless.sh
+            fi
+            echo "Running headless OpenCV detector..."
+            $REPO_ROOT/headless_detector "$@"
           '')
         ];
       };
