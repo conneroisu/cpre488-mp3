@@ -6,6 +6,10 @@ Autonomous Turret
 
 ---
 
-NIX Make file section?
+## Dev Env
+
+- Docker Powered Petalinux Tools
 
 ---
+
+
