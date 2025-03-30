@@ -1,0 +1,27 @@
+# Makefile to build launcher_driver.ko and control applications
+
+# Kernel module configuration
+obj-m += launcher_driver.o
+KDIR := ../linux/linux-xlnx/
+PWD := $(shell pwd)
+
+CC := $(CROSS_COMPILE)gcc
+
+BIN = launcher_fire launcher-fire-buttons
+SOURCES = $(BIN:=.c)
+
+all: modules $(BIN)
+
+modules:
+	$(MAKE) -C $(KDIR) M=${shell pwd} modules
+
+launcher_fire: launcher_fire.c
+	$(CC) $(CFLAGS) $< -o $@
+
+launcher-fire-buttons: launcher-fire-buttons.c
+	$(CC) $(CFLAGS) $< -o $@
+
+clean:
+	-$(MAKE) -C $(KDIR) M=${shell pwd} clean || true
+	-rm -f $(BIN) || true
+	-rm -f *.o *.ko *.mod.{c,o} modules.order Module.symvers || true
