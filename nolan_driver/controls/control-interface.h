@@ -41,9 +41,9 @@ typedef enum buttons
 
 gpio_addr_maps_t init_interface();
 
-uint32_t* get_button_states(gpio_addr_maps_t map);
+uint32_t get_button_states(gpio_addr_maps_t map);
 
-uint32_t* get_switch_states(gpio_addr_maps_t map);
+uint32_t get_switch_states(gpio_addr_maps_t map);
 
 int button_pressed(t_buttons button, uint32_t state);
 

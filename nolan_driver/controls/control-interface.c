@@ -1,4 +1,4 @@
-#include "control_interface.h"
+#include "control-interface.h"
 #define DREF_REG(reg_addr, offset) (volatile uint32_t*) ((uint32_t))
 
 gpio_addr_maps_t init_interface()
@@ -42,12 +42,12 @@ gpio_addr_maps_t init_interface()
 	return map;
 }
 
-uint32_t* get_button_states(gpio_addr_maps_t map)
+uint32_t get_button_states(gpio_addr_maps_t map)
 {
 	return map.button_addr[0];
 }
 
-uint32_t* get_switch_states(gpio_addr_maps_t map)
+uint32_t get_switch_states(gpio_addr_maps_t map)
 {
 	return map.sw_addr[0];
 }
