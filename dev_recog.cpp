@@ -1,9 +1,10 @@
 /**
  * optimized_recognition.cpp
  *
- * Optimized version of target recognition system without GUI dependencies.
- * Improved color detection and target tracking with better Z-position
- * estimation. Support for multiple target colors with adaptive thresholding.
+ * Optimized version of target recognition system without GUI
+ * dependencies. Improved color detection and target tracking with
+ * better Z-position estimation. Support for multiple target colors
+ * with adaptive thresholding.
  */
 
 #include <algorithm>
@@ -58,11 +59,14 @@ int g_historyLength = 5; // Number of frames to keep for smoothing
 
 // Z-position (depth) estimation parameters
 #define TARGET_ACTUAL_DIAMETER_CM 15.0 // Actual target diameter in cm
-#define CAMERA_FOV_HORIZONTAL_DEG 60.0 // Camera field of view in degrees
-#define DEFAULT_FRAME_WIDTH 640        // Default frame width in pixels
-#define DEFAULT_FRAME_HEIGHT 480       // Default frame height in pixels
-#define MIN_TARGET_DISTANCE_CM 30.0    // Minimum expected target distance
-#define MAX_TARGET_DISTANCE_CM 500.0   // Maximum expected target distance
+#define CAMERA_FOV_HORIZONTAL_DEG                                    \
+  60.0                           // Camera field of view in degrees
+#define DEFAULT_FRAME_WIDTH 640  // Default frame width in pixels
+#define DEFAULT_FRAME_HEIGHT 480 // Default frame height in pixels
+#define MIN_TARGET_DISTANCE_CM                                       \
+  30.0 // Minimum expected target distance
+#define MAX_TARGET_DISTANCE_CM                                       \
+  500.0 // Maximum expected target distance
 
 // Output directory for saved images
 #define OUTPUT_DIR "output/"
@@ -123,7 +127,9 @@ public:
     return sumZ / zHistory.size();
   }
 
-  bool isTracking() const { return !history.empty() || hasValidPoint; }
+  bool isTracking() const {
+    return !history.empty() || hasValidPoint;
+  }
 
   void reset() {
     history.clear();
@@ -133,25 +139,39 @@ public:
 };
 
 // Function Prototypes
-void setupColorThresholds(TargetColor color, cv::Scalar &lowerPrimary,
-                          cv::Scalar &upperPrimary, cv::Scalar &lowerSecondary,
-                          cv::Scalar &upperSecondary, bool &useTwoRanges);
-cv::Point detectTargetHSV(cv::Mat &frame, cv::Mat &debug_frame,
-                          TargetColor target_color, bool &detected,
-                          float &estimated_z, bool adaptiveThreshold);
-cv::Point detectTargetShape(cv::Mat &frame, cv::Mat &debug_frame,
-                            bool &detected, float &estimated_z);
-void processFrame(cv::Mat &frame, cv::Mat &debug_frame, TargetTracker &tracker);
+void setupColorThresholds(TargetColor color,
+                          cv::Scalar &lowerPrimary,
+                          cv::Scalar &upperPrimary,
+                          cv::Scalar &lowerSecondary,
+                          cv::Scalar &upperSecondary,
+                          bool &useTwoRanges);
+cv::Point detectTargetHSV(cv::Mat &frame,
+                          cv::Mat &debug_frame,
+                          TargetColor target_color,
+                          bool &detected,
+                          float &estimated_z,
+                          bool adaptiveThreshold);
+cv::Point detectTargetShape(cv::Mat &frame,
+                            cv::Mat &debug_frame,
+                            bool &detected,
+                            float &estimated_z);
+void processFrame(cv::Mat &frame,
+                  cv::Mat &debug_frame,
+                  TargetTracker &tracker);
 void saveImage(const cv::Mat &image, const std::string &prefix);
 void displayHelp();
 std::string getColorName(TargetColor color);
 void ensureDirectoryExists(const std::string &dirPath);
-float estimateZPosition(double apparent_diameter_pixels, int frame_width);
+float estimateZPosition(double apparent_diameter_pixels,
+                        int frame_width);
 float calculateFocalLength(int frame_width);
-void detectDominantColor(const cv::Mat &frame, const cv::Mat &mask,
+void detectDominantColor(const cv::Mat &frame,
+                         const cv::Mat &mask,
                          TargetColor &color);
-void autoAdjustThresholds(const cv::Mat &hsv_frame, TargetColor color,
-                          cv::Scalar &lowerPrimary, cv::Scalar &upperPrimary);
+void autoAdjustThresholds(const cv::Mat &hsv_frame,
+                          TargetColor color,
+                          cv::Scalar &lowerPrimary,
+                          cv::Scalar &upperPrimary);
 TargetColor parseColorOption(const std::string &colorStr);
 
 /**
@@ -209,7 +229,8 @@ int main(int argc, char *argv[]) {
     std::cout << "Opening camera " << cameraID << "..." << std::endl;
     cap.open(cameraID);
     if (!cap.isOpened()) {
-      std::cerr << "Error: Could not open camera " << cameraID << std::endl;
+      std::cerr << "Error: Could not open camera " << cameraID
+                << std::endl;
       return -1;
     }
 
@@ -235,14 +256,14 @@ int main(int argc, char *argv[]) {
 
   std::cout << "Target Recognition System" << std::endl;
   std::cout << "===============================" << std::endl;
-  std::cout << "Selected target color: " << getColorName(g_selectedTarget)
-            << std::endl;
+  std::cout << "Selected target color: "
+            << getColorName(g_selectedTarget) << std::endl;
   std::cout << "Adaptive thresholding: "
             << (g_enableAdaptiveThreshold ? "Enabled" : "Disabled")
             << std::endl;
   std::cout << "History length: " << g_historyLength << std::endl;
-  std::cout << "Debug mode: " << (g_enableDebug ? "Enabled" : "Disabled")
-            << std::endl;
+  std::cout << "Debug mode: "
+            << (g_enableDebug ? "Enabled" : "Disabled") << std::endl;
   std::cout << "Output directory: " << OUTPUT_DIR << std::endl;
 
   if (useWebcam) {
@@ -253,7 +274,8 @@ int main(int argc, char *argv[]) {
       // Get new frame from video
       cap >> frame;
       if (frame.empty()) {
-        std::cerr << "Error: Could not read frame from camera" << std::endl;
+        std::cerr << "Error: Could not read frame from camera"
+                  << std::endl;
         break;
       }
 
@@ -271,11 +293,13 @@ int main(int argc, char *argv[]) {
         saveImage(debug_frame, ss.str() + "_debug");
       }
 
-      std::cout << "Processed frame " << (i + 1) << "/" << frames << std::endl;
+      std::cout << "Processed frame " << (i + 1) << "/" << frames
+                << std::endl;
 
       // Add delay between frames if needed
       if (frameDelay > 0) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(frameDelay));
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(frameDelay));
       }
     }
 
@@ -329,7 +353,8 @@ TargetColor parseColorOption(const std::string &colorStr) {
 }
 
 /**
- * Calculate focal length in pixels based on frame width and camera FOV
+ * Calculate focal length in pixels based on frame width and camera
+ * FOV
  */
 float calculateFocalLength(int frame_width) {
   return (frame_width * 0.5f) /
@@ -337,28 +362,30 @@ float calculateFocalLength(int frame_width) {
 }
 
 /**
- * Estimates the Z-position (depth) based on the apparent size of the target
- * Returns estimated distance in centimeters
+ * Estimates the Z-position (depth) based on the apparent size of the
+ * target Returns estimated distance in centimeters
  */
-float estimateZPosition(double apparent_diameter_pixels, int frame_width) {
+float estimateZPosition(double apparent_diameter_pixels,
+                        int frame_width) {
   // Using the pinhole camera model: Z = (F * W) / P
-  // Where F is focal length in pixels, W is actual object size, P is apparent
-  // object size in pixels
+  // Where F is focal length in pixels, W is actual object size, P is
+  // apparent object size in pixels
   if (apparent_diameter_pixels <= 0) {
-    return MAX_TARGET_DISTANCE_CM; // Default to max distance if object is too
-                                   // small
+    return MAX_TARGET_DISTANCE_CM; // Default to max distance if
+                                   // object is too small
   }
 
   // Calculate focal length based on the frame width
   float focal_length_pixels = calculateFocalLength(frame_width);
 
   // Calculate the estimated distance
-  float estimated_distance = (focal_length_pixels * TARGET_ACTUAL_DIAMETER_CM) /
-                             apparent_diameter_pixels;
+  float estimated_distance =
+      (focal_length_pixels * TARGET_ACTUAL_DIAMETER_CM) /
+      apparent_diameter_pixels;
 
-  // Apply a smoothing function to reduce sudden jumps in distance estimation
-  // This is a simple polynomial fit that can be adjusted with real-world
-  // calibration
+  // Apply a smoothing function to reduce sudden jumps in distance
+  // estimation This is a simple polynomial fit that can be adjusted
+  // with real-world calibration
   float calibrated_distance = 0.8f * estimated_distance + 10.0f;
 
   // Clamp the estimated distance to reasonable values
@@ -374,7 +401,8 @@ float estimateZPosition(double apparent_diameter_pixels, int frame_width) {
 /**
  * Process a frame for target detection
  */
-void processFrame(cv::Mat &frame, cv::Mat &debug_frame,
+void processFrame(cv::Mat &frame,
+                  cv::Mat &debug_frame,
                   TargetTracker &tracker) {
   // Attempt target detection
   bool target_detected = false;
@@ -382,14 +410,14 @@ void processFrame(cv::Mat &frame, cv::Mat &debug_frame,
   float target_z = MAX_TARGET_DISTANCE_CM; // Default to max distance
 
   // Try HSV-based detection first
-  target_point =
-      detectTargetHSV(frame, debug_frame, g_selectedTarget, target_detected,
-                      target_z, g_enableAdaptiveThreshold);
+  target_point = detectTargetHSV(frame, debug_frame, g_selectedTarget,
+                                 target_detected, target_z,
+                                 g_enableAdaptiveThreshold);
 
   // If HSV detection fails, try shape-based detection
   if (!target_detected) {
-    target_point =
-        detectTargetShape(frame, debug_frame, target_detected, target_z);
+    target_point = detectTargetShape(frame, debug_frame,
+                                     target_detected, target_z);
   }
 
   // Update the tracker with the new detection
@@ -403,8 +431,9 @@ void processFrame(cv::Mat &frame, cv::Mat &debug_frame,
   // Add informational text to display
   std::string status_text;
   if (is_tracking) {
-    status_text = "Target tracked at: (" + std::to_string(smoothed_point.x) +
-                  ", " + std::to_string(smoothed_point.y) + ", " +
+    status_text = "Target tracked at: (" +
+                  std::to_string(smoothed_point.x) + ", " +
+                  std::to_string(smoothed_point.y) + ", " +
                   std::to_string(int(smoothed_z)) + " cm)";
 
     if (!target_detected) {
@@ -415,28 +444,34 @@ void processFrame(cv::Mat &frame, cv::Mat &debug_frame,
   }
 
   cv::putText(debug_frame, status_text, cv::Point(10, 30),
-              cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 0), 2);
+              cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 0),
+              2);
 
   // Add color mode text
-  std::string color_text = "Target: " + getColorName(g_selectedTarget);
-  cv::putText(debug_frame, color_text, cv::Point(10, debug_frame.rows - 10),
-              cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(255, 255, 255), 1);
+  std::string color_text =
+      "Target: " + getColorName(g_selectedTarget);
+  cv::putText(
+      debug_frame, color_text, cv::Point(10, debug_frame.rows - 10),
+      cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(255, 255, 255), 1);
 
   // If target is being tracked, add a crosshair
   if (is_tracking) {
     // Draw a crosshair on the target
-    cv::line(debug_frame, cv::Point(smoothed_point.x - 20, smoothed_point.y),
+    cv::line(debug_frame,
+             cv::Point(smoothed_point.x - 20, smoothed_point.y),
              cv::Point(smoothed_point.x + 20, smoothed_point.y),
              cv::Scalar(0, 0, 255), 2);
-    cv::line(debug_frame, cv::Point(smoothed_point.x, smoothed_point.y - 20),
+    cv::line(debug_frame,
+             cv::Point(smoothed_point.x, smoothed_point.y - 20),
              cv::Point(smoothed_point.x, smoothed_point.y + 20),
              cv::Scalar(0, 0, 255), 2);
 
-    // Draw circle with radius relative to distance (smaller for further
-    // targets)
+    // Draw circle with radius relative to distance (smaller for
+    // further targets)
     int circle_radius = 30;
     if (smoothed_z > 0) {
-      // Adjust circle radius based on distance (inversely proportional)
+      // Adjust circle radius based on distance (inversely
+      // proportional)
       circle_radius = int(30 * (200.0f / smoothed_z));
       if (circle_radius < 15)
         circle_radius = 15;
@@ -445,16 +480,19 @@ void processFrame(cv::Mat &frame, cv::Mat &debug_frame,
     }
 
     // Use different colors for detected vs predicted
-    cv::Scalar circleColor =
-        target_detected ? cv::Scalar(0, 0, 255) : cv::Scalar(255, 0, 255);
-    cv::circle(debug_frame, smoothed_point, circle_radius, circleColor, 2);
+    cv::Scalar circleColor = target_detected
+                                 ? cv::Scalar(0, 0, 255)
+                                 : cv::Scalar(255, 0, 255);
+    cv::circle(debug_frame, smoothed_point, circle_radius,
+               circleColor, 2);
 
     // Add depth information to visualization
     std::string depth_text =
         "Distance: " + std::to_string(int(smoothed_z)) + " cm";
-    cv::putText(debug_frame, depth_text,
-                cv::Point(smoothed_point.x + 20, smoothed_point.y - 20),
-                cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0, 255, 255), 2);
+    cv::putText(
+        debug_frame, depth_text,
+        cv::Point(smoothed_point.x + 20, smoothed_point.y - 20),
+        cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0, 255, 255), 2);
 
     // Print target info to console
     std::cout << "Target tracked at: (" << smoothed_point.x << ", "
@@ -466,18 +504,20 @@ void processFrame(cv::Mat &frame, cv::Mat &debug_frame,
 }
 
 /**
- * Sets up color thresholds for HSV detection based on the target color
- * Includes support for colors that wrap around the hue spectrum (like red)
+ * Sets up color thresholds for HSV detection based on the target
+ * color Includes support for colors that wrap around the hue spectrum
+ * (like red)
  */
 void setupColorThresholds(
-    TargetColor color,        // Input: target color
-    cv::Scalar &lowerPrimary, // Output: primary lower bound
-    cv::Scalar &upperPrimary, // Output: primary upper bound
-    cv::Scalar
-        &lowerSecondary, // Output: secondary lower bound (for wrapped ranges)
-    cv::Scalar
-        &upperSecondary, // Output: secondary upper bound (for wrapped ranges)
-    bool &useTwoRanges   // Output: whether to use two ranges (for wrapped hues)
+    TargetColor color,          // Input: target color
+    cv::Scalar &lowerPrimary,   // Output: primary lower bound
+    cv::Scalar &upperPrimary,   // Output: primary upper bound
+    cv::Scalar &lowerSecondary, // Output: secondary lower bound (for
+                                // wrapped ranges)
+    cv::Scalar &upperSecondary, // Output: secondary upper bound (for
+                                // wrapped ranges)
+    bool &useTwoRanges // Output: whether to use two ranges (for
+                       // wrapped hues)
 ) {
   useTwoRanges = false;
 
@@ -527,12 +567,15 @@ void setupColorThresholds(
 
 /**
  * Auto-adjusts the HSV thresholds based on the image histogram
- * This makes color detection more robust under different lighting conditions
+ * This makes color detection more robust under different lighting
+ * conditions
  */
-void autoAdjustThresholds(const cv::Mat &hsv_frame, TargetColor color,
-                          cv::Scalar &lowerPrimary, cv::Scalar &upperPrimary) {
-  // Only adjust saturation and value thresholds, leave hue ranges fixed
-  // because they are color-specific
+void autoAdjustThresholds(const cv::Mat &hsv_frame,
+                          TargetColor color,
+                          cv::Scalar &lowerPrimary,
+                          cv::Scalar &upperPrimary) {
+  // Only adjust saturation and value thresholds, leave hue ranges
+  // fixed because they are color-specific
   int channels[] = {1, 2}; // Saturation and Value channels
   int histSize[] = {64, 64};
   float sRanges[] = {0, 256};
@@ -540,16 +583,16 @@ void autoAdjustThresholds(const cv::Mat &hsv_frame, TargetColor color,
   const float *ranges[] = {sRanges, vRanges};
 
   cv::Mat hist;
-  cv::calcHist(&hsv_frame, 1, channels, cv::Mat(), hist, 2, histSize, ranges,
-               true, false);
+  cv::calcHist(&hsv_frame, 1, channels, cv::Mat(), hist, 2, histSize,
+               ranges, true, false);
 
   // Find the dominant saturation and value ranges
   double minVal, maxVal;
   cv::Point minLoc, maxLoc;
   cv::minMaxLoc(hist, &minVal, &maxVal, &minLoc, &maxLoc);
 
-  // Calculate the total number of pixels (for potential future normalization)
-  // double total = hsv_frame.rows * hsv_frame.cols;
+  // Calculate the total number of pixels (for potential future
+  // normalization) double total = hsv_frame.rows * hsv_frame.cols;
 
   // Adjust thresholds for different lighting conditions
   // For darker scenes, lower the value threshold
@@ -575,7 +618,8 @@ void autoAdjustThresholds(const cv::Mat &hsv_frame, TargetColor color,
     }
   } else {
     // For black targets, we need special handling
-    upperPrimary[2] = std::min(50.0, static_cast<double>(avgVal) * 0.5);
+    upperPrimary[2] =
+        std::min(50.0, static_cast<double>(avgVal) * 0.5);
   }
 }
 
@@ -583,7 +627,8 @@ void autoAdjustThresholds(const cv::Mat &hsv_frame, TargetColor color,
  * Detect the dominant color in the masked region
  * Used for automatic color detection mode
  */
-void detectDominantColor(const cv::Mat &frame, const cv::Mat &mask,
+void detectDominantColor(const cv::Mat &frame,
+                         const cv::Mat &mask,
                          TargetColor &color) {
   // Convert to HSV
   cv::Mat hsv_frame;
@@ -611,7 +656,8 @@ void detectDominantColor(const cv::Mat &frame, const cv::Mat &mask,
   }
 
   // Determine color based on hue
-  if ((avgHue >= 0 && avgHue <= 10) || (avgHue >= 160 && avgHue <= 179))
+  if ((avgHue >= 0 && avgHue <= 10) ||
+      (avgHue >= 160 && avgHue <= 179))
     color = TARGET_RED;
   else if (avgHue >= 35 && avgHue <= 85)
     color = TARGET_GREEN;
@@ -627,8 +673,9 @@ void detectDominantColor(const cv::Mat &frame, const cv::Mat &mask,
 
 /**
  * Detects a target using HSV color filtering
- * Returns the center point of the detected target and sets detected flag
- * Also adds visualization to the debug frame and updates estimated_z
+ * Returns the center point of the detected target and sets detected
+ * flag Also adds visualization to the debug frame and updates
+ * estimated_z
  */
 cv::Point detectTargetHSV(
     cv::Mat &frame,           // Input: original frame
@@ -636,9 +683,11 @@ cv::Point detectTargetHSV(
     TargetColor target_color, // Input: color to detect
     bool &detected,           // Output: whether target was detected
     float &estimated_z,       // Output: estimated distance
-    bool adaptiveThreshold    // Input: whether to use adaptive thresholds
+    bool
+        adaptiveThreshold // Input: whether to use adaptive thresholds
 ) {
-  cv::Scalar lowerPrimary, upperPrimary, lowerSecondary, upperSecondary;
+  cv::Scalar lowerPrimary, upperPrimary, lowerSecondary,
+      upperSecondary;
   bool useTwoRanges = false;
   cv::Point target_center(0, 0);
   detected = false;
@@ -649,12 +698,13 @@ cv::Point detectTargetHSV(
   cv::cvtColor(frame, hsv_frame, cv::COLOR_BGR2HSV);
 
   // Set color thresholds based on selected target color
-  setupColorThresholds(target_color, lowerPrimary, upperPrimary, lowerSecondary,
-                       upperSecondary, useTwoRanges);
+  setupColorThresholds(target_color, lowerPrimary, upperPrimary,
+                       lowerSecondary, upperSecondary, useTwoRanges);
 
   // Auto-adjust thresholds based on lighting if enabled
   if (adaptiveThreshold) {
-    autoAdjustThresholds(hsv_frame, target_color, lowerPrimary, upperPrimary);
+    autoAdjustThresholds(hsv_frame, target_color, lowerPrimary,
+                         upperPrimary);
     if (useTwoRanges) {
       // Also adjust the secondary range
       autoAdjustThresholds(hsv_frame, target_color, lowerSecondary,
@@ -675,7 +725,8 @@ cv::Point detectTargetHSV(
 
   // Apply morphological operations to clean up the mask
   cv::Mat kernel = cv::getStructuringElement(
-      cv::MORPH_ELLIPSE, cv::Size(MORPH_KERNEL_SIZE, MORPH_KERNEL_SIZE));
+      cv::MORPH_ELLIPSE,
+      cv::Size(MORPH_KERNEL_SIZE, MORPH_KERNEL_SIZE));
   cv::morphologyEx(mask, mask, cv::MORPH_OPEN, kernel);
   cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, kernel);
 
@@ -687,9 +738,10 @@ cv::Point detectTargetHSV(
   // Add a small version of the mask to the debug frame
   if (g_enableDebug) {
     cv::Mat small_mask;
-    cv::resize(mask, small_mask, cv::Size(mask.cols / 4, mask.rows / 4));
-    cv::Mat roi =
-        debug_frame(cv::Rect(10, 50, small_mask.cols, small_mask.rows));
+    cv::resize(mask, small_mask,
+               cv::Size(mask.cols / 4, mask.rows / 4));
+    cv::Mat roi = debug_frame(
+        cv::Rect(10, 50, small_mask.cols, small_mask.rows));
 
     // Convert mask to BGR for overlay (it's currently grayscale)
     cv::Mat small_mask_bgr;
@@ -698,7 +750,8 @@ cv::Point detectTargetHSV(
 
     // Add label for the mask
     cv::putText(debug_frame, "HSV Mask", cv::Point(10, 45),
-                cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
+                cv::FONT_HERSHEY_SIMPLEX, 0.5,
+                cv::Scalar(255, 255, 255), 1);
   }
 
   // Auto color detection mode
@@ -707,23 +760,26 @@ cv::Point detectTargetHSV(
     detectDominantColor(frame, mask, detected_color);
 
     // Update debug frame with detected color
-    std::string color_text = "Detected color: " + getColorName(detected_color);
-    cv::putText(debug_frame, color_text, cv::Point(10, debug_frame.rows - 30),
-                cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(255, 255, 255), 1);
+    std::string color_text =
+        "Detected color: " + getColorName(detected_color);
+    cv::putText(
+        debug_frame, color_text, cv::Point(10, debug_frame.rows - 30),
+        cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(255, 255, 255), 1);
   }
 
   // Find contours in the mask
   std::vector<std::vector<cv::Point>> contours;
-  cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+  cv::findContours(mask, contours, cv::RETR_EXTERNAL,
+                   cv::CHAIN_APPROX_SIMPLE);
 
   // Process the found contours to identify potential targets
   if (!contours.empty()) {
     // Sort contours by area (largest first)
-    std::sort(
-        contours.begin(), contours.end(),
-        [](const std::vector<cv::Point> &c1, const std::vector<cv::Point> &c2) {
-          return cv::contourArea(c1) > cv::contourArea(c2);
-        });
+    std::sort(contours.begin(), contours.end(),
+              [](const std::vector<cv::Point> &c1,
+                 const std::vector<cv::Point> &c2) {
+                return cv::contourArea(c1) > cv::contourArea(c2);
+              });
 
     // Find suitable contours that match our criteria
     for (size_t i = 0; i < contours.size(); i++) {
@@ -735,16 +791,19 @@ cv::Point detectTargetHSV(
 
       // Analyze contour shape to find circular targets
       cv::Rect boundRect = cv::boundingRect(contours[i]);
-      double aspect_ratio = boundRect.width / (double)boundRect.height;
+      double aspect_ratio =
+          boundRect.width / (double)boundRect.height;
 
-      // Check if it's approximately circular/square (aspect ratio close to 1)
+      // Check if it's approximately circular/square (aspect ratio
+      // close to 1)
       if (aspect_ratio < 0.7 || aspect_ratio > 1.4)
         continue;
 
       // Fit an ellipse if possible
       if (contours[i].size() >= 5) {
         cv::RotatedRect ellipse = cv::fitEllipse(contours[i]);
-        double ellipse_ratio = ellipse.size.width / ellipse.size.height;
+        double ellipse_ratio =
+            ellipse.size.width / ellipse.size.height;
 
         // Check if the ellipse is roughly circular
         if (ellipse_ratio < 0.7 || ellipse_ratio > 1.4)
@@ -761,21 +820,26 @@ cv::Point detectTargetHSV(
 
         // Calculate the equivalent diameter for z-position estimation
         double equivalent_diameter = 2 * sqrt(area / M_PI);
-        estimated_z = estimateZPosition(equivalent_diameter, frame.cols);
+        estimated_z =
+            estimateZPosition(equivalent_diameter, frame.cols);
 
         // Draw the contour and center point for visualization
-        cv::drawContours(debug_frame, contours, i, cv::Scalar(0, 255, 0), 2);
-        cv::circle(debug_frame, target_center, 5, cv::Scalar(0, 0, 255), -1);
+        cv::drawContours(debug_frame, contours, i,
+                         cv::Scalar(0, 255, 0), 2);
+        cv::circle(debug_frame, target_center, 5,
+                   cv::Scalar(0, 0, 255), -1);
 
         // Draw area information
         std::string area_text = "Area: " + std::to_string(int(area));
-        cv::putText(debug_frame, area_text,
-                    cv::Point(target_center.x + 10, target_center.y + 10),
-                    cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 1);
+        cv::putText(
+            debug_frame, area_text,
+            cv::Point(target_center.x + 10, target_center.y + 10),
+            cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 1);
 
         std::cout << "HSV detection - Contour area: " << area
                   << ", Estimated diameter: " << equivalent_diameter
-                  << "px, Distance: " << estimated_z << " cm" << std::endl;
+                  << "px, Distance: " << estimated_z << " cm"
+                  << std::endl;
 
         break; // Found a suitable target, stop processing
       }
@@ -788,11 +852,14 @@ cv::Point detectTargetHSV(
 /**
  * Detects a target using shape detection (circles/ellipses)
  * This is a fallback method if HSV color detection fails
- * Returns the center point of the detected target and sets detected flag
- * Also adds visualization to the debug frame and updates estimated_z
+ * Returns the center point of the detected target and sets detected
+ * flag Also adds visualization to the debug frame and updates
+ * estimated_z
  */
-cv::Point detectTargetShape(cv::Mat &frame, cv::Mat &debug_frame,
-                            bool &detected, float &estimated_z) {
+cv::Point detectTargetShape(cv::Mat &frame,
+                            cv::Mat &debug_frame,
+                            bool &detected,
+                            float &estimated_z) {
   cv::Point target_center(0, 0);
   detected = false;
   estimated_z = MAX_TARGET_DISTANCE_CM; // Default to max distance
@@ -809,12 +876,15 @@ cv::Point detectTargetShape(cv::Mat &frame, cv::Mat &debug_frame,
     saveImage(gray, "grayscale");
   }
 
-  // Add a small version of the grayscale to the debug frame if debug is enabled
+  // Add a small version of the grayscale to the debug frame if debug
+  // is enabled
   if (g_enableDebug) {
     cv::Mat small_gray;
-    cv::resize(gray, small_gray, cv::Size(gray.cols / 4, gray.rows / 4));
-    cv::Mat roi = debug_frame(cv::Rect(10, 50 + small_gray.rows + 10,
-                                       small_gray.cols, small_gray.rows));
+    cv::resize(gray, small_gray,
+               cv::Size(gray.cols / 4, gray.rows / 4));
+    cv::Mat roi =
+        debug_frame(cv::Rect(10, 50 + small_gray.rows + 10,
+                             small_gray.cols, small_gray.rows));
 
     // Convert grayscale to BGR for overlay
     cv::Mat small_gray_bgr;
@@ -824,7 +894,8 @@ cv::Point detectTargetShape(cv::Mat &frame, cv::Mat &debug_frame,
     // Add label for the grayscale image
     cv::putText(debug_frame, "Grayscale",
                 cv::Point(10, 50 + small_gray.rows + 5),
-                cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
+                cv::FONT_HERSHEY_SIMPLEX, 0.5,
+                cv::Scalar(255, 255, 255), 1);
   }
 
   // Use Canny edge detection
@@ -837,12 +908,13 @@ cv::Point detectTargetShape(cv::Mat &frame, cv::Mat &debug_frame,
 
   // Use Hough Circle Transform to detect circles
   std::vector<cv::Vec3f> circles;
-  cv::HoughCircles(gray, circles, cv::HOUGH_GRADIENT, HOUGH_CIRCLE_DP,
-                   HOUGH_CIRCLE_MIN_DIST, // Minimum distance between circles
-                   HOUGH_CIRCLE_PARAM1, // Canny edge detection upper threshold
-                   HOUGH_CIRCLE_PARAM2, // Accumulator threshold
-                   HOUGH_CIRCLE_MIN_RADIUS, // Min circle radius
-                   HOUGH_CIRCLE_MAX_RADIUS  // Max circle radius
+  cv::HoughCircles(
+      gray, circles, cv::HOUGH_GRADIENT, HOUGH_CIRCLE_DP,
+      HOUGH_CIRCLE_MIN_DIST,   // Minimum distance between circles
+      HOUGH_CIRCLE_PARAM1,     // Canny edge detection upper threshold
+      HOUGH_CIRCLE_PARAM2,     // Accumulator threshold
+      HOUGH_CIRCLE_MIN_RADIUS, // Min circle radius
+      HOUGH_CIRCLE_MAX_RADIUS  // Max circle radius
   );
 
   // Process the found circles
@@ -853,7 +925,8 @@ cv::Point detectTargetShape(cv::Mat &frame, cv::Mat &debug_frame,
     cv::Point image_center(frame.cols / 2, frame.rows / 2);
 
     for (size_t i = 0; i < circles.size(); i++) {
-      cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
+      cv::Point center(cvRound(circles[i][0]),
+                       cvRound(circles[i][1]));
       float distance = cv::norm(center - image_center);
 
       if (distance < min_distance) {
@@ -873,20 +946,25 @@ cv::Point detectTargetShape(cv::Mat &frame, cv::Mat &debug_frame,
       estimated_z = estimateZPosition(diameter, frame.cols);
 
       // Draw the circle for visualization
-      cv::circle(debug_frame, target_center, cvRound(circles[best_circle][2]),
+      cv::circle(debug_frame, target_center,
+                 cvRound(circles[best_circle][2]),
                  cv::Scalar(255, 0, 0), 2);
-      cv::circle(debug_frame, target_center, 3, cv::Scalar(0, 0, 255), -1);
+      cv::circle(debug_frame, target_center, 3, cv::Scalar(0, 0, 255),
+                 -1);
 
       // Draw radius information
       std::string radius_text =
-          "Radius: " + std::to_string(cvRound(circles[best_circle][2]));
-      cv::putText(debug_frame, radius_text,
-                  cv::Point(target_center.x + 10, target_center.y + 30),
-                  cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 1);
+          "Radius: " +
+          std::to_string(cvRound(circles[best_circle][2]));
+      cv::putText(
+          debug_frame, radius_text,
+          cv::Point(target_center.x + 10, target_center.y + 30),
+          cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 1);
 
       std::cout << "Shape detection - Circle radius: "
-                << circles[best_circle][2] << "px, Distance: " << estimated_z
-                << " cm" << std::endl;
+                << circles[best_circle][2]
+                << "px, Distance: " << estimated_z << " cm"
+                << std::endl;
     }
   }
 
@@ -901,10 +979,12 @@ void saveImage(const cv::Mat &image, const std::string &prefix) {
   auto now = std::chrono::system_clock::now();
   auto time_t_now = std::chrono::system_clock::to_time_t(now);
   std::stringstream timestamp;
-  timestamp << std::put_time(std::localtime(&time_t_now), "%Y%m%d-%H%M%S");
+  timestamp << std::put_time(std::localtime(&time_t_now),
+                             "%Y%m%d-%H%M%S");
 
   // Create filename
-  std::string filename = OUTPUT_DIR + prefix + "_" + timestamp.str() + ".jpg";
+  std::string filename =
+      OUTPUT_DIR + prefix + "_" + timestamp.str() + ".jpg";
 
   // Save image
   cv::imwrite(filename, image);
@@ -916,32 +996,41 @@ void saveImage(const cv::Mat &image, const std::string &prefix) {
 void displayHelp() {
   std::cout << "Optimized Target Recognition - Command Line Options:"
             << std::endl;
-  std::cout << "---------------------------------------------------------------"
+  std::cout << "-----------------------------------------------------"
+               "----------"
             << std::endl;
-  std::cout << "-i <file>     - Use image file instead of webcam" << std::endl;
-  std::cout << "-c <id>       - Specify camera ID (default: 0)" << std::endl;
-  std::cout << "-f <num>      - Number of frames to capture (default: 10)"
+  std::cout << "-i <file>     - Use image file instead of webcam"
+            << std::endl;
+  std::cout << "-c <id>       - Specify camera ID (default: 0)"
             << std::endl;
   std::cout
-      << "-d <ms>       - Delay between frames in milliseconds (default: 500)"
+      << "-f <num>      - Number of frames to capture (default: 10)"
       << std::endl;
+  std::cout << "-d <ms>       - Delay between frames in milliseconds "
+               "(default: 500)"
+            << std::endl;
   std::cout << "-color <name> - Set target color "
                "(red/green/blue/yellow/cyan/magenta/black/auto)"
             << std::endl;
+  std::cout << "-adaptive <0|1> - Enable/disable adaptive thresholds "
+               "(default: 1)"
+            << std::endl;
+  std::cout << "-history <num> - Set history length for smoothing "
+               "(default: 5)"
+            << std::endl;
   std::cout
-      << "-adaptive <0|1> - Enable/disable adaptive thresholds (default: 1)"
+      << "-debug <0|1>  - Enable/disable debug mode (default: 1)"
       << std::endl;
-  std::cout << "-history <num> - Set history length for smoothing (default: 5)"
+  std::cout << "-h/--help     - Display this help message"
             << std::endl;
-  std::cout << "-debug <0|1>  - Enable/disable debug mode (default: 1)"
-            << std::endl;
-  std::cout << "-h/--help     - Display this help message" << std::endl;
   std::cout << std::endl;
   std::cout << "Example usage:" << std::endl;
-  std::cout << "  ./target_recognition -c 0 -f 20 -color red       # Capture "
+  std::cout << "  ./target_recognition -c 0 -f 20 -color red       # "
+               "Capture "
                "20 frames looking for red targets"
             << std::endl;
-  std::cout << "  ./target_recognition -i target.jpg -color auto   # Process "
+  std::cout << "  ./target_recognition -i target.jpg -color auto   # "
+               "Process "
                "image with auto color detection"
             << std::endl;
 }
