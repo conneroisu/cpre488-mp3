@@ -18,15 +18,6 @@
 
 #define MEM_DEVICE "/dev/mem"
 
-#define GPIO_DATA_OFFSET 0x0
-#define GPIO_TRI_OFFSET 0x4
-
-#define BUTTON_DATA *((volatile u32*) (BUTTON_BASE_ADDR + GPIO_DATA_OFFSET))
-#define SWITCH_DATA *((volatile u32*) (SWITCH_BASE_ADDR + GPIO_DATA_OFFSET))
-
-#define TRI_INPUT 0x1
-#define TRI_OUTPUT 0x0
-
 typedef struct gpio_addr_maps
 {
 	uint32_t* button_addr;
