@@ -1,19 +1,8 @@
-/**
- * optimized_recognition.cpp
- *
- * Optimized version of target recognition system without GUI
- * dependencies. Improved color detection and target tracking with
- * better Z-position estimation. Support for multiple target colors
- * with adaptive thresholding.
- */
-
 #include <algorithm>
 #include <chrono>
 #include <cmath>
-#include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <numeric>
 #include <sstream>
 #include <string>
 #include <thread>
