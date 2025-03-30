@@ -224,7 +224,7 @@ CONFIG_YOCTO_MACHINE_NAME="zedboard-zynq7"
 #
 # TMPDIR Location
 #
-CONFIG_TMP_DIR_LOCATION="/tmp/eastburnohnesorge/build/tmp"
+CONFIG_TMP_DIR_LOCATION="/tmp/ohnesorgeeastburn/build/tmp"
 
 #
 # WORKSPACE Location
