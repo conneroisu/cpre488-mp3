@@ -41,13 +41,7 @@ MODULE_AUTHOR("Eastburn, Ohnesorge");
 /* Get a minor range for your devices from the usb maintainer */
 #define USB_MISS_LAUNCH_MINOR_BASE 192
 
-/* our private defines. if this grows any larger, use your own .h file */
-#define MAX_TRANSFER (PAGE_SIZE - 512)
-/* MAX_TRANSFER is chosen so that the VM is not stressed by
-   allocations > PAGE_SIZE and the number of packets in a page
-   is an integer 512 is the largest possible packet on EHCI */
 #define WRITES_IN_FLIGHT 8
-/* arbitrarily chosen */
 
 /* Structure to hold all of our device specific stuff */
 struct usb_miss_launch
@@ -173,11 +167,13 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
     char *user_data_buf = NULL;
     char *command_buf = NULL;
 
+    int sem_downed, buf_alloced = 0;
+
     // We only write a single byte at a time.
     ssize_t user_data_size = 1;
 
     // A command to the turret has to be 8 bytes
-    ssize_t command_size = 8;
+    ssize_t command_size = LAUNCHER_CTRL_BUFFER_SIZE;
 
     pr_alert("Attempting a write operation!\n");
 
@@ -208,6 +204,8 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
         }
     }
 
+    sem_downed = 1;
+
     spin_lock_irq(&dev->err_lock);
     retval = dev->errors;
     if (retval < 0)
@@ -219,12 +217,14 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
     }
     spin_unlock_irq(&dev->err_lock);
     if (retval < 0)
-        goto error;
+        goto exit;
 
 
     // Allocate space for the buffers
     user_data_buf = kmalloc(user_data_size, GFP_KERNEL);
     command_buf = kmalloc(command_size, GFP_KERNEL);
+
+    buf_alloced = 1;
 
     // Zeroize the newly allocated space.
     memset(user_data_buf, 0, user_data_size);
@@ -233,19 +233,19 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
     if (!user_data_buf || !command_buf)
     {
         retval = -ENOMEM;
-        goto error;
+        goto exit;
     }
 
     if (copy_from_user(user_data_buf, user_buffer, user_data_size))
     {
         retval = -EFAULT;
-        goto error;
+        goto exit;
     }
 
     if (!dev->interface)
     { /* disconnect() was called */
         retval = -ENODEV;
-        goto error;
+        goto exit;
     }
 
     // Format the command buffer.
@@ -268,18 +268,23 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
         dev_err(&dev->interface->dev,
                 "%s - ERROR: Failed writing control URB. Error Code: %d\n",
                 __func__, retval);
-        goto error;
+        goto exit;
     }
 
     pr_alert("Finished a write operation!\n");
 
-    return retval;
-error:
-    up(&dev->limit_sem);
-
 exit:
-    kfree(user_data_buf);
-    kfree(command_buf);
+    if(sem_downed)
+    {
+        up(&dev->limit_sem);
+    }
+    
+    if(buf_alloced)
+    {
+        kfree(user_data_buf);
+        kfree(command_buf);
+    }
+    
     return retval;
 }
 
