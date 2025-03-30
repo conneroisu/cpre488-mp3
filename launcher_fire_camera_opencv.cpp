@@ -1,18 +1,12 @@
-#include <chrono>
-#include <errno.h>
 #include <fcntl.h>
-#include <iomanip>
 #include <iostream>
 #include <math.h>
-#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <thread>
 #include <unistd.h>
-#include <vector>
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
