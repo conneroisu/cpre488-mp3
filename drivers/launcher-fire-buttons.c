@@ -15,7 +15,7 @@
 #define BTNR 0x08               // Right
 
 // Launcher commands
-#define LAUNCHER_NODE "/dev/launch0"
+#define LAUNCHER_NODE "/dev/miss_launch0"
 #define LAUNCHER_FIRE 0x10
 #define LAUNCHER_STOP 0x20
 #define LAUNCHER_UP 0x02
