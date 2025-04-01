@@ -3,7 +3,7 @@
 
 gpio_addr_maps_t init_interface()
 {
-	long page_size = sysconf(_SC_PAGE_SIZE);
+	long page_size = 512;
 	printf("Page Size: %lf\n", page_size);
 
 	// Setup GPIO mapping using mmap()
