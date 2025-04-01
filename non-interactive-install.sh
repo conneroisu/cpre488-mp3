@@ -34,6 +34,11 @@ expect {
         send "\q"
         expect "*>*"
         send "y\r"
+        expect "*RETURN*"
+        send "\r"
+        send "\q"
+        expect "*>*"
+        send "y\r"
     }
     timeout {
         send_user "ERROR: Installation timed out\r"
