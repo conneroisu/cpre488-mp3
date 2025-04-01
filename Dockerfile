@@ -1,9 +1,9 @@
 FROM ubuntu:20.04
 
 # Define build arguments for installer customization
-ARG PETALINUX_INSTALLER=petalinux-v2022.1-04191534-installer.run
-ARG PETALINUX_VERSION=2022.1
-ARG PETALINUX_RELEASE=04191534
+ARG PETALINUX_INSTALLER=petalinux-v2020.1-final-installer.run
+ARG PETALINUX_VERSION=2020.1
+ARG PETALINUX_RELEASE=final
 
 # Set environment variables for non-interactive installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -154,8 +154,8 @@ else \
     echo "Go to Petalinux -> Archive -> ${PETALINUX_VERSION} -> PetaLinux Installer"; \
     exit 1; \
 fi
-COPY noninteractive-install.sh /
-RUN chmod a+x /noninteractive-install.sh
+COPY ./non-interactive-install.sh ./noninteractive-install.sh
+RUN chmod a+x ./noninteractive-install.sh
 
 # Ensure proper permissions for the user (make sure this is the last group of lines since the user will change for the docker)
 RUN useradd -ms /bin/bash petalinux && echo "petalinux:petalinux" | chpasswd && adduser petalinux sudo && adduser petalinux dialout

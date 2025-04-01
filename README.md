@@ -337,113 +337,142 @@ This particular functionality is quite simple - it just fires the missile launch
 
 ## Algorithm to detect Target
 
-The system uses two detection methods, with one functioning as a fallback if the primary method fails:
+### System Architecture
 
-### 1. Primary Method: HSV Color Filtering
+The system combines computer vision processing with physical hardware control, structured around several key components:
 
-This method detects targets based on their color:
+1. **Framebuffer Interface**: The system maps the FPGA's framebuffer memory directly into the application's memory space, providing direct access to the camera feed.
 
 ```cpp
-cv::Point detect_target_hsv(cv::Mat &frame, TargetColor target_color,
-                          bool &detected, float &estimated_z) {
+// Map framebuffer memory
+fb_mem = mmap(NULL, FB_SIZE, PROT_READ, MAP_SHARED, mem_fd, FB_PHYS_ADDR);
+```
+
+2. **Launcher Control Interface**: A device driver interface allows the software to command a physical launcher device through simple directional commands.
+
+3. **Computer Vision Processing**: The system uses OpenCV for real-time target detection, combining color-based and shape-based detection methods.
+
+4. **Targeting Logic**: Once targets are detected, the system performs depth estimation and aims the launcher accordingly.
+
+## Target Detection Algorithm
+
+The detection algorithm employs a dual-method approach to maximize reliability:
+
+### 1. Color-Based (HSV) Detection
+
+The primary detection method uses HSV color filtering to isolate potential targets based on their color:
+
+```cpp
+cv::Point detect_target_hsv(cv::Mat &frame,
+                           cv::Mat &debug_frame,
+                           DetectionParams &params,
+                           bool &detected,
+                           float &estimated_z) {
   // Convert the frame from BGR to HSV color space
   cv::Mat hsv_frame;
   cv::cvtColor(frame, hsv_frame, cv::COLOR_BGR2HSV);
 
-  // Set color thresholds based on selected target color
-  setup_color_thresholds(target_color, lower_thresh, upper_thresh);
+  // Create binary masks for the selected color range
+  cv::Mat mask1, mask2, mask;
+  cv::inRange(hsv_frame, params.primary.lower, params.primary.upper, mask1);
 
-  // Create a binary mask for the selected color range
-  cv::Mat mask;
-  cv::inRange(hsv_frame, lower_thresh, upper_thresh, mask);
+  if (params.useMultiRange) {
+    cv::inRange(hsv_frame, params.secondary.lower, params.secondary.upper, mask2);
+    cv::bitwise_or(mask1, mask2, mask);
+  } else {
+    mask = mask1;
+  }
   
-  // Find contours in the mask
-  std::vector<std::vector<cv::Point>> contours;
-  cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-  
-  // Calculate the center of the largest contour
-  cv::Moments moments = cv::moments(contours[largest_idx]);
-  target_center.x = int(moments.m10 / moments.m00);
-  target_center.y = int(moments.m01 / moments.m00);
+  // Apply morphological operations to clean up the mask
+  // ...
 }
 ```
 
-Example: For red targets, the system applies these HSV thresholds:
+The algorithm accommodates complex color ranges (like red, which wraps around the hue spectrum) by using multiple threshold ranges when needed.
+
+### 2. Shape-Based Detection
+
+As a fallback, the system also implements shape-based detection using both Hough Circle Transform and contour circularity analysis:
+
 ```cpp
-lower = cv::Scalar(160, 100, 100);
-upper = cv::Scalar(179, 255, 255);
+// Use Hough Circle Transform to detect circles
+std::vector<cv::Vec3f> circles;
+cv::HoughCircles(gray, circles, cv::HOUGH_GRADIENT, 1,
+                gray.rows / 8, 100, 30, 10, 100);
 ```
 
-### 2. Fallback Method: Shape Detection
-
-If color-based detection fails, the system falls back to shape detection:
+For enhanced reliability, the system also analyzes contour circularity when Hough transform fails:
 
 ```cpp
-cv::Point detect_target_shape(cv::Mat &frame, TargetColor target_color,
-                            bool &detected, float &estimated_z) {
-  // Convert to grayscale
-  cv::Mat gray;
-  cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+// Circularity = 4π × Area / Perimeter²
+// Perfect circle has circularity = 1
+double circularity = 4 * M_PI * area / (perimeter * perimeter);
 
-  // Apply Gaussian blur
-  cv::GaussianBlur(gray, gray, cv::Size(9, 9), 2, 2);
-
-  // Use Hough Circle Transform to detect circles
-  std::vector<cv::Vec3f> circles;
-  cv::HoughCircles(gray, circles, cv::HOUGH_GRADIENT, 1,
-                 gray.rows / 8, 100, 30, 10, 100);
-                 
-  // Find the circle closest to the image center
-  // Calculate distance from target to z-position
+if (circularity > 0.7 && circularity > maxCircularity) {
+  maxCircularity = circularity;
+  bestContour = i;
 }
 ```
 
-### Z/Distance estimation
+### Depth Estimation
 
-This approach works by using the apparent size of detected objects to estimate their distance from the camera.
+A key feature of this system is the ability to estimate the target's distance from the camera based on its apparent size (knowing the camera's focal length, target diameter, and apparent diameter):
 
-We do this mainly by:
-1. Defining some Parameters and Constants
-   ```cpp
-   // Z-position (depth) estimation parameters
-   #define TARGET_ACTUAL_DIAMETER_CM 15.0  // Actual target diameter in cm
-   #define CAMERA_FOV_HORIZONTAL_DEG 60.0  // Camera field of view in degrees
-   #define MIN_TARGET_DISTANCE_CM 50.0     // Minimum expected target distance
-   #define MAX_TARGET_DISTANCE_CM 300.0    // Maximum expected target distance
-   #define FOCAL_LENGTH_PIXELS ((FB_WIDTH * 0.5) / tan((CAMERA_FOV_HORIZONTAL_DEG * 0.5) * M_PI / 180.0))
-   ```
-   These parameters calibrate the depth estimation algorithm and can be adjusted based on your specific setup.
-2. Creating a new function for estimating the z given the detected diameter of the target.
-   ```cpp
-   float estimate_z_position(double apparent_diameter_pixels) {
-   // Using the pinhole camera model: Z = (F * W) / P
-   // Where F is focal length in pixels, W is actual object size, P is apparent object size in pixels
-   if (apparent_diameter_pixels <= 0) {
-      return MAX_TARGET_DISTANCE_CM;  // Default to max distance if object is too small
-   }
-   
-   float estimated_distance = (FOCAL_LENGTH_PIXELS * TARGET_ACTUAL_DIAMETER_CM) / apparent_diameter_pixels;
-   
-   // Clamp the estimated distance to reasonable values
-   if (estimated_distance < MIN_TARGET_DISTANCE_CM) {
-      estimated_distance = MIN_TARGET_DISTANCE_CM;
-   } else if (estimated_distance > MAX_TARGET_DISTANCE_CM) {
-      estimated_distance = MAX_TARGET_DISTANCE_CM;
-   }
-   
-   return estimated_distance;
-   }
-   ```
-For optimal performance, we needed to calibrate these values:
+```cpp
+float estimate_z_position(double apparent_diameter_pixels) {
+  if (apparent_diameter_pixels <= 0) {
+    return MAX_TARGET_DISTANCE_CM;
+  }
 
-- `TARGET_ACTUAL_DIAMETER_CM` - Measure actual target's diameter
-- `CAMERA_FOV_HORIZONTAL_DEG` - Check camera's specifications
+  float estimated_distance = (FOCAL_LENGTH_PIXELS * TARGET_ACTUAL_DIAMETER_CM) / apparent_diameter_pixels;
 
-The compensation factor in adjust_aim_for_depth() - You may need to adjust the 0.5f factor based on experimentation
+  if (estimated_distance < MIN_TARGET_DISTANCE_CM) {
+    estimated_distance = MIN_TARGET_DISTANCE_CM;
+  } else if (estimated_distance > MAX_TARGET_DISTANCE_CM) {
+    estimated_distance = MAX_TARGET_DISTANCE_CM;
+  }
 
-### Targeting Adjustments for Depth
+  return estimated_distance;
+}
+```
 
-The system uses the estimated z-position to adjust targeting:
+This calculation uses the principle that a target of known physical size (`TARGET_ACTUAL_DIAMETER_CM`) appears smaller in the image as its distance increases.
+
+By knowing the camera's focal length (converted to pixels), we can derive the distance.
+
+### Launcher Control Algorithm
+
+The launcher control system uses a proportional approach to aim at targets:
+
+```cpp
+int aim_launcher(int launcher_fd,
+                int current_x,
+                int current_y,
+                int target_x,
+                int target_y,
+                float target_z) {
+  int dx = target_x - current_x;
+  int dy = target_y - current_y;
+  
+  // If target is already centered (within dead zone), we're done
+  if (abs(dx) < LAUNCHER_DEAD_ZONE && abs(dy) < LAUNCHER_DEAD_ZONE) {
+    // Apply depth-based adjustments
+    ret = adjust_aim_for_depth(launcher_fd, target_z);
+    return ret;
+  }
+  
+  // Handle horizontal movement first
+  // ...
+}
+```
+
+Notable aspects of the aiming algorithm:
+
+1. It implements a dead zone to prevent jitter when the target is nearly centered
+2. It handles horizontal and vertical movements separately
+3. Movement duration is proportional to the distance the launcher needs to travel
+4. It includes a recursive approach to refine aiming with a limit of 5 attempts
+5. It adjusts aim based on target depth to account for projectile ballistics
 
 ```cpp
 int adjust_aim_for_depth(int launcher_fd, float target_z) {
@@ -451,50 +480,98 @@ int adjust_aim_for_depth(int launcher_fd, float target_z) {
   if (target_z <= 100.0f) {
     return 0;
   }
-  
+
   // Calculate adjustment time - more adjustment for distant targets
   int adjustment_ms = (int)((target_z - 100.0f) * 0.5f);
-  
+
   if (adjustment_ms > 0) {
+    std::cout << "Depth adjustment: Moving UP for " << adjustment_ms
+              << " ms to compensate for distance" << std::endl;
     move_launcher(launcher_fd, LAUNCHER_UP);
     delay_ms(adjustment_ms);
     stop_launcher(launcher_fd);
     return 0;
   }
+
+  return 0;
 }
 ```
 
-Example: For a target at 200cm, the adjustment would be:
-- `adjustment_ms = (200 - 100) * 0.5 = 50`
-- The launcher would move UP for 50ms to compensate for gravity over this distance
+### Firing Logic
 
-### Main Detection Loop
-
-The detection methods are integrated in the main loop:
+The system employs a confirmation-based firing mechanism to prevent false positives:
 
 ```cpp
-while (1) {
-  // Create a copy of the framebuffer data
-  cv::Mat frame_copy = frame.clone();
+if (target_detected) {
+  std::cout << "Target detected at position (" << target_point.x
+            << ", " << target_point.y << ", " << target_z
+            << " cm)" << std::endl;
 
-  // Try HSV detection first
-  target_point = detect_target_hsv(frame_copy, SELECTED_TARGET, target_detected, target_z);
+  consecutive_detections++;
 
-  // If HSV detection fails, try shape-based detection
-  if (!target_detected) {
-    target_point = detect_target_shape(frame_copy, SELECTED_TARGET, target_detected, target_z);
-  }
+  // Only fire when we have consistent detections to avoid false positives
+  if (consecutive_detections >= fire_threshold && fire_cooldown <= 0) {
+    // Aim launcher at the target
+    ret = aim_launcher(launcher_fd, LAUNCHER_CENTER_X,
+                       LAUNCHER_CENTER_Y, target_point.x,
+                       target_point.y, target_z);
 
-  if (target_detected) {
-    // Aim launcher at the target with z-position consideration
-    ret = aim_launcher(
-      launcher_fd,
-      LAUNCHER_CENTER_X,
-      LAUNCHER_CENTER_Y,
-      target_point.x,
-      target_point.y,
-      target_z
-   );
+    if (ret == 0) {
+      std::cout << "Target locked, firing!" << std::endl;
+      // Fire the launcher
+      fire_launcher(launcher_fd);
+
+      // Set cooldown period after firing
+      fire_cooldown = 20; // Approx 2 seconds at 100ms loop time
+      consecutive_detections = 0;
+    }
   }
 }
 ```
+
+Key aspects of the firing logic:
+1. It requires multiple consecutive successful detections before firing
+2. It implements a cooldown period after firing to prevent rapid repeated firing
+3. It only fires after the aiming process has completed successfully
+
+## Configurable Parameters
+
+```cpp
+// Target recognition parameters
+#define MIN_CONTOUR_AREA 500
+#define MAX_CONTOUR_AREA 50000
+#define MORPH_KERNEL_SIZE 5
+
+// Launcher control parameters
+#define LAUNCHER_MOVE_TIMEOUT_MS 1000
+#define LAUNCHER_CENTER_X (FB_WIDTH / 2)
+#define LAUNCHER_CENTER_Y (FB_HEIGHT / 2)
+#define LAUNCHER_DEAD_ZONE 20
+#define LAUNCHER_MAX_X_ANGLE 30
+#define LAUNCHER_MAX_Y_ANGLE 20
+
+// Z-position (depth) estimation parameters
+#define TARGET_ACTUAL_DIAMETER_CM 15.0
+#define CAMERA_FOV_HORIZONTAL_DEG 60.0
+```
+
+## Error Handling
+
+Added error handling helps to manage potential issues with hardware interfaces:
+
+```cpp
+mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
+if (mem_fd < 0) {
+  perror("Failed to open /dev/mem");
+  return -1;
+}
+
+// Map framebuffer memory
+fb_mem = mmap(NULL, FB_SIZE, PROT_READ, MAP_SHARED, mem_fd, FB_PHYS_ADDR);
+if (fb_mem == MAP_FAILED) {
+  perror("Failed to mmap framebuffer");
+  close(mem_fd);
+  return -1;
+}
+```
+
