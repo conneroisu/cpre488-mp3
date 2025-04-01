@@ -3,8 +3,8 @@
 
 gpio_addr_maps_t init_interface()
 {
-	long page_size = 512;
-	printf("Page Size: %lf\n", page_size);
+	long page_size = sysconf(_SC_PAGE_SIZE);
+	printf("Page Size: %ld\n", page_size);
 
 	// Setup GPIO mapping using mmap()
 	gpio_addr_maps_t map;
@@ -43,8 +43,8 @@ gpio_addr_maps_t init_interface()
 	close(mem);
 
 	// Since buttons and switches are inputs, set TRI reg to 0x1.
-	map.button_addr[1] = 0x1;
-	map.sw_addr[1] = 0x1;
+	(map.button_addr)[1] = 0x1;
+	(map.sw_addr)[1] = 0x1;
 
 	printf("Configured gpio\n");
 
@@ -53,12 +53,12 @@ gpio_addr_maps_t init_interface()
 
 uint32_t get_button_states(gpio_addr_maps_t map)
 {
-	return map.button_addr[0];
+	return (map.button_addr)[0];
 }
 
 uint32_t get_switch_states(gpio_addr_maps_t map)
 {
-	return map.sw_addr[0];
+	return (map.sw_addr)[0];
 }
 
 int button_pressed(t_buttons button, uint32_t state)
