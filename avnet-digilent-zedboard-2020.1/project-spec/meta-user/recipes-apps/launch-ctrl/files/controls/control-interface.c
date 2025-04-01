@@ -19,7 +19,7 @@ gpio_addr_maps_t init_interface()
 
 	printf("Opened /dev/mem\n");
 
-	map.button_addr = mmap(NULL, REG_SIZE_BYTES * BUTTON_REG_COUNT, PROT_READ | PROT_WRITE, MAP_PRIVATE, mem, BUTTON_BASE_ADDR / page_size);
+	map.button_addr = (uint32_t*) mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, mem, BUTTON_BASE_ADDR / page_size);
 
 	if(map.button_addr < 0)
 	{
@@ -29,7 +29,7 @@ gpio_addr_maps_t init_interface()
 
 	printf("Mapped buttons\n");
 
-	map.sw_addr = mmap(NULL, REG_SIZE_BYTES * SWITCH_REG_COUNT, PROT_READ | PROT_WRITE, MAP_PRIVATE, mem, SWITCH_BASE_ADDR / page_size);
+	map.sw_addr = (uint32_t*) mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, mem, SWITCH_BASE_ADDR / page_size);
 
 	if(map.sw_addr < 0)
 	{
