@@ -7,7 +7,7 @@
 /*-------- CONSTANTS --------*/
 
 // Button addresses and masks
-#define BTN_ADDRESS 0x41240000
+#define BTN_ADDRESS 0x41210000
 #define BTNC 0x01               // Center button (fire)
 #define BTNU 0x10               // Up
 #define BTND 0x02               // Down
