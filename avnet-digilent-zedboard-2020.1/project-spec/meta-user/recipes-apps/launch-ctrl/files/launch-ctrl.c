@@ -36,7 +36,10 @@ int main()
     {
         // Get button and switch values
         sw_val = get_switch_states(maps);
+        printf("Got switches\n");
         btn_val = get_button_states(maps);
+        printf("Got buttons\n");
+        
 
         // Set state variables
         exit = !(sw_val & 0x1);
