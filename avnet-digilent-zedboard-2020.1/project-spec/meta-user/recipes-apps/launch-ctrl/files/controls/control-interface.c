@@ -1,10 +1,8 @@
 #include "control-interface.h"
-#define DREF_REG(reg_addr, offset) (volatile uint32_t*) ((uint32_t))
 
 gpio_addr_maps_t init_interface()
 {
 	long page_size = sysconf(_SC_PAGE_SIZE);
-	printf("Page Size: %ld\n", page_size);
 
 	// Setup GPIO mapping using mmap()
 	gpio_addr_maps_t map;
@@ -15,50 +13,63 @@ gpio_addr_maps_t init_interface()
 	if(mem < 0)
 	{
 		printf("ERROR: Could not open %s\n", MEM_DEVICE);
+		perror("Error Description: ");
 		return ERROR_GPIO_ADDR_MAPS;
 	}
 
-	printf("Opened /dev/mem\n");
+	// Make sure that button address is a multiple of page_size
+	if(BUTTON_BASE_ADDR % page_size)
+	{
+		printf("ERROR: Button address is not a multiple of page_size! Addr: %x, Page Size: %lx\n", BUTTON_BASE_ADDR, page_size);
+		return ERROR_GPIO_ADDR_MAPS;
+	}
+	else
+	{
+		map.button_addr = mmap(NULL, REG_SIZE_BYTES * BUTTON_REG_COUNT, PROT_READ | PROT_WRITE, MAP_PRIVATE, mem, BUTTON_BASE_ADDR);
+	}
 
-	map.button_addr = (uint32_t*) mmap(NULL, REG_SIZE_BYTES * BUTTON_REG_COUNT, PROT_READ | PROT_WRITE, MAP_PRIVATE, mem, BUTTON_BASE_ADDR / page_size);
-
-	if(map.button_addr < 0)
+	if(map.button_addr == ERROR_U32_PTR)
 	{
 		printf("ERROR: Could not get mapping to buttons!\n");
+		perror("Error Description: ");
 		return ERROR_GPIO_ADDR_MAPS;
 	}
 
-	printf("Mapped buttons\n");
+	// Make sure that switch address is a multiple of page_size
+	if(SWITCH_BASE_ADDR % page_size)
+	{
+		printf("ERROR: Switch address is not a multiple of page_size! Addr: %x, Page Size: %lx\n", SWITCH_BASE_ADDR, page_size);
+		return ERROR_GPIO_ADDR_MAPS;
+	}
+	else
+	{
+		map.sw_addr = mmap(NULL, REG_SIZE_BYTES * SWITCH_REG_COUNT, PROT_READ | PROT_WRITE, MAP_PRIVATE, mem, SWITCH_BASE_ADDR);
+	}
 
-	map.sw_addr = (uint32_t*) mmap(NULL, REG_SIZE_BYTES * SWITCH_REG_COUNT, PROT_READ | PROT_WRITE, MAP_PRIVATE, mem, SWITCH_BASE_ADDR / page_size);
-
-	if(map.sw_addr < 0)
+	if(map.sw_addr == ERROR_U32_PTR)
 	{
 		printf("ERROR: Could not get mapping to switches!\n");
+		perror("Error Description: ");
 		return ERROR_GPIO_ADDR_MAPS;
 	}
-
-	printf("Mapped switches\n");
 
 	close(mem);
 
 	// Since buttons and switches are inputs, set TRI reg to 0x1.
-	(map.button_addr)[1] = 0x1;
-	(map.sw_addr)[1] = 0x1;
-
-	printf("Configured gpio\n");
+	map.button_addr[1] = 0x1;
+	map.sw_addr[1] = 0x1;
 
 	return map;
 }
 
 uint32_t get_button_states(gpio_addr_maps_t map)
 {
-	return (map.button_addr)[0];
+	return map.button_addr[0];
 }
 
 uint32_t get_switch_states(gpio_addr_maps_t map)
 {
-	return (map.sw_addr)[0];
+	return map.sw_addr[0];
 }
 
 int button_pressed(t_buttons button, uint32_t state)
