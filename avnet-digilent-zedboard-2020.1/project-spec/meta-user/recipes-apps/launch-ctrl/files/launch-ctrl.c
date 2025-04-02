@@ -42,7 +42,7 @@ int main()
         
 
         // Set state variables
-        exit = 0;
+        exit = sw_val & 0x1;
         left = button_pressed(LEFT, btn_val);
         right = button_pressed(RIGHT, btn_val);
         up = button_pressed(UP, btn_val);

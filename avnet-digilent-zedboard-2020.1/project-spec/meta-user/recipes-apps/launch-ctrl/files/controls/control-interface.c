@@ -25,7 +25,8 @@ gpio_addr_maps_t init_interface()
 	}
 	else
 	{
-		map.button_addr = mmap(NULL, REG_SIZE_BYTES * BUTTON_REG_COUNT, PROT_READ | PROT_WRITE, MAP_PRIVATE, mem, BUTTON_BASE_ADDR);
+		map.button_addr = mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, mem, BUTTON_BASE_ADDR);
+		printf("Button Addr: %x\n", map.button_addr);
 	}
 
 	if(map.button_addr == ERROR_U32_PTR)
@@ -43,7 +44,8 @@ gpio_addr_maps_t init_interface()
 	}
 	else
 	{
-		map.sw_addr = mmap(NULL, REG_SIZE_BYTES * SWITCH_REG_COUNT, PROT_READ | PROT_WRITE, MAP_PRIVATE, mem, SWITCH_BASE_ADDR);
+		map.sw_addr = mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, mem, SWITCH_BASE_ADDR);
+		printf("Switch Addr: %x\n", map.sw_addr);
 	}
 
 	if(map.sw_addr == ERROR_U32_PTR)
