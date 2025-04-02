@@ -34,11 +34,12 @@ int main()
 
     while(1)
     {
+        // Stop launchers previous command
+        send_command(LAUNCHER_STOP, miss_launch);
+
         // Get button and switch values
         sw_val = get_switch_states(maps);
-        printf("Got switches! Value: %x\n", sw_val);
         btn_val = get_button_states(maps);
-        printf("Got buttons! Value: %x\n", btn_val);
         
 
         // Set state variables
@@ -61,6 +62,7 @@ int main()
         {
             send_command(LAUNCHER_FIRE, miss_launch);
             usleep(FIRE_TIME);
+            send_command(LAUNCHER_STOP, miss_launch);
         }
         else
         {
@@ -75,6 +77,27 @@ int main()
                 down = 0;
             }
 
+            uint8_t command = 0;
+
+            if(right)
+            {
+                command |= LAUNCHER_RIGHT;
+            }
+
+            if(left)
+            {
+                command |= LAUNCHER_LEFT;
+            }
+
+            if(up)
+            {
+                command |= LAUNCHER_UP;
+            }
+
+            if(down)
+            {
+                command |= LAUNCHER_DOWN;
+            }
 
         }
 
