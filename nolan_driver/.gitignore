@@ -8,3 +8,4 @@
 *.o
 *.cmd
 launcher-fire-buttons
+mmap_test

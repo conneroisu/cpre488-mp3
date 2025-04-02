@@ -14,22 +14,43 @@ gpio_addr_maps_t init_interface()
 	if(mem < 0)
 	{
 		printf("ERROR: Could not open %s\n", MEM_DEVICE);
+		perror("Error Description: ");
 		return ERROR_GPIO_ADDR_MAPS;
 	}
 
-	map.button_addr = mmap(NULL, REG_SIZE_BYTES * BUTTON_REG_COUNT, PROT_READ | PROT_WRITE, MAP_PRIVATE, mem, BUTTON_BASE_ADDR / page_size);
+	// Make sure that button address is a multiple of page_size
+	if(BUTTON_BASE_ADDR % page_size)
+	{
+		printf("ERROR: Button address is not a multiple of page_size! Addr: %x, Page Size: %lx\n", BUTTON_BASE_ADDR, page_size);
+		return ERROR_GPIO_ADDR_MAPS;
+	}
+	else
+	{
+		map.button_addr = mmap(NULL, REG_SIZE_BYTES * BUTTON_REG_COUNT, PROT_READ | PROT_WRITE, MAP_PRIVATE, mem, BUTTON_BASE_ADDR);
+	}
 
-	if(map.button_addr < 0)
+	if(map.button_addr == ERROR_U32_PTR)
 	{
 		printf("ERROR: Could not get mapping to buttons!\n");
+		perror("Error Description: ");
 		return ERROR_GPIO_ADDR_MAPS;
 	}
 
-	map.sw_addr = mmap(NULL, REG_SIZE_BYTES * SWITCH_REG_COUNT, PROT_READ | PROT_WRITE, MAP_PRIVATE, mem, SWITCH_BASE_ADDR / page_size);
+	// Make sure that switch address is a multiple of page_size
+	if(SWITCH_BASE_ADDR % page_size)
+	{
+		printf("ERROR: Switch address is not a multiple of page_size! Addr: %x, Page Size: %lx\n", SWITCH_BASE_ADDR, page_size);
+		return ERROR_GPIO_ADDR_MAPS;
+	}
+	else
+	{
+		map.sw_addr = mmap(NULL, REG_SIZE_BYTES * SWITCH_REG_COUNT, PROT_READ | PROT_WRITE, MAP_PRIVATE, mem, SWITCH_BASE_ADDR);
+	}
 
-	if(map.sw_addr < 0)
+	if(map.sw_addr == ERROR_U32_PTR)
 	{
 		printf("ERROR: Could not get mapping to switches!\n");
+		perror("Error Description: ");
 		return ERROR_GPIO_ADDR_MAPS;
 	}
 

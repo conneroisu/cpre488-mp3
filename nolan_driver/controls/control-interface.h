@@ -6,9 +6,11 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #define REG_SIZE_BYTES 4
 #define ERROR_GPIO_ADDR_MAPS ((gpio_addr_maps_t) {.button_addr = 0x0, .sw_addr = 0x0})
+#define ERROR_U32_PTR ((uint32_t*) 0xFFFFFFFF)
 
 #define BUTTON_BASE_ADDR 0x41210000
 #define BUTTON_REG_COUNT 2
