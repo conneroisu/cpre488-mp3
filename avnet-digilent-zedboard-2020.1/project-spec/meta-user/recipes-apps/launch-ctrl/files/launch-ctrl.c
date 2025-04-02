@@ -36,13 +36,13 @@ int main()
     {
         // Get button and switch values
         sw_val = get_switch_states(maps);
-        printf("Got switches\n");
+        printf("Got switches! Value: %x\n", sw_val);
         btn_val = get_button_states(maps);
-        printf("Got buttons\n");
+        printf("Got buttons! Value: %x\n", btn_val);
         
 
         // Set state variables
-        exit = !(sw_val & 0x1);
+        exit = 0;
         left = button_pressed(LEFT, btn_val);
         right = button_pressed(RIGHT, btn_val);
         up = button_pressed(UP, btn_val);
