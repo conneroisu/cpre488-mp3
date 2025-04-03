@@ -32,6 +32,7 @@ typedef enum buttons
 
 
 gpio_addr_maps_t init_interface();
+void cleanup_interface(gpio_addr_maps_t maps);
 
 uint32_t get_button_states(gpio_addr_maps_t map);
 
