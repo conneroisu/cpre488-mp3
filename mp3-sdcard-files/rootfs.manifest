@@ -66,8 +66,8 @@ kernel-modules zedboard_zynq7 5.4+git999
 kmod-lic cortexa9t2hf_neon 26
 launcher-driver zedboard_zynq7 1.0
 launcher-driver-lic zedboard_zynq7 1.0
-launcher-fire cortexa9t2hf_neon 1.0
-launcher-fire-lic cortexa9t2hf_neon 1.0
+launcher-fire-buttons cortexa9t2hf_neon 1.0
+launcher-fire-buttons-lic cortexa9t2hf_neon 1.0
 libattr1 cortexa9t2hf_neon 2.4.47
 libblkid1 cortexa9t2hf_neon 2.34
 libc6 cortexa9t2hf_neon 2.30

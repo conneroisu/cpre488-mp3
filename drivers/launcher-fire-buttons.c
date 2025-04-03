@@ -80,6 +80,7 @@ int main() {
         
         // Determine command based on button presses
         if (btn_state & BTNC) {
+            printf("Center Button\n");
             cmd = LAUNCHER_FIRE;
         } 
         // Diagonal movements
@@ -98,17 +99,22 @@ int main() {
         // Single direction movements
         else if (btn_state & BTNU) {
             cmd = LAUNCHER_UP;
+            printf("Center UP\n");
         } 
         else if (btn_state & BTNR) {
             cmd = LAUNCHER_RIGHT;
+            printf("Center RIGHT\n");
         } 
         else if (btn_state & BTND) {
             cmd = LAUNCHER_DOWN;
+            printf("Center DOWN\n");
         } 
         else if (btn_state & BTNL) {
             cmd = LAUNCHER_LEFT;
+            printf("Center LEFT\n");
         } 
         else {
+            printf("Nothing\n");
             cmd = LAUNCHER_STOP;
         }
 
@@ -116,10 +122,13 @@ int main() {
         launcher_cmd(fd, cmd);
         
         // For movement commands, send stop after short delay
-        if (cmd != LAUNCHER_FIRE && cmd != LAUNCHER_STOP) {
-            usleep(MOVE_DURATION * 1000);
-            launcher_cmd(fd, LAUNCHER_STOP);
-        }
+        // if (cmd != LAUNCHER_FIRE && cmd != LAUNCHER_STOP) {
+        //     printf("Enter Usleep \n");
+        //     usleep(MOVE_DURATION * 1000);
+        //     launcher_cmd(fd, LAUNCHER_STOP);
+        // }
+
+        printf("End\n");
     }
 
     // Cleanup (unreachable in this loop)
@@ -131,25 +140,56 @@ int main() {
 /**
  * Sends a command to the launcher device
  */
-static void launcher_cmd(int fd, int cmd) {
-    int retval = write(fd, &cmd, 1);
+// static void launcher_cmd(int fd, int cmd) {
+//     int retval = write(fd, &cmd, 1);
     
-    while (retval != 1) {
-        if (retval < 0) {
-            perror("Command failed");
-            return;
-        } 
-        else if (retval == 0) {
-            printf("Launcher busy, retrying...\n");
-        }
-        retval = write(fd, &cmd, 1);
-    }
+//     while (retval != 1) {
+//         if (retval < 0) {
+//             perror("Command failed");
+//             return;
+//         } 
+//         else if (retval == 0) {
+//             printf("Launcher busy, retrying...\n");
+//         }
+//         retval = write(fd, &cmd, 1);
+//     }
 
-    // Extra delay for fire command
-    if (cmd == LAUNCHER_FIRE) {
-        usleep(2000000); // 2 second delay for firing
-    }
+//     // Extra delay for fire command
+//     if (cmd == LAUNCHER_FIRE) {
+//         usleep(2000000); // 2 second delay for firing
+//     }
+// }
+
+static void launcher_cmd(int fd, int cmd) {
+  int retval = 0;
+    printf("Enter launch\n");
+
+  retval = write(fd, &cmd, 1);
+//   while (retval != 1) {
+//     if (retval < 0) {
+//       fprintf(stderr, "Could not send command to %s (error %d)\n",
+//               LAUNCHER_NODE, retval);
+//     }
+
+//     else if (retval == 0) {
+//       fprintf(stdout, "Command busy, waiting...\n");
+//     }
+
+//     printf("While Loop\n");
+//   }
+
+  if (cmd == LAUNCHER_FIRE) {
+    printf("Start\n");
+    usleep(5000000);
+    printf("End\n");
+  }
+
+    printf("Exit launch\n");
 }
+
+
+
+
 
 /**
  * Cleanup handler registered with on_exit
