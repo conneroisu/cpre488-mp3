@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:16.04
 
 # Define build arguments for installer customization
 ARG PETALINUX_INSTALLER=petalinux-v2020.1-final-installer.run
