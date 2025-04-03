@@ -175,8 +175,6 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
     // A command to the turret has to be 8 bytes
     ssize_t command_size = LAUNCHER_CTRL_BUFFER_SIZE;
 
-    pr_alert("Attempting a write operation!\n");
-
     dev = file->private_data;
 
     /* verify that we actually have some data to write */
@@ -270,8 +268,6 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
                 __func__, retval);
         goto exit;
     }
-
-    pr_alert("Finished a write operation!\n");
 
 exit:
     if(sem_downed)
