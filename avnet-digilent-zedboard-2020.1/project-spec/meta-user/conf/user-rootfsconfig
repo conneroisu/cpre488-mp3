@@ -4,3 +4,5 @@
 CONFIG_gpio-demo
 CONFIG_peekpoke
 CONFIG_launcher-driver
+CONFIG_vision-app
+CONFIG_opencv
