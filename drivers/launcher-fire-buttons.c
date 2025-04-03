@@ -7,7 +7,7 @@
 /*-------- CONSTANTS --------*/
 
 // Button addresses and masks
-#define BTN_ADDRESS 0x41240000
+#define BTN_ADDRESS 0x41210000
 #define BTNC 0x01               // Center button (fire)
 #define BTNU 0x10               // Up
 #define BTND 0x02               // Down
@@ -15,7 +15,7 @@
 #define BTNR 0x08               // Right
 
 // Launcher commands
-#define LAUNCHER_NODE "/dev/launcher0"
+#define LAUNCHER_NODE "/dev/miss_launch0"
 #define LAUNCHER_FIRE 0x10
 #define LAUNCHER_STOP 0x20
 #define LAUNCHER_UP 0x02
