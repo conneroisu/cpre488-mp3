@@ -82,7 +82,8 @@ struct DetectionParams {
 
 // Function prototypes
 int open_launcher_device();
-int move_launcher(int launcher_fd, unsigned char direction);
+int move_launcher(int launcher_fd, //
+                  unsigned char direction);
 int fire_launcher(int launcher_fd);
 int stop_launcher(int launcher_fd);
 void delay_ms(int ms);
@@ -92,7 +93,8 @@ int aim_launcher(int launcher_fd,
                  int target_x,
                  int target_y,
                  float target_z);
-int adjust_aim_for_depth(int launcher_fd, float target_z);
+int adjust_aim_for_depth(int launcher_fd, //
+                         float target_z);
 void setup_color_thresholds(TargetColor color,
                             ColorThreshold &primary,
                             ColorThreshold &secondary,
@@ -443,13 +445,20 @@ cv::Point detect_target_hsv(cv::Mat &frame,
 
   // Create binary masks for the selected color range
   cv::Mat mask1, mask2, mask;
-  cv::inRange(hsv_frame, params.primary.lower, params.primary.upper,
-              mask1);
+  cv::inRange(hsv_frame,            //
+              params.primary.lower, //
+              params.primary.upper, //
+              mask1                 //
+  );
 
   if (params.useMultiRange) {
-    cv::inRange(hsv_frame, params.secondary.lower,
-                params.secondary.upper, mask2);
-    cv::bitwise_or(mask1, mask2, mask);
+    cv::inRange(hsv_frame,              //
+                params.secondary.lower, //
+                params.secondary.upper, //
+                mask2);
+    cv::bitwise_or(mask1, //
+                   mask2, //
+                   mask);
   } else {
     mask = mask1;
   }
@@ -458,12 +467,19 @@ cv::Point detect_target_hsv(cv::Mat &frame,
   cv::Mat kernel = cv::getStructuringElement(
       cv::MORPH_ELLIPSE,
       cv::Size(MORPH_KERNEL_SIZE, MORPH_KERNEL_SIZE));
-  cv::morphologyEx(mask, mask, cv::MORPH_OPEN, kernel);
-  cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, kernel);
+  cv::morphologyEx(mask, //
+                   mask, //
+                   cv::MORPH_OPEN, kernel);
+  cv::morphologyEx(mask,            //
+                   mask,            //
+                   cv::MORPH_CLOSE, //
+                   kernel);
 
   // Find contours in the mask
   std::vector<std::vector<cv::Point>> contours;
-  cv::findContours(mask, contours, cv::RETR_EXTERNAL,
+  cv::findContours(mask,              //
+                   contours,          //
+                   cv::RETR_EXTERNAL, //
                    cv::CHAIN_APPROX_SIMPLE);
 
   // Process the found contours to identify potential targets
@@ -520,11 +536,22 @@ cv::Point detect_target_hsv(cv::Mat &frame,
 }
 
 /**
- * Detects a target using shape detection (circles/ellipses)
+ * @brief Detects a target using shape detection (circles/ellipses)
+ *
  * This is a fallback method if HSV color detection fails
+ *
  * Returns the center point of the detected target and sets detected
- * flag Also adds visualization to the debug frame and updates
- * estimated_z
+ * flag.
+ *
+ * Also adds visualization to the debug frame and updates
+ * estimated_z.
+ *
+ * @param frame The frame to detect the target in.
+ * @param debug_frame The debug frame to add visualization to.
+ * @param params The detection parameters.
+ * @param detected The detected flag.
+ * @param estimated_z The estimated z value.
+ * @return The center point of the detected target.
  */
 cv::Point detect_target_shape(cv::Mat &frame,
                               cv::Mat &debug_frame,
@@ -544,15 +571,23 @@ cv::Point detect_target_shape(cv::Mat &frame,
 
   // Use Hough Circle Transform to detect circles
   std::vector<cv::Vec3f> circles;
-  cv::HoughCircles(gray, circles, cv::HOUGH_GRADIENT, 1,
-                   gray.rows / 8, 100, 30, 10, 100);
+  cv::HoughCircles(gray,               //
+                   circles,            //
+                   cv::HOUGH_GRADIENT, //
+                   1,                  //
+                   gray.rows / 8,      //
+                   100,                //
+                   30,                 //
+                   10,                 //
+                   100);
 
   // Process the found circles
   if (!circles.empty()) {
     // Find the most centered circle (closest to image center)
     float min_distance = FLT_MAX;
     int best_circle = -1;
-    cv::Point image_center(frame.cols / 2, frame.rows / 2);
+    cv::Point image_center(frame.cols / 2, //
+                           frame.rows / 2);
 
     for (size_t i = 0; i < circles.size(); i++) {
       cv::Point center(cvRound(circles[i][0]),
@@ -577,11 +612,16 @@ cv::Point detect_target_shape(cv::Mat &frame,
 
       // Draw the circle for visualization in debug mode
       if (debug_frame.data) {
-        cv::circle(debug_frame, target_center,
-                   cvRound(circles[best_circle][2]),
-                   cv::Scalar(255, 0, 0), 2);
-        cv::circle(debug_frame, target_center, 3,
-                   cv::Scalar(0, 0, 255), -1);
+        cv::circle(debug_frame,                      //
+                   target_center,                    //
+                   cvRound(circles[best_circle][2]), //
+                   cv::Scalar(255, 0, 0),            //
+                   2);
+        cv::circle(debug_frame,           //
+                   target_center,         //
+                   3,                     //
+                   cv::Scalar(0, 0, 255), //
+                   -1);
 
         // Draw radius information
         std::string radius_text =
@@ -603,7 +643,9 @@ cv::Point detect_target_shape(cv::Mat &frame,
 
     // Find contours in the edge image
     std::vector<std::vector<cv::Point>> contours;
-    cv::findContours(edges, contours, cv::RETR_LIST,
+    cv::findContours(edges,         //
+                     contours,      //
+                     cv::RETR_LIST, //
                      cv::CHAIN_APPROX_SIMPLE);
 
     // Look for circular contours
@@ -685,7 +727,7 @@ float estimate_z_position(double apparent_diameter_pixels) {
 }
 
 /**
- * Opens the launcher device
+ * Opens the launcher device.
  * Returns file descriptor or -1 on error
  */
 int open_launcher_device() {
@@ -694,7 +736,7 @@ int open_launcher_device() {
 }
 
 /**
- * Moves the launcher in the specified direction
+ * Moves the launcher in the specified direction.
  * Returns 0 on success, -1 on error
  */
 int move_launcher(int launcher_fd, unsigned char direction) {
