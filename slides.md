@@ -13,4 +13,9 @@ Autonomous Turret
 
 ---
 
+## Cleaning
+
+```
+petalinux-build -x mrproper -f
+```
 
