@@ -106,6 +106,10 @@ RUN apt-get update && apt-get install -y \
     rsync \
     expect \
     bc \
+    ncurses-dev:i386 \
+    libstdc\+\+6:i386 \
+    libselinux1:i386 \
+    lib32ncurses5-dev \
     && apt-get clean
 
 RUN locale-gen en_US.UTF-8
