@@ -1,17 +1,3 @@
-/*
- * Missle Launcher driver
- *
- * Derrived from USB Skeleton Driver:
- * Copyright (C) 2001-2004 Greg Kroah-Hartman (greg@kroah.com)
- *
- *	This program is free software; you can redistribute it and/or
- *	modify it under the terms of the GNU General Public License as
- *	published by the Free Software Foundation, version 2.
- *
- * This driver is based on the 2.6.3 version of drivers/usb/usb-skeleton.c
- * but has been rewritten to be easier to read and use.
- *
- */
 
 #include <linux/kernel.h>
 #include <linux/errno.h>
@@ -450,3 +436,9 @@ static struct usb_driver miss_launch_driver = {
 };
 
 module_usb_driver(miss_launch_driver);
+
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Conner Ohnesorge");
+MODULE_DESCRIPTION("USB Launcher Driver");
+

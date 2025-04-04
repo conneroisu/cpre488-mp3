@@ -1,0 +1,9 @@
+---
+Language: Cpp
+ColumnLimit: 70
+BasedOnStyle: LLVM
+IndentWidth: 2
+BinPackParameters: false
+AlignAfterOpenBracket: Align
+AllowAllParametersOfDeclarationOnNextLine: false
+---

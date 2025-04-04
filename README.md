@@ -2,10 +2,10 @@
 
 - [x] Explain how this Make process was configured to appropriately use a cross-compiler targeting the ARM architecture.
 - [x] Explanatory annotation of the boot messages that print as PetaLinux starts up. 
-- [ ] Include the kernel messages that result from the plugging in the of the usb missle launcher.
+- [x] Include the kernel messages that result from the plugging in the of the usb missle launcher.
 - [ ] Describe changes made to the usb driver `usb-skeletion.c`
-- [ ] Describe the operation of the `launcher_fire.c` file.
-- [ ] Describe algorithm used to detect the target.
+- [x] Describe the operation of the `launcher_fire.c` file.
+- [x] Describe algorithm used to detect the target.
 
 
 # In your writeup, briefly explain how this Make process was configured to appropriately use a cross-compiler targeting the ARM architecture.
@@ -281,4 +281,297 @@ Starting syslogd/klogd: done
 Starting tcf-agent: OK
 ```
 Starting various system services: internet services daemon, system logging, and TCF (Target Communication Framework) agent.
+
+
+## Kernel Messages For USB Device
+
+> Note: This is prior to setup of the kernel object device driver.
+
+```bash
+avnet-digilent-zedboard-2020_1:~$ usb 1-1: new low-speed USB device number 2 using ci_hdrc
+usb 1-1: New USB device found, idVendor=2123, idProduct=1010, bcdDevice= 0.01
+usb 1-1: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+usb 1-1: Product: USB Missile Launcher
+usb 1-1: Manufacturer: Syntek
+hid-generic 0003:2123:1010.0001: device has no listeners, quitting
+```
+1. `usb 1-1: new low-speed USB device number 2 using ci_hdrc` - This indicates a new USB device connecting at the low-speed USB specification (1.5 Mbps) and is being assigned device number 2. The "ci_hdrc" refers to the USB host controller driver.
+
+2. `usb 1-1: New USB device found, idVendor=2123, idProduct=1010, bcdDevice= 0.01` - The system has identified the USB device with its vendor ID (2123) and product ID (1010). These unique identifiers tell the system what device is connected. The bcdDevice value (0.01) indicates the device's firmware/version number.
+
+3. `usb 1-1: New USB device strings: Mfr=1, Product=2, SerialNumber=0` - This shows that the device provides manufacturer and product string descriptors but no serial number.
+
+4. `usb 1-1: Product: USB Missile Launcher` - The product string identifies it as the USB Missile Launcher.
+
+5. `usb 1-1: Manufacturer: Syntek` - The manufacturer is identified as Syntek.
+
+6. `hid-generic 0003:2123:1010.0001: device has no listeners, quitting` - This is expected since the device needs a specific driver.
+
+## Operation of Initial `launcher_fire.c`
+
+The code defines a set of command constants that correspond to different actions the missile launcher can perform, such as:
+
+- LAUNCHER_FIRE (`0x10`): Fires a dart/missile
+- LAUNCHER_STOP (`0x20`): Stops all movement
+- LAUNCHER_UP (`0x02`), DOWN (`0x01`), LEFT (`0x04`), RIGHT (`0x08`): Directional controls
+- Combined directions like UP_LEFT, DOWN_RIGHT, etc.
+
+The program relies on the Linux character device driver properly translating these simple commands into the appropriate USB control messages that the missile launcher hardware can understand.
+
+The main logic is implemented through:
+
+The `launcher_cmd()` function which:
+1. Takes a file descriptor and command as input
+2. Attempts to write the command to the device file
+3. Handles error conditions if the write fails
+4. Adds a 5-second delay after firing to allow the launcher to complete its firing sequence
+The `main()` function which:
+1. Opens the device file `/dev/launcher0` with read/write permissions
+2. Sets the command to LAUNCHER_FIRE (this is fixed, not user-controlled)
+3. Sends the fire command to the launcher
+4. Waits for a specified duration (500ms)
+5. Sends the stop command
+6. Closes the file descriptor
+
+This particular functionality is quite simple - it just fires the missile launcher once when executed. 
+
+## Algorithm to detect Target
+
+### System Architecture
+
+The system combines computer vision processing with physical hardware control, structured around several key components:
+
+1. **Framebuffer Interface**: The system maps the FPGA's framebuffer memory directly into the application's memory space, providing direct access to the camera feed.
+
+```cpp
+// Map framebuffer memory
+fb_mem = mmap(NULL, FB_SIZE, PROT_READ, MAP_SHARED, mem_fd, FB_PHYS_ADDR);
+```
+
+2. **Launcher Control Interface**: A device driver interface allows the software to command a physical launcher device through simple directional commands.
+
+3. **Computer Vision Processing**: The system uses OpenCV for real-time target detection, combining color-based and shape-based detection methods.
+
+4. **Targeting Logic**: Once targets are detected, the system performs depth estimation and aims the launcher accordingly.
+
+## Target Detection Algorithm
+
+The detection algorithm employs a dual-method approach to maximize reliability:
+
+### 1. Color-Based (HSV) Detection
+
+The primary detection method uses HSV color filtering to isolate potential targets based on their color:
+
+```cpp
+cv::Point detect_target_hsv(cv::Mat &frame,
+                           cv::Mat &debug_frame,
+                           DetectionParams &params,
+                           bool &detected,
+                           float &estimated_z) {
+  // Convert the frame from BGR to HSV color space
+  cv::Mat hsv_frame;
+  cv::cvtColor(frame, hsv_frame, cv::COLOR_BGR2HSV);
+
+  // Create binary masks for the selected color range
+  cv::Mat mask1, mask2, mask;
+  cv::inRange(hsv_frame, params.primary.lower, params.primary.upper, mask1);
+
+  if (params.useMultiRange) {
+    cv::inRange(hsv_frame, params.secondary.lower, params.secondary.upper, mask2);
+    cv::bitwise_or(mask1, mask2, mask);
+  } else {
+    mask = mask1;
+  }
+  
+  // Apply morphological operations to clean up the mask
+  // ...
+}
+```
+
+The algorithm accommodates complex color ranges (like red, which wraps around the hue spectrum) by using multiple threshold ranges when needed.
+
+### 2. Shape-Based Detection
+
+As a fallback, the system also implements shape-based detection using both Hough Circle Transform and contour circularity analysis:
+
+```cpp
+// Use Hough Circle Transform to detect circles
+std::vector<cv::Vec3f> circles;
+cv::HoughCircles(gray, circles, cv::HOUGH_GRADIENT, 1,
+                gray.rows / 8, 100, 30, 10, 100);
+```
+
+For enhanced reliability, the system also analyzes contour circularity when Hough transform fails:
+
+```cpp
+// Circularity = 4π × Area / Perimeter²
+// Perfect circle has circularity = 1
+double circularity = 4 * M_PI * area / (perimeter * perimeter);
+
+if (circularity > 0.7 && circularity > maxCircularity) {
+  maxCircularity = circularity;
+  bestContour = i;
+}
+```
+
+### Depth Estimation
+
+A key feature of this system is the ability to estimate the target's distance from the camera based on its apparent size (knowing the camera's focal length, target diameter, and apparent diameter):
+
+```cpp
+float estimate_z_position(double apparent_diameter_pixels) {
+  if (apparent_diameter_pixels <= 0) {
+    return MAX_TARGET_DISTANCE_CM;
+  }
+
+  float estimated_distance = (FOCAL_LENGTH_PIXELS * TARGET_ACTUAL_DIAMETER_CM) / apparent_diameter_pixels;
+
+  if (estimated_distance < MIN_TARGET_DISTANCE_CM) {
+    estimated_distance = MIN_TARGET_DISTANCE_CM;
+  } else if (estimated_distance > MAX_TARGET_DISTANCE_CM) {
+    estimated_distance = MAX_TARGET_DISTANCE_CM;
+  }
+
+  return estimated_distance;
+}
+```
+
+This calculation uses the principle that a target of known physical size (`TARGET_ACTUAL_DIAMETER_CM`) appears smaller in the image as its distance increases.
+
+By knowing the camera's focal length (converted to pixels), we can derive the distance.
+
+### Launcher Control Algorithm
+
+The launcher control system uses a proportional approach to aim at targets:
+
+```cpp
+int aim_launcher(int launcher_fd,
+                int current_x,
+                int current_y,
+                int target_x,
+                int target_y,
+                float target_z) {
+  int dx = target_x - current_x;
+  int dy = target_y - current_y;
+  
+  // If target is already centered (within dead zone), we're done
+  if (abs(dx) < LAUNCHER_DEAD_ZONE && abs(dy) < LAUNCHER_DEAD_ZONE) {
+    // Apply depth-based adjustments
+    ret = adjust_aim_for_depth(launcher_fd, target_z);
+    return ret;
+  }
+  
+  // Handle horizontal movement first
+  // ...
+}
+```
+
+Notable aspects of the aiming algorithm:
+
+1. It implements a dead zone to prevent jitter when the target is nearly centered
+2. It handles horizontal and vertical movements separately
+3. Movement duration is proportional to the distance the launcher needs to travel
+4. It includes a recursive approach to refine aiming with a limit of 5 attempts
+5. It adjusts aim based on target depth to account for projectile ballistics
+
+```cpp
+int adjust_aim_for_depth(int launcher_fd, float target_z) {
+  // Skip adjustment for close targets
+  if (target_z <= 100.0f) {
+    return 0;
+  }
+
+  // Calculate adjustment time - more adjustment for distant targets
+  int adjustment_ms = (int)((target_z - 100.0f) * 0.5f);
+
+  if (adjustment_ms > 0) {
+    std::cout << "Depth adjustment: Moving UP for " << adjustment_ms
+              << " ms to compensate for distance" << std::endl;
+    move_launcher(launcher_fd, LAUNCHER_UP);
+    delay_ms(adjustment_ms);
+    stop_launcher(launcher_fd);
+    return 0;
+  }
+
+  return 0;
+}
+```
+
+### Firing Logic
+
+The system employs a confirmation-based firing mechanism to prevent false positives:
+
+```cpp
+if (target_detected) {
+  std::cout << "Target detected at position (" << target_point.x
+            << ", " << target_point.y << ", " << target_z
+            << " cm)" << std::endl;
+
+  consecutive_detections++;
+
+  // Only fire when we have consistent detections to avoid false positives
+  if (consecutive_detections >= fire_threshold && fire_cooldown <= 0) {
+    // Aim launcher at the target
+    ret = aim_launcher(launcher_fd, LAUNCHER_CENTER_X,
+                       LAUNCHER_CENTER_Y, target_point.x,
+                       target_point.y, target_z);
+
+    if (ret == 0) {
+      std::cout << "Target locked, firing!" << std::endl;
+      // Fire the launcher
+      fire_launcher(launcher_fd);
+
+      // Set cooldown period after firing
+      fire_cooldown = 20; // Approx 2 seconds at 100ms loop time
+      consecutive_detections = 0;
+    }
+  }
+}
+```
+
+Key aspects of the firing logic:
+1. It requires multiple consecutive successful detections before firing
+2. It implements a cooldown period after firing to prevent rapid repeated firing
+3. It only fires after the aiming process has completed successfully
+
+## Configurable Parameters
+
+```cpp
+// Target recognition parameters
+#define MIN_CONTOUR_AREA 500
+#define MAX_CONTOUR_AREA 50000
+#define MORPH_KERNEL_SIZE 5
+
+// Launcher control parameters
+#define LAUNCHER_MOVE_TIMEOUT_MS 1000
+#define LAUNCHER_CENTER_X (FB_WIDTH / 2)
+#define LAUNCHER_CENTER_Y (FB_HEIGHT / 2)
+#define LAUNCHER_DEAD_ZONE 20
+#define LAUNCHER_MAX_X_ANGLE 30
+#define LAUNCHER_MAX_Y_ANGLE 20
+
+// Z-position (depth) estimation parameters
+#define TARGET_ACTUAL_DIAMETER_CM 15.0
+#define CAMERA_FOV_HORIZONTAL_DEG 60.0
+```
+
+## Error Handling
+
+Added error handling helps to manage potential issues with hardware interfaces:
+
+```cpp
+mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
+if (mem_fd < 0) {
+  perror("Failed to open /dev/mem");
+  return -1;
+}
+
+// Map framebuffer memory
+fb_mem = mmap(NULL, FB_SIZE, PROT_READ, MAP_SHARED, mem_fd, FB_PHYS_ADDR);
+if (fb_mem == MAP_FAILED) {
+  perror("Failed to mmap framebuffer");
+  close(mem_fd);
+  return -1;
+}
+```
 
