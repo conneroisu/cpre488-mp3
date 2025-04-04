@@ -4,3 +4,4 @@ HARDWARE_CHECKSUM=0d1ef43744cadce512bf8b94b9483b02
 YOCTO_SDK=ec2933eff44b6c49df87d39a9666aafb
 
 HARDWARE_PATH=/tmp/conneroisu/cpre488-mp3/sw_btn_led_wrapper.xsa
+RFSCONFIG_CHKSUM=c62acebc47281edb38821656e96f9ff5
