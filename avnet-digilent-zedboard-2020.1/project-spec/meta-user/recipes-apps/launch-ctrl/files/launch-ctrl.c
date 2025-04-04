@@ -11,16 +11,15 @@
 // us
 #define FIRE_TIME 3000000
 
-// us
-#define MOVE_TIME 500000
-
 int send_command(uint8_t command, int miss_launch_fd);
 
 int main()
 {
-    int exit, left, right, up, down, fire, did_action = 0;
+    int exit, left, right, up, down, fire = 0;
 
     uint32_t btn_val, sw_val = 0;
+
+    uint8_t command, prev_command = 0;
 
     gpio_addr_maps_t maps = init_interface();
 
@@ -37,8 +36,7 @@ int main()
 
     while(1)
     {
-        // Stop launchers previous command
-        send_command(LAUNCHER_STOP, miss_launch);
+        command == LAUNCHER_STOP;
 
         // Get button and switch values
         sw_val = get_switch_states(maps);
@@ -63,11 +61,7 @@ int main()
         }
         else if(!left && !right && !up && !down && fire)
         {
-            send_command(LAUNCHER_FIRE, miss_launch);
-            usleep(FIRE_TIME);
-            send_command(LAUNCHER_STOP, miss_launch);
-
-            did_action = 1;
+            command = LAUNCHER_FIRE;
         }
         else
         {
@@ -81,8 +75,6 @@ int main()
             {
                 down = 0;
             }
-
-            uint8_t command = 0;
 
             if(right)
             {
@@ -105,19 +97,31 @@ int main()
             }
 
             send_command(command, miss_launch);
-            usleep(MOVE_TIME);
 
-            did_action = 1;
         }
 
-        // Only wait POLL_TIME when an action has not been done.
-        if(!did_action)
+        // Only send command different from the previous one.
+        if(command != prev_command)
         {
-            usleep(POLL_TIME);
+            // Send the command.
+            // Launch is special since it runs once and then stops
+            // Other commands just run.
+            if(command == LAUNCHER_FIRE, miss_launch)
+            {
+                send_command(LAUNCHER_FIRE, miss_launch);
+                usleep(FIRE_TIME);
+                command = LAUNCHER_STOP;
+                send_command(LAUNCHER_STOP, miss_launch);
+            }
+            else
+            {
+                send_command(command, miss_launch);
+            }
         }
 
-        did_action = 0;
-        
+        usleep(POLL_TIME);
+
+        prev_command = command;
     }
 
     close(miss_launch);
