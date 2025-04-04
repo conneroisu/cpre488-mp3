@@ -26,7 +26,7 @@ int fmc_imageon_enable(camera_config_t *config) {
                          "FMC-IPMI I2C Controller",
                          config->uBaseAddr_IIC_FmcIpmi);
   if (!ret) {
-    xil_printf("ERROR: Failed to open FMC-IIC driver,\n\r");
+    xil_printf("fail open impi\n\r");
     exit(1);
   }
 
@@ -35,8 +35,7 @@ int fmc_imageon_enable(camera_config_t *config) {
                       FMC_ID_ALL)) {
     fmc_ipmi_enable(&(config->fmc_ipmi_iic), FMC_ID_SLOT1);
   } else {
-    xil_printf(
-        "ERROR: Failed to validate FMC-IPMI I2C Controller.\n\r");
+    xil_printf("fail validate FMC-IPMI I2C Controller.\n\r");
     exit(1);
   }
 
@@ -44,7 +43,7 @@ int fmc_imageon_enable(camera_config_t *config) {
                          "FMC-IMAGEON I2C Controller",
                          config->uBaseAddr_IIC_FmcImageon);
   if (!ret) {
-    xil_printf("ERROR: Failed to open FMC-IIC driver\n\r");
+    xil_printf("fail open IIC\n\r");
     exit(1);
   }
 
@@ -82,12 +81,10 @@ int fmc_imageon_enable(camera_config_t *config) {
   vgen_config(&(config->vtc_tpg), config->hdmio_resolution, 1);
 
   // FMC-IMAGEON HDMI Output Initialization
-  xil_printf("FMC-IMAGEON HDMI Output Initialization ...\n\r");
   ret = fmc_imageon_hdmio_init(&(config->fmc_imageon), 1,
                                &(config->hdmio_timing), 0);
   if (!ret) {
-    xil_printf("ERROR : Failed to init FMC-IMAGEON HDMI Output "
-               "Interface\n\r");
+    xil_printf("fail init imageon HDMI\n\r");
     return 0;
   }
 
@@ -112,8 +109,6 @@ int fmc_imageon_enable(camera_config_t *config) {
       config->uNumFrames_HdmiFrameBuffer * ((1920 * 1080) << 1);
   volatile Xuint32 *pStorageMem =
       (Xuint32 *)config->uBaseAddr_MEM_HdmiFrameBuffer;
-
-  xil_printf("pStorageMem = %X\n\r", pStorageMem);
 
   // Frame #1 - Red pixels
   for (i = 0; i < storage_size / config->uNumFrames_HdmiFrameBuffer;
@@ -147,9 +142,8 @@ int fmc_imageon_enable(camera_config_t *config) {
   do {
     vita_enabled_error = fmc_imageon_enable_vita(config);
     if (vita_enable_attempt > VITA_ENABLE_ATTEMPT_LIMIT) {
-      xil_printf(
-          "VITA Camera failed to initialize after %d attempts\r\n",
-          VITA_ENABLE_ATTEMPT_LIMIT);
+      xil_printf("VITA Camera failed init after %d attempts\r\n",
+                 VITA_ENABLE_ATTEMPT_LIMIT);
       return -1;
     }
   } while (vita_enabled_error != 0);
@@ -175,7 +169,7 @@ int fmc_imageon_enable_vita(camera_config_t *config) {
   ret = onsemi_vita_sensor_initialize(
       &(config->onsemi_vita), SENSOR_INIT_ENABLE, config->bVerbose);
   if (ret == 0) {
-    xil_printf("VITA sensor failed to initialize ...\n\r");
+    xil_printf("VITA sensor init failed\n\r");
     return -1;
   }
 
@@ -186,8 +180,7 @@ int fmc_imageon_enable_vita(camera_config_t *config) {
   ret = onsemi_vita_sensor_1080P60(&(config->onsemi_vita),
                                    config->bVerbose);
   if (ret == 0) {
-    xil_printf(
-        "VITA sensor failed to configure for 1080P60 timing ...\n\r");
+    xil_printf("configure timing VITA failed\n\r");
     return -1;
   }
   sleep(1);
@@ -249,7 +242,7 @@ int fmc_imageon_enable_ipipe(camera_config_t *config) {
                                   XPAR_XVPROCSS_1_BASEADDR //
   );
   if (result != XST_SUCCESS) {
-    xil_printf("Error initializing 4:4:4 to 4:2:2 conversion\n\r");
+    xil_printf("Error init 4:4:4 to 4:2:2\n\r");
     return -1;
   }
 
@@ -288,7 +281,7 @@ int fmc_imageon_enable_ipipe(camera_config_t *config) {
                                   XPAR_XVPROCSS_0_BASEADDR //
   );
   if (result != XST_SUCCESS) {
-    xil_printf("Error initializing RGB to 4:4:4 conversion\n\r");
+    xil_printf("failed init RGB to 4:4:4\n\r");
     return -1;
   }
 
@@ -300,15 +293,13 @@ int fmc_imageon_enable_ipipe(camera_config_t *config) {
                                XVIDC_CR_0_255       //
   );
   if (result != XST_SUCCESS) {
-    xil_printf("Error setting colorspace for RGB to YCrCb 4:4:4 "
-               "conversion\n\r");
+    xil_printf("failed colorspace RGB to YCrCb 4:4:4\n\r");
     return -1;
   }
 
   result = XVprocSs_SetSubsystemConfig(&proc_ss_RGB_YCrCb_444);
   if (result != XST_SUCCESS) {
-    xil_printf("Error setting subsystem configuration for RGB to "
-               "4:4:4 conversion\n\r");
+    xil_printf("failed ss configuration for RGB to 4:4:4\n\r");
     return -1;
   }
   result = XV_CscSetColorspace(proc_ss_RGB_YCrCb_444.CscPtr,
@@ -319,8 +310,7 @@ int fmc_imageon_enable_ipipe(camera_config_t *config) {
                                XVIDC_CR_0_255       //
   );
   if (result != XST_SUCCESS) {
-    xil_printf("Error setting colorspace for RGB to YCrCb 4:4:4 "
-               "conversion\n\r");
+    xil_printf("failed colorspace RGB to YCrCb 4:4:4\n\r");
     return -1;
   }
   XVprocSs_Start(&proc_ss_RGB_YCrCb_444);
