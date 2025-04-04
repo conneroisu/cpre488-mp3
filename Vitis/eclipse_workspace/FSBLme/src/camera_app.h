@@ -1,18 +1,18 @@
 #ifndef __CAMERA_APP_H__
 #define __CAMERA_APP_H__
 
-#include <xparameters.h>
-#include <xbasic_types.h>
-#include <xil_printf.h>
-#include <sleep.h>
 #include "fmc_iic.h"
-#include "fmc_ipmi.h"
 #include "fmc_imageon.h"
+#include "fmc_ipmi.h"
 #include "onsemi_vita_sw.h"
-#include "xvprocss.h"	 // Uncomment when using Video Processing Subsystem IP cores
-#include "xvtc.h"
 #include "xaxivdma.h"
 #include "xtpg_app.h"
+#include "xvprocss.h" // Uncomment when using Video Processing Subsystem IP cores
+#include "xvtc.h"
+#include <sleep.h>
+#include <xbasic_types.h>
+#include <xil_printf.h>
+#include <xparameters.h>
 
 // Constants for library code
 #define ZED_FMC_IMAGEON_GETTING_STARTED_HW
@@ -20,59 +20,58 @@
 
 // This structure contains the configuration context for the
 // camera peripherals
-struct struct_camera_config_t
-{
+struct struct_camera_config_t {
 
-	// IP base addresses
-	Xuint32 uBaseAddr_MUX_VideoSource;
-	Xuint32 uBaseAddr_IIC_FmcIpmi;
-	Xuint32 uBaseAddr_IIC_FmcImageon;
-	Xuint32 uBaseAddr_IIC_HdmiOut;
-	Xuint32 uBaseAddr_VITA_SPI;
-	Xuint32 uBaseAddr_VITA_CAM;
-	Xuint32 uBaseAddr_TPG_PatternGenerator;
+  // IP base addresses
+  Xuint32 uBaseAddr_MUX_VideoSource;
+  Xuint32 uBaseAddr_IIC_FmcIpmi;
+  Xuint32 uBaseAddr_IIC_FmcImageon;
+  Xuint32 uBaseAddr_IIC_HdmiOut;
+  Xuint32 uBaseAddr_VITA_SPI;
+  Xuint32 uBaseAddr_VITA_CAM;
+  Xuint32 uBaseAddr_TPG_PatternGenerator;
 
-	Xuint32 uDeviceId_VTC_ipipe;
-	Xuint32 uDeviceId_VTC_tpg;
+  Xuint32 uDeviceId_VTC_ipipe;
+  Xuint32 uDeviceId_VTC_tpg;
 
-	Xuint32 uDeviceId_CFA;
-	Xuint32 uDeviceId_CRES;
-	Xuint32 uDeviceId_RGBYCC;
+  Xuint32 uDeviceId_CFA;
+  Xuint32 uDeviceId_CRES;
+  Xuint32 uDeviceId_RGBYCC;
 
-	// Frame Buffer memory addresses
-	Xuint32 uDeviceId_VDMA_HdmiFrameBuffer;
-	Xuint32 uBaseAddr_VDMA_HdmiFrameBuffer;
-	Xuint32 uBaseAddr_MEM_HdmiFrameBuffer;
-	Xuint32 uNumFrames_HdmiFrameBuffer;
+  // Frame Buffer memory addresses
+  Xuint32 uDeviceId_VDMA_HdmiFrameBuffer;
+  Xuint32 uBaseAddr_VDMA_HdmiFrameBuffer;
+  Xuint32 uBaseAddr_MEM_HdmiFrameBuffer;
+  Xuint32 uNumFrames_HdmiFrameBuffer;
 
-	// VDMA data structures
-	XAxiVdma vdma_hdmi;
-	XAxiVdma_DmaSetup vdmacfg_hdmi_read;
-	XAxiVdma_DmaSetup vdmacfg_hdmi_write;
+  // VDMA data structures
+  XAxiVdma vdma_hdmi;
+  XAxiVdma_DmaSetup vdmacfg_hdmi_read;
+  XAxiVdma_DmaSetup vdmacfg_hdmi_write;
 
-	fmc_iic_t fmc_ipmi_iic;
-	fmc_iic_t fmc_imageon_iic;
-	fmc_imageon_t fmc_imageon;
+  fmc_iic_t fmc_ipmi_iic;
+  fmc_iic_t fmc_imageon_iic;
+  fmc_imageon_t fmc_imageon;
 
-	onsemi_vita_t onsemi_vita;
-	onsemi_vita_status_t vita_status_t1;
-	onsemi_vita_status_t vita_status_t2;
+  onsemi_vita_t onsemi_vita;
+  onsemi_vita_status_t vita_status_t1;
+  onsemi_vita_status_t vita_status_t2;
 
-	XVtc vtc_ipipe;
-	XVtc vtc_tpg;
+  XVtc vtc_ipipe;
+  XVtc vtc_tpg;
 
-	Xuint32 vita_aec;
-	Xuint32 vita_again;
-	Xuint32 vita_dgain;
-	Xuint32 vita_exposure;
+  Xuint32 vita_aec;
+  Xuint32 vita_again;
+  Xuint32 vita_dgain;
+  Xuint32 vita_exposure;
 
-	Xuint32 bVerbose;
+  Xuint32 bVerbose;
 
-	// HDMI Output settings
-	Xuint32 hdmio_width;
-	Xuint32 hdmio_height;
-	Xuint32 hdmio_resolution;
-	fmc_imageon_video_timing_t hdmio_timing;
+  // HDMI Output settings
+  Xuint32 hdmio_width;
+  Xuint32 hdmio_height;
+  Xuint32 hdmio_resolution;
+  fmc_imageon_video_timing_t hdmio_timing;
 };
 typedef struct struct_camera_config_t camera_config_t;
 
@@ -87,19 +86,18 @@ typedef struct struct_camera_config_t camera_config_t;
 #define VIDEO_RESOLUTION_UXGA 7
 #define NUM_VIDEO_RESOLUTIONS 8
 
-struct struct_vres_timing_t
-{
-	char *pName;
-	Xuint32 VActiveVideo;
-	Xuint32 VFrontPorch;
-	Xuint32 VSyncWidth;
-	Xuint32 VBackPorch;
-	Xuint32 VSyncPolarity;
-	Xuint32 HActiveVideo;
-	Xuint32 HFrontPorch;
-	Xuint32 HSyncWidth;
-	Xuint32 HBackPorch;
-	Xuint32 HSyncPolarity;
+struct struct_vres_timing_t {
+  char *pName;
+  Xuint32 VActiveVideo;
+  Xuint32 VFrontPorch;
+  Xuint32 VSyncWidth;
+  Xuint32 VBackPorch;
+  Xuint32 VSyncPolarity;
+  Xuint32 HActiveVideo;
+  Xuint32 HFrontPorch;
+  Xuint32 HSyncWidth;
+  Xuint32 HBackPorch;
+  Xuint32 HSyncPolarity;
 };
 typedef struct struct_vres_timing_t vres_timing_t;
 
@@ -137,7 +135,6 @@ int vfb_common_init(u16 uDeviceId, XAxiVdma *InstancePtr);
 
 int vfb_dump_registers(XAxiVdma *pAxiVdma);
 int vfb_check_errors(XAxiVdma *pAxiVdma, u8 bClearErrors);
-
 
 int camera_main();
 

@@ -155,6 +155,17 @@
           (script "dx" ''
             $EDITOR $REPO_ROOT/flake.nix
           '')
+          (script "format" ''
+            # ${pkgs.git}/bin/git ls-files \
+            #   --others \
+            #   --exclude-standard \
+            #   --cached \
+            #   -- '*.chh' '*.cpp' '*.h' '*.c' \
+            #   | xargs clang-format --style=file --dry-run
+            find . -type f -name '*.c' -o -name '*.h' -o -name '*.cpp' -o -name '*.chh' \
+              | xargs clang-format --style=file --dry-run
+
+          '')
         ];
       };
     });
