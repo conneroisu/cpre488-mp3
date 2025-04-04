@@ -436,9 +436,3 @@ static struct usb_driver miss_launch_driver = {
 };
 
 module_usb_driver(miss_launch_driver);
-
-
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Conner Ohnesorge");
-MODULE_DESCRIPTION("USB Launcher Driver");
-
