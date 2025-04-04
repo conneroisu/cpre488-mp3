@@ -634,6 +634,8 @@
           pkgs.glib
           pkgs.gst_all_1.gstreamer
           pkgs.gst_all_1.gst-libav
+          pkgs.ccls
+          pkgs.clang-tools
 
           # USB development
           pkgs.libusb1
