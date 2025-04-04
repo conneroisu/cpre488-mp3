@@ -60,11 +60,11 @@ int main() {
                   target.x, target.y, target.count);
             aim_and_fire(fd_launcher, &target);
         } else {
-            usleep(100000); // Small delay when no target found
+            usleep(100000);
         }
     }
 
-    // Cleanup (unreachable in this simple example)
+    // Cleanup
     munmap(frame, 1920*1080*2);
     close(fd_launcher);
     return 0;
@@ -106,18 +106,16 @@ int detect_target(uint16_t (*frame)[1920], Target* target) {
 }
 
 void aim_and_fire(int fd, Target* target) {
-    // Center of screen (adjust based on your launcher's calibration)
+    // Center of screen - might need to adjust 
     const uint32_t center_x = 1920 / 2;
     const uint32_t center_y = 1080 / 2;
     
-    // Calculate offsets
     int x_offset = (int)target->x - (int)center_x;
     int y_offset = (int)target->y - (int)center_y;
     
-    // Adjust for dart spread (empirically determined)
+    // Adjust for dart spread? Spread offset
     center_y += (15000 - target->count) / 300;
     
-    // Horizontal adjustment
     if (x_offset < -50) {
         launcher_cmd(fd, LAUNCHER_LEFT);
         usleep(abs(x_offset) * 100); // Proportional timing
@@ -129,7 +127,6 @@ void aim_and_fire(int fd, Target* target) {
         launcher_cmd(fd, LAUNCHER_STOP);
     }
     
-    // Vertical adjustment
     if (y_offset < -50) {
         launcher_cmd(fd, LAUNCHER_UP);
         usleep(abs(y_offset) * 100);
@@ -141,7 +138,7 @@ void aim_and_fire(int fd, Target* target) {
         launcher_cmd(fd, LAUNCHER_STOP);
     }
     
-    // Fire if target is centered enough
+    // Fire if centered
     if (abs(x_offset) < 50 && abs(y_offset) < 50) {
         launcher_cmd(fd, LAUNCHER_FIRE);
         usleep(2000000); // Wait for firing to complete
