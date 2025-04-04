@@ -107,7 +107,7 @@ int main()
             // Send the command.
             // Launch is special since it runs once and then stops
             // Other commands just run.
-            if(command == LAUNCHER_FIRE, miss_launch)
+            if(command == LAUNCHER_FIRE)
             {
                 send_command(LAUNCHER_FIRE, miss_launch);
                 usleep(FIRE_TIME);
