@@ -8,17 +8,14 @@
 // us
 #define POLL_TIME 10000
 
-// us
-#define FIRE_TIME 3000000
-
-// us
-#define MOVE_TIME 500000
+// us, accounts for POLL_TIME.
+#define FIRE_TIME 2000000 - POLL_TIME
 
 int send_command(uint8_t command, int miss_launch_fd);
 
 int main()
 {
-    int exit, left, right, up, down, fire, did_action = 0;
+    int exit, left, right, up, down, fire = 0;
 
     uint32_t btn_val, sw_val = 0;
 
@@ -66,8 +63,6 @@ int main()
             send_command(LAUNCHER_FIRE, miss_launch);
             usleep(FIRE_TIME);
             send_command(LAUNCHER_STOP, miss_launch);
-
-            did_action = 1;
         }
         else
         {
@@ -104,24 +99,13 @@ int main()
                 command |= LAUNCHER_DOWN;
             }
 
-            send_command(command, miss_launch);
-            usleep(MOVE_TIME);
-
-            did_action = 1;
         }
 
-        // Only wait POLL_TIME when an action has not been done.
-        if(!did_action)
-        {
-            usleep(POLL_TIME);
-        }
-
-        did_action = 0;
+        usleep(POLL_TIME);
         
     }
 
     close(miss_launch);
-    cleanup_interface(maps);
     return 0;
 }
 

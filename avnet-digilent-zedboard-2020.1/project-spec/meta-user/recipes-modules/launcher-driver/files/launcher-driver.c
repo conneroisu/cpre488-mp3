@@ -1,3 +1,17 @@
+/*
+ * Missle Launcher driver
+ *
+ * Derrived from USB Skeleton Driver:
+ * Copyright (C) 2001-2004 Greg Kroah-Hartman (greg@kroah.com)
+ *
+ *	This program is free software; you can redistribute it and/or
+ *	modify it under the terms of the GNU General Public License as
+ *	published by the Free Software Foundation, version 2.
+ *
+ * This driver is based on the 2.6.3 version of drivers/usb/usb-skeleton.c
+ * but has been rewritten to be easier to read and use.
+ *
+ */
 
 #include <linux/kernel.h>
 #include <linux/errno.h>
@@ -161,6 +175,8 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
     // A command to the turret has to be 8 bytes
     ssize_t command_size = LAUNCHER_CTRL_BUFFER_SIZE;
 
+    pr_alert("Attempting a write operation!\n");
+
     dev = file->private_data;
 
     /* verify that we actually have some data to write */
@@ -254,6 +270,8 @@ static ssize_t miss_launch_write(struct file *file, const char *user_buffer,
                 __func__, retval);
         goto exit;
     }
+
+    pr_alert("Finished a write operation!\n");
 
 exit:
     if(sem_downed)
@@ -436,9 +454,3 @@ static struct usb_driver miss_launch_driver = {
 };
 
 module_usb_driver(miss_launch_driver);
-
-
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Conner Ohnesorge");
-MODULE_DESCRIPTION("USB Launcher Driver");
-
