@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>DigitalCamera</name>
+	<name>FSBLme</name>
 	<comment>Created by Vitis v2020.1</comment>
 	<projects>
-		<project>Digtial_Camera_Pipeline_HW</project>
+		<project>FSBLme_HW</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
