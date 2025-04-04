@@ -25,7 +25,7 @@ gpio_addr_maps_t init_interface()
 	}
 	else
 	{
-		map.button_addr = mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, mem, BUTTON_BASE_ADDR);
+		map.button_addr = mmap(NULL, REG_SIZE_BYTES * BUTTON_REG_COUNT, PROT_READ | PROT_WRITE, MAP_SHARED, mem, BUTTON_BASE_ADDR);
 		printf("Button Addr: %x\n", map.button_addr);
 	}
 
@@ -44,7 +44,7 @@ gpio_addr_maps_t init_interface()
 	}
 	else
 	{
-		map.sw_addr = mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, mem, SWITCH_BASE_ADDR);
+		map.sw_addr = mmap(NULL, REG_SIZE_BYTES * SWITCH_REG_COUNT, PROT_READ | PROT_WRITE, MAP_SHARED, mem, SWITCH_BASE_ADDR);
 		printf("Switch Addr: %x\n", map.sw_addr);
 	}
 
@@ -62,6 +62,29 @@ gpio_addr_maps_t init_interface()
 	map.sw_addr[1] = 0x1;
 
 	return map;
+}
+
+void cleanup_interface(gpio_addr_maps_t maps)
+{
+	// Undo the GPIO tri state sets.
+	maps.button_addr[1] = 0x0;
+	maps.sw_addr[1] = 0x0;
+
+	// Unmap physical memory
+	int retval = munmap(maps.button_addr, REG_SIZE_BYTES * BUTTON_REG_COUNT);
+	if(retval < 0)
+	{
+		printf("ERROR: Could not unmap buttons!\n");
+		perror("Error Description: ");
+	}
+
+	retval = munmap(maps.sw_addr, REG_SIZE_BYTES * SWITCH_REG_COUNT);
+	if(retval < 0)
+	{
+		printf("ERROR: Could not unmap switches!\n");
+		perror("Error Description: ");
+	}
+
 }
 
 uint32_t get_button_states(gpio_addr_maps_t map)
