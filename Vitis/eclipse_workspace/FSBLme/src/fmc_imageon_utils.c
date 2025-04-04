@@ -75,8 +75,8 @@ int fmc_imageon_enable(camera_config_t *config) {
 
   config->hdmio_resolution =
       vres_detect(config->hdmio_width, config->hdmio_height);
-  xil_printf("\tVideo Resolution = %s\n\r",
-             vres_get_name(config->hdmio_resolution));
+  // xil_printf("\tVideo Resolution = %s\n\r",
+  //            vres_get_name(config->hdmio_resolution));
 
   vgen_init(&(config->vtc_tpg), config->uDeviceId_VTC_tpg);
   vgen_config(&(config->vtc_tpg), config->hdmio_resolution, 1);
@@ -92,7 +92,6 @@ int fmc_imageon_enable(camera_config_t *config) {
   }
 
   // FMC-IMAGEON VITA Camera Receiver Initialization
-  xil_printf("FMC-IMAGEON VITA Camera Initialization ...\n\r");
   onsemi_vita_init(
       &(config->onsemi_vita), "VITA-2000", config->uBaseAddr_VITA_SPI,
       config->uBaseAddr_VITA_CAM // Base Address of VITA CAM
@@ -135,18 +134,14 @@ int fmc_imageon_enable(camera_config_t *config) {
   Xil_DCacheFlush(); // Flush Cache
 
   // Initialize Output Side of AXI VDMA
-  xil_printf("Video DMA (Output Side) Initialization ...\n\r");
   vfb_common_init(config->uDeviceId_VDMA_HdmiFrameBuffer, // uDeviceId
                   &(config->vdma_hdmi)                    // pAxiVdma
   );
 
   // Output static Frame buffer for 5 seconds
-  xil_printf("Output static Frame buffer for 5 seconds\n\r");
   sleep(5);
 
   // Initialize Input Side of AXI VDMA
-  xil_printf("Video DMA (Input Side) Initialization ...\n\r");
-
   int vita_enabled_error = 0;
   int vita_enable_attempt = 1;
   do {
@@ -161,8 +156,6 @@ int fmc_imageon_enable(camera_config_t *config) {
 
   fmc_imageon_enable_ipipe(config);
 
-  xil_printf(
-      "Output Video input source in Hardware mode for 1 seconds\n\r");
   sleep(1);
 
   // Status of AXI VDMA
@@ -362,9 +355,7 @@ int fmc_imageon_enable_ipipe(camera_config_t *config) {
             (u32)(0x81) // start and freerun mode (page 16 in PG286)
   );
 
-  xil_printf(
-      "Demosaic IP Configuring and Enable done\r\n"); // RGRG sensor
-                                                      // pattern
+  // Demosaic IP Configuring and Enable done
 
   return 0;
 }
@@ -381,10 +372,6 @@ void enable_ssc(camera_config_t *config) {
       {0x12, 0xDB}  //
   };
 
-  if (config->bVerbose) {
-    xil_printf("Enabling spread-spectrum clocking (SSC)\n\r");
-    xil_printf("\ttype=down-spread, amount=-0.75%%\n\r");
-  }
   fmc_imageon_iic_mux(&(config->fmc_imageon),
                       FMC_IMAGEON_I2C_SELECT_VID_CLK);
 

@@ -64,12 +64,10 @@ void camera_config_init(camera_config_t *config) {
                                        // HDMI board
 
   config->uBaseAddr_VITA_SPI =
-      XPAR_ONSEMI_VITA_SPI_0_S00_AXI_BASEADDR; // Device for
-                                               // configuring the
-                                               // Camera sensor
+      XPAR_ONSEMI_VITA_SPI_0_S00_AXI_BASEADDR; // Config Device
+
   config->uBaseAddr_VITA_CAM =
       XPAR_ONSEMI_VITA_CAM_0_S00_AXI_BASEADDR; // Device for receiving
-                                               // Camera sensor data
 
   config->uDeviceId_VTC_tpg =
       XPAR_V_TC_0_DEVICE_ID; // Video Timer Controller (VTC) ID
