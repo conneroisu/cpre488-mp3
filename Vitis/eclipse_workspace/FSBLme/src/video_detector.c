@@ -149,15 +149,8 @@ int vdet_detect(XVtc *pVtc, int bVerbose) {
 
   Width = (Signal.HTotal + 1) - Signal.HActiveStart;
   Height = (Signal.V0Total + 1) - Signal.V0ActiveStart;
-  if (bVerbose) {
-    xil_printf("\tVideo Dimensions = %d x %d\n\r", Width, Height);
-  }
 
   ResolutionId = vres_detect(Width, Height);
-  if (bVerbose) {
-    xil_printf("\tVideo Resolution = %s\n\r",
-               vres_get_name(ResolutionId));
-  }
 
   return ResolutionId;
 }
@@ -184,13 +177,6 @@ int vdet_config(XVtc *pVtc, int ResolutionId, int bVerbose) {
   XVtc_Polarity Polarity;       /* Polarity configuration */
   XVtc_HoriOffsets HoriOffsets; /* Horizontal offsets configuration */
   XVtc_SourceSelect SourceSelect; /* Source Selection configuration */
-
-  if (bVerbose) {
-    xil_printf("\tVideo Resolution = %s\n\r",
-               vres_get_name(ResolutionId));
-  }
-
-  /* Set up Polarity of all outputs */
 
   memset((void *)&Polarity, 0, sizeof(Polarity));
   Polarity.ActiveChromaPol = 1;
