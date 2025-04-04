@@ -4011,6 +4011,11 @@ CONFIG_vision-app=y
 CONFIG_launcher-driver=y
 
 #
+# modules 
+#
+# CONFIG_launcher-driver is not set
+
+#
 # user packages 
 #
 
