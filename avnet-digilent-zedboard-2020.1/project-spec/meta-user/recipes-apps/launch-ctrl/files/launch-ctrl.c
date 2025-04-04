@@ -19,7 +19,8 @@ int main()
 
     uint32_t btn_val, sw_val = 0;
 
-    uint8_t command, prev_command = 0;
+    uint8_t command = 0;
+    uint8_t prev_command = 0xFF;
 
     gpio_addr_maps_t maps = init_interface();
 
@@ -36,7 +37,7 @@ int main()
 
     while(1)
     {
-        command == LAUNCHER_STOP;
+        command = LAUNCHER_STOP;
 
         // Get button and switch values
         sw_val = get_switch_states(maps);
@@ -65,6 +66,9 @@ int main()
         }
         else
         {
+            // Set command to zero so we can construct it.
+            command = 0;
+
             // Note: Left/Right and Up/Down can be at the same time.
             if(left && right)
             {
@@ -95,9 +99,6 @@ int main()
             {
                 command |= LAUNCHER_DOWN;
             }
-
-            send_command(command, miss_launch);
-
         }
 
         // Only send command different from the previous one.
