@@ -8,7 +8,7 @@
 // Constants
 #define FRAME_BUFFER_ADDR 0x10000000
 #define VDMA_BASE_ADDR 0x43000000
-#define LAUNCHER_NODE "/dev/launcher0"
+#define LAUNCHER_NODE "/dev/miss_launch0"
 
 // Launcher commands
 #define LAUNCHER_FIRE   0x10
