@@ -10,10 +10,6 @@
 #define NUMBER_OF_READ_FRAMES    XPAR_AXIVDMA_0_NUM_FSTORES
 #define NUMBER_OF_WRITE_FRAMES   XPAR_AXIVDMA_0_NUM_FSTORES
 
-// Interrupts
-static XScuGic_Config* gic_config;
-XScuGic int_controller;
-
 int vfb_common_init( u16 uDeviceId, XAxiVdma *pAxiVdma )
 {
    int Status;
@@ -37,51 +33,6 @@ int vfb_common_init( u16 uDeviceId, XAxiVdma *pAxiVdma )
    int status = 0;
 
 
-   // Get config
-	  gic_config = XScuGic_LookupConfig(XPAR_PS7_SCUGIC_0_DEVICE_ID);
-	  if(gic_config == NULL)
-	  {
-	   xil_printf("ERROR: Could not get GIC config!\n\r");
-	  }
-	  // Initialize
-	  status = XScuGic_CfgInitialize(&int_controller, gic_config, gic_config->CpuBaseAddress);
-	  if(status != XST_SUCCESS)
-	  {
-	   xil_printf("ERROR: Could not initialize GIC!\n\r");
-	  }
-
-	  // Run self test
-	  status = XScuGic_SelfTest(&int_controller);
-	  if(status != XST_SUCCESS)
-	  {
-	   xil_printf("ERROR: GIC self test failed!\n\r");
-	  }
-
-	XScuGic_SetPriorityTriggerType(&int_controller, XPAR_FABRIC_AXIVDMA_0_S2MM_INTROUT_VEC_ID, 0xA0, 0x3);
-	XScuGic_SetPriorityTriggerType(&int_controller, XPAR_FABRIC_AXIVDMA_0_MM2S_INTROUT_VEC_ID, 0xA0, 0x3);
-
-	  Xil_ExceptionInit();
-	  Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_INT, (Xil_ExceptionHandler) XScuGic_InterruptHandler, &int_controller);
-	  Xil_ExceptionEnable();
-
-	  // Connect ISR
-	  status = XScuGic_Connect(&int_controller, XPAR_FABRIC_AXIVDMA_0_MM2S_INTROUT_VEC_ID, (Xil_InterruptHandler)XAxiVdma_ReadIntrHandler, pAxiVdma);
-	  if(status != XST_SUCCESS)
-	  {
-	   xil_printf("ERROR: GIC could not connect the VDMA write interrupt!\n\r");
-	  }
-
-	  status = XScuGic_Connect(&int_controller, XPAR_FABRIC_AXIVDMA_0_S2MM_INTROUT_VEC_ID, (Xil_InterruptHandler)XAxiVdma_WriteIntrHandler, pAxiVdma);
-	  if(status != XST_SUCCESS)
-	  {
-	   xil_printf("ERROR: GIC could not connect the VDMA read interrupt!\n\r");
-	  }
-
-
-      // Enable interrupt on GIC
-      XScuGic_Enable(&int_controller, XPAR_FABRIC_AXIVDMA_0_MM2S_INTROUT_VEC_ID);
-      XScuGic_Enable(&int_controller, XPAR_FABRIC_AXIVDMA_0_S2MM_INTROUT_VEC_ID);
-
    // Set frame counter
    XAxiVdma_FrameCounter f;
    f.ReadDelayTimerCount = 0;
@@ -100,9 +51,6 @@ int vfb_common_init( u16 uDeviceId, XAxiVdma *pAxiVdma )
 int vfb_rx_init( XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pWriteCfg, Xuint32 uVideoResolution, Xuint32 uStorageResolution, Xuint32 uMemAddr, Xuint32 uNumFrames )
 {
    int Status;
-   XAxiVdma_FrameCounter FrameCfg;
-   u32 uBaseAddr;
-   u32 uDMACR;
 
    /* Setup the write channel */
    Status = vfb_rx_setup(pAxiVdma,pWriteCfg,uVideoResolution,uStorageResolution,uMemAddr,uNumFrames);
@@ -113,10 +61,6 @@ int vfb_rx_init( XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pWriteCfg, Xuint32 uVide
            return 1;
    }
 
-   // Configure RX int handler.
-   XAxiVdma_SetCallBack(pAxiVdma, XAXIVDMA_HANDLER_GENERAL, video_frame_output_isr, (void*) pAxiVdma, XAXIVDMA_READ);
-   XAxiVdma_SetCallBack(pAxiVdma, XAXIVDMA_HANDLER_ERROR, error_isr, (void*) pAxiVdma, XAXIVDMA_READ);
-   XAxiVdma_IntrEnable(pAxiVdma, XAXIVDMA_IXR_FRMCNT_MASK, XAXIVDMA_READ);
 
    /* Start the DMA engine to transfer
 	*/
@@ -126,13 +70,12 @@ int vfb_rx_init( XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pWriteCfg, Xuint32 uVide
    }
 
 	XAxiVdma_FsyncSrcSelect(pAxiVdma, XAXIVDMA_S2MM_TUSER_FSYNC, XAXIVDMA_READ);
-
+return 0;
 }
 
 int vfb_tx_init( XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pReadCfg, Xuint32 uVideoResolution, Xuint32 uStorageResolution, Xuint32 uMemAddr, Xuint32 uNumFrames )
 {
    int Status;
-   XAxiVdma_FrameCounter FrameCfg;
    u32 uBaseAddr;
    u32 uDMACR;
 
@@ -145,10 +88,6 @@ int vfb_tx_init( XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pReadCfg, Xuint32 uVideo
 		   return 1;
    }
 
-   // Configure RX int handler.
-   XAxiVdma_SetCallBack(pAxiVdma, XAXIVDMA_HANDLER_GENERAL, camera_input_isr, (void*) pAxiVdma, XAXIVDMA_WRITE);
-   XAxiVdma_SetCallBack(pAxiVdma, XAXIVDMA_HANDLER_ERROR, error_isr, (void*) pAxiVdma, XAXIVDMA_WRITE);
-   XAxiVdma_IntrEnable(pAxiVdma, XAXIVDMA_IXR_FRMCNT_MASK, XAXIVDMA_WRITE);
 
 
    /* Start the DMA engine to transfer
@@ -167,7 +106,7 @@ int vfb_tx_init( XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pReadCfg, Xuint32 uVideo
 	uDMACR |= 0x00000080;
 	*((volatile int *)(uBaseAddr+XAXIVDMA_TX_OFFSET+XAXIVDMA_CR_OFFSET )) = uDMACR;
 #endif
-
+return 0;
 }
 
 int vfb_rx_setup(XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pWriteCfg, Xuint32 uVideoResolution, Xuint32 uStorageResolution, Xuint32 uMemAddr, Xuint32 uNumFrames )

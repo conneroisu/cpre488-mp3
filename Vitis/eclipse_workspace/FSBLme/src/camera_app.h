@@ -3,14 +3,12 @@
 
 #include <xparameters.h>
 #include <xbasic_types.h>
-#include <stdlib.h>
 #include <xil_printf.h>
 #include <sleep.h>
 #include "fmc_iic.h"
 #include "fmc_ipmi.h"
 #include "fmc_imageon.h"
 #include "onsemi_vita_sw.h"
-#include "xv_demosaic.h" // Uncomment when using Demosaic IP core
 #include "xvprocss.h"	 // Uncomment when using Video Processing Subsystem IP cores
 #include "xvtc.h"
 #include "xaxivdma.h"
@@ -136,42 +134,11 @@ int vdet_config(XVtc *pVtc, int ResolutionId, int bVerbose);
 
 // Function prototypes (video_frame_buffer.c)
 int vfb_common_init(u16 uDeviceId, XAxiVdma *InstancePtr);
-int vfb_rx_init(XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pWriteCfg, Xuint32 uVideoResolution, Xuint32 uStorageResolution, Xuint32 uMemAddr, Xuint32 uNumFrames);
-int vfb_rx_setup(XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pWriteCfg, Xuint32 uVideoResolution, Xuint32 uStorageResolution, Xuint32 uMemAddr, Xuint32 uNumFrames);
-int vfb_rx_start(XAxiVdma *pAxiVdma);
-int vfb_rx_stop(XAxiVdma *pAxiVdma);
-int vfb_tx_init(XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pReadCfg, Xuint32 uVideoResolution, Xuint32 uStorageResolution, Xuint32 uMemAddr, Xuint32 uNumFrames);
-int vfb_tx_setup(XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pReadCfg, Xuint32 uVideoResolution, Xuint32 uStorageResolution, Xuint32 uMemAddr, Xuint32 uNumFrames);
-int vfb_tx_start(XAxiVdma *pAxiVdma);
-int vfb_tx_stop(XAxiVdma *pAxiVdma);
+
 int vfb_dump_registers(XAxiVdma *pAxiVdma);
 int vfb_check_errors(XAxiVdma *pAxiVdma, u8 bClearErrors);
 
-void video_frame_output_isr(void* CallBackRef, u32 InterruptTypes);
-void camera_input_isr(void* CallBackRef, u32 InterruptTypes);
-void error_isr(void* CallBackRef, u32 InterruptTypes);
 
-void set_brightness(
-	camera_config_t *config,
-	int brightness);
-void set_contrast(
-	camera_config_t *config,
-	int contrast);
-void set_saturation(
-	camera_config_t *config,
-	int saturation);
-void increase_brightness(
-	camera_config_t *config);
-void decrease_brightness(
-	camera_config_t *config);
-void increase_contrast(
-	camera_config_t *config);
-void decrease_contrast(
-	camera_config_t *config);
-void increase_saturation(
-	camera_config_t *config);
-void decrease_saturation(
-	camera_config_t *config);
-
+int camera_main();
 
 #endif // __CAMERA_APP_H__

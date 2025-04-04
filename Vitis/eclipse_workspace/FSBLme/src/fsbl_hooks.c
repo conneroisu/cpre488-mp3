@@ -15,16 +15,17 @@
 * <pre>
 * MODIFICATION HISTORY:
 *
-* Ver   Who  Date        Changes
-* ----- ---- -------- -------------------------------------------------------
-* 3.00a np   08/03/12 Initial release
+* Ver   Who        Date        Changes
+* ----- ---------- -------- -------------------------------------------------------
+* 3.00a np           08/03/12 Initial release
+* 3.01a conneroisu   10/03/12 Added the Camera and USB driver hooks
 * </pre>
 *
 * @note
 *
 ******************************************************************************/
 
-
+#include "camera_app.h"
 #include "fsbl.h"
 #include "xstatus.h"
 #include "fsbl_hooks.h"
@@ -112,6 +113,8 @@ u32 FsblHookBeforeHandoff(void)
 	 * Errors to be stored in the status variable and returned
 	 */
 	fsbl_printf(DEBUG_INFO,"In FsblHookBeforeHandoff function \r\n");
+
+	camera_main();
 
 	return (Status);
 }
