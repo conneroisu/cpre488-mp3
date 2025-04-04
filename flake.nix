@@ -117,17 +117,6 @@
         ];
 
         packages = with pkgs; [
-          # Helper scripts for the environment
-          setupEnvScript
-          createMakefileScript
-          createLEDScriptScript
-          buildLauncherScript
-          buildKernelModuleScript
-          createBootBinScript
-          zedboardSshScript
-          zedboardCopyScript
-          createHeadlessOpenCVScript
-
           # Original scripts
           (script "dx" ''
             $EDITOR $REPO_ROOT/flake.nix
@@ -154,17 +143,6 @@
           # Scripts
           (script "dx" ''
             $EDITOR $REPO_ROOT/flake.nix
-          '')
-          (script "format" ''
-            # ${pkgs.git}/bin/git ls-files \
-            #   --others \
-            #   --exclude-standard \
-            #   --cached \
-            #   -- '*.chh' '*.cpp' '*.h' '*.c' \
-            #   | xargs clang-format --style=file --dry-run
-            find . -type f -name '*.c' -o -name '*.h' -o -name '*.cpp' -o -name '*.chh' \
-              | xargs clang-format --style=file --dry-run
-
           '')
         ];
       };
