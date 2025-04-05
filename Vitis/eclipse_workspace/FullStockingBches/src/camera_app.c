@@ -1,74 +1,21 @@
 #include "camera_app.h"
+#include "fmc_iic.h"
+#include "fmc_ipmi.h"
 #include "platform.h"
 #include "xaxis_switch.h"
+#include "xil_cache.h"
 #include "xil_types.h"
+#include "xv_csc_l2.h"
 #include "xv_hcresampler.h"
 #include "xv_letterbox.h"
+#include "xv_letterbox_l2.h"
 #include "xv_vcresampler.h"
 #include "xvidc.h"
+#include "xvprocss_coreinit.h"
+#include "xvprocss_router.h"
+#include "xvprocss_vdma.h"
 
 camera_config_t camera_config;
-/**
- *  This typedef enumerates the AXIS Switch Port for Sub-Core
- * connection
- */
-typedef enum {
-  XVPROCSS_SUBCORE_SCALER_V = 1,
-  XVPROCSS_SUBCORE_SCALER_H,
-  XVPROCSS_SUBCORE_VDMA,
-  XVPROCSS_SUBCORE_LBOX,
-  XVPROCSS_SUBCORE_CR_H,
-  XVPROCSS_SUBCORE_CR_V_IN,
-  XVPROCSS_SUBCORE_CR_V_OUT,
-  XVPROCSS_SUBCORE_CSC,
-  XVPROCSS_SUBCORE_DEINT,
-  XVPROCSS_SUBCORE_MAX
-} XVPROCSS_SUBCORE_ID;
-
-/**
- * This typedef enumerates supported subsystem configuration topology
- */
-typedef enum {
-  XVPROCSS_TOPOLOGY_SCALER_ONLY = 0,
-  XVPROCSS_TOPOLOGY_FULL_FLEDGED,
-  XVPROCSS_TOPOLOGY_DEINTERLACE_ONLY,
-  XVPROCSS_TOPOLOGY_CSC_ONLY,
-  XVPROCSS_TOPOLOGY_VCRESAMPLE_ONLY,
-  XVPROCSS_TOPOLOGY_HCRESAMPLE_ONLY,
-  XVPROCSS_TOPOLOGY_NUM_SUPPORTED
-} XVPROCSS_CONFIG_TOPOLOGY;
-
-/**
- * This typedef enumerates types of Windows (Sub-frames) available in
- * the Subsystem
- */
-typedef enum {
-  XVPROCSS_ZOOM_WIN = 0,
-  XVPROCSS_PIP_WIN,
-  XVPROCSS_PIXEL_WIN,
-  XVPROCSS_WIN_NUM_SUPPORTED
-} XVprocSs_Win;
-
-/**
- * This typedef enumerates supported scaling modes
- */
-typedef enum {
-  XVPROCSS_SCALE_1_1 = 0,
-  XVPROCSS_SCALE_UP,
-  XVPROCSS_SCALE_DN,
-  XVPROCSS_SCALE_NOT_SUPPORTED
-} XVprocSs_ScaleMode;
-
-/** This typedef enumerates supported Color Channels
- *
- */
-typedef enum {
-  XVPROCSS_COLOR_CH_Y_RED = 0,
-  XVPROCSS_COLOR_CH_CB_GREEN,
-  XVPROCSS_COLOR_CH_CR_BLUE,
-  XVPROCSS_COLOR_CH_NUM_SUPPORTED
-} XVprocSs_ColorChannel;
-
 /**
  * Video Processing Subsystem context scratch pad memory.
  * This contains internal flags, state variables, routing table
@@ -297,6 +244,61 @@ int fmc_imageon_enable_vita(camera_config_t *config) {
   return 0;
 }
 
+static __inline u32 XVprocSs_GetResetState(XGpio *pReset,
+                                           u32 channel) {
+  return (XGpio_DiscreteRead(pReset, channel));
+}
+static __inline void
+XVprocSs_EnableBlock(XGpio *pReset, u32 channel, u32 ipBlock) {
+  u32 val;
+
+  if (pReset) {
+    val = XVprocSs_GetResetState(pReset, channel);
+    val |= ipBlock;
+    XGpio_DiscreteWrite(pReset, channel, val);
+  }
+}
+void XVprocSs_Start(XVprocSs *InstancePtr) {
+  u8 *StartCorePtr;
+
+  /* Verify arguments */
+  Xil_AssertVoid(InstancePtr != NULL);
+
+  StartCorePtr = &InstancePtr->CtxtData.StartCore[0];
+
+  if (StartCorePtr[7])
+    XV_VCrsmplStart(InstancePtr->VcrsmplrOutPtr);
+
+  if (StartCorePtr[5])
+    XV_HCrsmplStart(InstancePtr->HcrsmplrPtr);
+
+  if (StartCorePtr[8])
+    XV_CscStart(InstancePtr->CscPtr);
+
+  if (StartCorePtr[4])
+    XV_LBoxStart(InstancePtr->LboxPtr);
+
+  if (StartCorePtr[2])
+    XV_HScalerStart(InstancePtr->HscalerPtr);
+
+  if (StartCorePtr[1])
+    XV_VScalerStart(InstancePtr->VscalerPtr);
+
+  if (StartCorePtr[3])
+    XVprocSs_VdmaStartTransfer(InstancePtr);
+
+  if (StartCorePtr[9])
+    XV_DeintStart(InstancePtr->DeintPtr);
+
+  if (StartCorePtr[6])
+    XV_VCrsmplStart(InstancePtr->VcrsmplrInPtr);
+
+  /* Subsystem ready to accept axis - Enable Video Input */
+  XVprocSs_EnableBlock(InstancePtr->RstAxisPtr, 1u, 0x01);
+
+  XVprocSs_LogWrite(InstancePtr, 28, 0x00);
+}
+
 int fmc_imageon_enable_ipipe(camera_config_t *config) {
 
   int result;
@@ -430,6 +432,177 @@ void enable_ssc(camera_config_t *config) {
   return;
 }
 
+int vgen_init(XVtc *pVtc, u16 VtcDeviceID) {
+  int Status;
+  XVtc_Config *VtcCfgPtr;
+
+  Xuint32 Width;
+  Xuint32 Height;
+  int ResolutionId;
+
+  /* Look for the device configuration info for the Video Timing
+   * Controller.
+   */
+  VtcCfgPtr = XVtc_LookupConfig(VtcDeviceID);
+  if (VtcCfgPtr == NULL) {
+    return 1;
+  }
+
+  /* Initialize the Video Timing Controller instance */
+
+  Status =
+      XVtc_CfgInitialize(pVtc, VtcCfgPtr, VtcCfgPtr->BaseAddress);
+  if (Status != XST_SUCCESS) {
+    return 1;
+  }
+
+  XVtc_DisableSync(pVtc);
+
+  sleep(1);
+
+  /* Enable the generator module */
+
+  // phjones update to 1 arg.  XVtc_Enable(pVtc, XVTC_EN_GENERATOR);
+  XVtc_EnableGenerator(pVtc);
+
+  //	XVtc_DisableSync(pVtc);
+
+  return 0;
+}
+
+static void SignalSetup(XVtc *pVtc,
+                        Xuint32 ResolutionId,
+                        XVtc_Signal *SignalCfgPtr) {
+  vres_timing_t VideoTiming;
+
+  int HFrontPorch;
+  int HSyncWidth;
+  int HBackPorch;
+  int VFrontPorch;
+  int VSyncWidth;
+  int VBackPorch;
+  int LineWidth;
+  int FrameHeight;
+
+  vres_get_timing(ResolutionId, &VideoTiming);
+
+  HFrontPorch = VideoTiming.HFrontPorch;
+  HSyncWidth = VideoTiming.HSyncWidth;
+  HBackPorch = VideoTiming.HBackPorch;
+  VFrontPorch = VideoTiming.VFrontPorch;
+  VSyncWidth = VideoTiming.VSyncWidth;
+  VBackPorch = VideoTiming.VBackPorch;
+  LineWidth = VideoTiming.HActiveVideo;
+  FrameHeight = VideoTiming.VActiveVideo;
+
+  /* Clear the VTC Signal config structure */
+
+  memset((void *)SignalCfgPtr, 0, sizeof(XVtc_Signal));
+
+  /* Populate the VTC Signal config structure. Ignore the Field 1 */
+
+  SignalCfgPtr->HFrontPorchStart = LineWidth;
+  SignalCfgPtr->HTotal =
+      HFrontPorch + HSyncWidth + HBackPorch + LineWidth;
+  SignalCfgPtr->HBackPorchStart =
+      LineWidth + HFrontPorch + HSyncWidth;
+  SignalCfgPtr->HSyncStart = LineWidth + HFrontPorch;
+  SignalCfgPtr->HActiveStart = 0;
+
+  SignalCfgPtr->V0FrontPorchStart = FrameHeight;
+  SignalCfgPtr->V0Total =
+      VFrontPorch + VSyncWidth + VBackPorch + FrameHeight;
+  SignalCfgPtr->V0BackPorchStart =
+      FrameHeight + VFrontPorch + VSyncWidth;
+  SignalCfgPtr->V0SyncStart = FrameHeight + VFrontPorch;
+  SignalCfgPtr->V0ChromaStart = 0;
+  SignalCfgPtr->V0ActiveStart = 0;
+
+  return;
+}
+int vgen_config(XVtc *pVtc, int ResolutionId, int bVerbose) {
+  int Status;
+
+  XVtc_Signal Signal;           /* VTC Signal configuration */
+  XVtc_Polarity Polarity;       /* Polarity configuration */
+  XVtc_HoriOffsets HoriOffsets; /* Horizontal offsets configuration */
+  XVtc_SourceSelect SourceSelect; /* Source Selection configuration */
+
+  sleep(5);
+
+  if (bVerbose) {
+    xil_printf("\tVideo Resolution = %s\n\r",
+               vres_get_name(ResolutionId));
+  }
+
+  /* Set up Polarity of all outputs */
+
+  memset((void *)&Polarity, 0, sizeof(Polarity));
+  Polarity.ActiveChromaPol = 1;
+  Polarity.ActiveVideoPol = 1;
+  Polarity.FieldIdPol = 0;
+  Polarity.VBlankPol = 1;
+  Polarity.VSyncPol = 1;
+  Polarity.HBlankPol = 1;
+  Polarity.HSyncPol = 1;
+
+  XVtc_SetPolarity(pVtc, &Polarity);
+
+  /* Set up Generator */
+
+  memset((void *)&HoriOffsets, 0, sizeof(HoriOffsets));
+  HoriOffsets.V0BlankHoriEnd = 1920;
+  HoriOffsets.V0BlankHoriStart = 1920;
+  HoriOffsets.V0SyncHoriEnd = 1920;
+  HoriOffsets.V0SyncHoriStart = 1920;
+
+  XVtc_SetGeneratorHoriOffset(pVtc, &HoriOffsets);
+
+  SignalSetup(pVtc, ResolutionId, &Signal);
+
+  if (bVerbose == 2) {
+    xil_printf("\tVTC Generator Configuration\n\r");
+    xil_printf("\t\tHorizontal Timing:\n\r");
+    xil_printf("\t\t\tHFrontPorchStart %d\r\n",
+               Signal.HFrontPorchStart);
+    xil_printf("\t\t\tHSyncStart %d\r\n", Signal.HSyncStart);
+    xil_printf("\t\t\tHBackPorchStart %d\r\n",
+               Signal.HBackPorchStart);
+    xil_printf("\t\t\tHActiveStart = %d\r\n", Signal.HActiveStart);
+    xil_printf("\t\t\tHTotal = %d\r\n", Signal.HTotal);
+    xil_printf("\t\tVertical Timing:\n\r");
+    xil_printf("\t\t\tV0FrontPorchStart %d\r\n",
+               Signal.V0FrontPorchStart);
+    xil_printf("\t\t\tV0SyncStart %d\r\n", Signal.V0SyncStart);
+    xil_printf("\t\t\tV0BackPorchStart %d\r\n",
+               Signal.V0BackPorchStart);
+    xil_printf("\t\t\tV0ActiveStart %d\r\n", Signal.V0ActiveStart);
+    xil_printf("\t\t\tV0Total %d\r\n", Signal.V0Total);
+  }
+
+  XVtc_SetGenerator(pVtc, &Signal);
+
+  /* Set up source select */
+
+  memset((void *)&SourceSelect, 0, sizeof(SourceSelect));
+  SourceSelect.VChromaSrc = 0;
+  SourceSelect.VActiveSrc = 1;
+  SourceSelect.VBackPorchSrc = 1;
+  SourceSelect.VSyncSrc = 1;
+  SourceSelect.VFrontPorchSrc = 1;
+  SourceSelect.VTotalSrc = 1;
+  SourceSelect.HActiveSrc = 1;
+  SourceSelect.HBackPorchSrc = 1;
+  SourceSelect.HSyncSrc = 1;
+  SourceSelect.HFrontPorchSrc = 1;
+  SourceSelect.HTotalSrc = 1;
+
+  XVtc_SetSource(pVtc, &SourceSelect);
+
+  /* Return success */
+
+  return 0;
+}
 // Toggles the reset on the DCM core (clock generator)
 void reset_dcms(camera_config_t *config) {
 
