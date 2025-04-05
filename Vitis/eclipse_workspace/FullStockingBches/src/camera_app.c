@@ -364,6 +364,147 @@ int vfb_tx_init(XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pReadCfg,
 	return 0;
 }
 
+int vfb_rx_setup(XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pWriteCfg,
+		Xuint32 uVideoResolution, Xuint32 uStorageResolution, Xuint32 uMemAddr,
+		Xuint32 uNumFrames) {
+	int i;
+	u32 Addr;
+	int Status;
+
+	Xuint32 video_width, video_height;
+	Xuint32 storage_width, storage_height, storage_stride, storage_size,
+			storage_offset;
+
+	// Get Video dimensions
+	video_height = vres_get_height(uVideoResolution);      // in lines
+	video_width = vres_get_width(uVideoResolution) << 1; // in bytes
+
+	// Get Storage dimensions
+	storage_height = vres_get_height(uStorageResolution);      // in lines
+	storage_width = vres_get_width(uStorageResolution) << 1; // in bytes
+	storage_stride = storage_width;
+	storage_size = storage_width * storage_height;
+	storage_offset = ((storage_height - video_height) >> 1) * storage_width
+			+ ((storage_width - video_width) >> 1);
+
+	pWriteCfg->VertSizeInput = video_height;
+	pWriteCfg->HoriSizeInput = video_width;
+	pWriteCfg->Stride = storage_stride;
+
+	pWriteCfg->FrameDelay = 0; /* This example does not test frame delay */
+
+	pWriteCfg->EnableCircularBuf = 1;
+	pWriteCfg->EnableSync = 1;
+
+	pWriteCfg->PointNum = 1;
+	pWriteCfg->EnableFrameCounter = 0; /* Endless transfers */
+
+	pWriteCfg->FixedFrameStoreAddr = 0; /* We are not doing parking */
+
+	Status = XAxiVdma_DmaConfig(pAxiVdma, XAXIVDMA_WRITE, pWriteCfg);
+	if (Status != XST_SUCCESS) {
+		xdbg_printf(XDBG_DEBUG_ERROR,
+				"Write channel config failed %d\r\n", Status);
+		return 1L;
+	}
+
+	Addr = uMemAddr + storage_offset;
+	for (i = 0; i < uNumFrames; i++) {
+		pWriteCfg->FrameStoreStartAddr[i] = Addr;
+
+		Addr += storage_size;
+	}
+
+	Status = XAxiVdma_DmaSetBufferAddr(pAxiVdma, XAXIVDMA_WRITE,
+			pWriteCfg->FrameStoreStartAddr);
+	if (Status != XST_SUCCESS) {
+		xdbg_printf(XDBG_DEBUG_ERROR,
+				"Write channel set buffer address failed %d\r\n", Status);
+		return 1L;
+	}
+
+	return 0L;
+}
+
+int vfb_rx_start(XAxiVdma *pAxiVdma) {
+	int Status;
+
+	Status = XAxiVdma_DmaStart(pAxiVdma, 1);
+	if (Status != XST_SUCCESS) {
+		xil_printf("Start Write transfer failed %d\r\n", Status);
+		return XST_FAILURE;
+	}
+
+	return XST_SUCCESS;
+}
+
+int vfb_rx_init(XAxiVdma *pAxiVdma, //
+		XAxiVdma_DmaSetup *pWriteCfg, //
+		Xuint32 uVideoResolution, //
+		Xuint32 uStorageResolution, //
+		Xuint32 uMemAddr, //
+		Xuint32 uNumFrames //
+		) {
+	int Status;
+
+	Status = vfb_rx_setup(pAxiVdma, pWriteCfg, uVideoResolution,
+			uStorageResolution, uMemAddr, uNumFrames);
+	if (Status != 0L) {
+		xdbg_printf(XDBG_DEBUG_ERROR,
+				"Write channel setup failed %d\r\n", Status);
+		return 1;
+	}
+	Status = vfb_rx_start(pAxiVdma);
+	if (Status != 0L) {
+		return 1;
+	}
+
+	XAxiVdma_FsyncSrcSelect(pAxiVdma, 2, 1);
+	return 0;
+}
+
+int fmc_imageon_enable_vita(camera_config_t *config) {
+	int result;
+	xil_printf("FMC-IMAGEON VITA Initialization ...\n\r");
+	result = onsemi_vita_sensor_initialize(&(config->onsemi_vita),
+			SENSOR_INIT_ENABLE, 0);
+	if (result == 0) {
+		xil_printf("VITA sensor failed to initialize ...\n\r");
+		return -1;
+	}
+	onsemi_vita_sensor_initialize(&(config->onsemi_vita), SENSOR_INIT_STREAMON,
+			0);
+	sleep(1);
+	xil_printf("FMC-IMAGEON VITA Configuration for 1080P60 timing ...\n\r");
+	result = onsemi_vita_sensor_1080P60(&(config->onsemi_vita),
+			config->bVerbose);
+	if (result == 0) {
+		xil_printf(
+				"VITA sensor failed to configure for 1080P60 timing ...\n\r");
+		return -1;
+	}
+	sleep(1);
+	onsemi_vita_get_status(&(config->onsemi_vita), &(config->vita_status_t1),
+			0);
+	sleep(1);
+	onsemi_vita_get_status(&(config->onsemi_vita), &(config->vita_status_t2),
+			0);
+	int vita_width, vita_height, vita_rate, vita_crc;
+	vita_width = config->vita_status_t1.cntImagePixels * 4;
+	vita_height = config->vita_status_t1.cntImageLines;
+	vita_rate = config->vita_status_t2.cntFrames
+			- config->vita_status_t1.cntFrames;
+	vita_crc = config->vita_status_t2.crcStatus;
+	xil_printf("VITA Status = \n\r");
+	xil_printf("\tImage Width  = %d\n\r", vita_width);
+	xil_printf("\tImage Height = %d\n\r", vita_height);
+	xil_printf("\tFrame Rate   = %d frames/sec\n\r", vita_rate);
+	xil_printf("\tCRC = %d\n\r", vita_crc);
+	if ((vita_width != 1920) || (vita_height != 1080) || (vita_rate == 0)) {
+		return 1;
+	}
+	return 0;
+}
 int fmc_imageon_enable(camera_config_t *config) {
 
 	config->bVerbose = 1;
@@ -472,14 +613,26 @@ int fmc_imageon_enable(camera_config_t *config) {
 			config->uNumFrames_HdmiFrameBuffer     // uNumFrames
 			);
 	sleep(5);
-	   vfb_rx_init(
-	       &(config->vdma_hdmi),                  // pAxiVdma
-	       &(config->vdmacfg_hdmi_write),         // pWriteCfg
-	       config->hdmio_resolution,              // uVideoResolution
-	       config->hdmio_resolution,              // uStorageResolution
-	       config->uBaseAddr_MEM_HdmiFrameBuffer, // uMemAddr
-	       config->uNumFrames_HdmiFrameBuffer     // uNumFrames
-	   );
+	vfb_rx_init(&(config->vdma_hdmi),                  // pAxiVdma
+			&(config->vdmacfg_hdmi_write),         // pWriteCfg
+			config->hdmio_resolution,              // uVideoResolution
+			config->hdmio_resolution,              // uStorageResolution
+			config->uBaseAddr_MEM_HdmiFrameBuffer, // uMemAddr
+			config->uNumFrames_HdmiFrameBuffer     // uNumFrames
+			);
+	int vita_enabled_error = 0;
+	int vita_enable_attempt = 1;
+	do {
+		xil_printf("\r\n\n\nFMC_IMAGEON_ENABLE_VITA, attempt %d\r\n\n\n",
+				vita_enable_attempt++);
+		vita_enabled_error = fmc_imageon_enable_vita(config);
+		if (vita_enable_attempt > 3) {
+			xil_printf("VITA Camera failed to initialize after %d attempts\r\n",
+					3);
+			return -1;
+		}
+	} while (vita_enabled_error != 0);
+
 	return 0;
 }
 
