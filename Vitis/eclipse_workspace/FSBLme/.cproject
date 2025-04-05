@@ -63,7 +63,7 @@
                                 								
                                 <option id="xilinx.gnu.compiler.misc.verbose.290784689" name="Verbose (-v)" superClass="xilinx.gnu.compiler.misc.verbose" useByScannerDiscovery="false" value="false" valueType="boolean"/>
                                 								
-                                <option id="xilinx.gnu.compiler.option.warnings.toerrors.409862950" name="Warnings as errors (-Werror)" superClass="xilinx.gnu.compiler.option.warnings.toerrors" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+                                <option id="xilinx.gnu.compiler.option.warnings.toerrors.409862950" name="Warnings as errors (-Werror)" superClass="xilinx.gnu.compiler.option.warnings.toerrors" useByScannerDiscovery="false" value="false" valueType="boolean"/>
                                 								
                                 <option id="xilinx.gnu.compiler.option.warnings.pedantic.1670507979" name="Pedantic (-pedantic)" superClass="xilinx.gnu.compiler.option.warnings.pedantic" useByScannerDiscovery="false" value="false" valueType="boolean"/>
                                 								

@@ -1,24 +1,44 @@
-
-
-/***************************** Include Files
- * *********************************/
 #include "sleep.h"
 #include "xenv.h"
 #include "xvprocss_coreinit.h"
 #include "xvprocss_router.h"
 #include "xvprocss_vdma.h"
-
-/************************** Constant Definitions
- * *****************************/
+#include "camera_app.h"
+#include "xil_cache.h"
+#include "xil_types.h"
+#include <stdio.h>
+#include "xparameters.h"
+#include "xstatus.h"
+#include "fmc_iic.h"
+#include "fmc_ipmi_fru.h"
 
 /* HW Reset Network GPIO Channel */
 #define GPIO_CH_RESET_SEL (1u)
+#define VITA_ENABLE_ATTEMPT_LIMIT 3
+#define INCR_DECR_VALUE 1
+#define XPAR_XV_DEMOSAIC_0_DEVICE_ID XPAR_V_DEMOSAIC_0_DEVICE_ID
+#define XPAR_XV_DEMOSAIC_0_S_AXI_CTRL_BASEADDR 0x43C40000
+#define XPAR_XV_DEMOSAIC_0_S_AXI_CTRL_HIGHADDR 0x43C4FFFF
+#define XPAR_XV_DEMOSAIC_0_SAMPLES_PER_CLOCK 1
+#define XPAR_XV_DEMOSAIC_0_MAX_COLS 3840
+#define XPAR_XV_DEMOSAIC_0_MAX_ROWS 2160
+#define XPAR_XV_DEMOSAIC_0_MAX_DATA_WIDTH 8
+#define XPAR_XV_DEMOSAIC_0_ALGORITHM 1
+#define XV_DEMOSAIC_CTRL_ADDR_AP_CTRL 0x00
+#define XV_DEMOSAIC_CTRL_ADDR_GIE 0x04
+#define XV_DEMOSAIC_CTRL_ADDR_IER 0x08
+#define XV_DEMOSAIC_CTRL_ADDR_ISR 0x0c
+#define XV_DEMOSAIC_CTRL_ADDR_HWREG_WIDTH_DATA 0x10
+#define XV_DEMOSAIC_CTRL_BITS_HWREG_WIDTH_DATA 16
+#define XV_DEMOSAIC_CTRL_ADDR_HWREG_HEIGHT_DATA 0x18
+#define XV_DEMOSAIC_CTRL_BITS_HWREG_HEIGHT_DATA 16
+#define XV_DEMOSAIC_CTRL_ADDR_HWREG_BAYER_PHASE_DATA 0x28
+#define XV_DEMOSAIC_CTRL_BITS_HWREG_BAYER_PHASE_DATA 16
 
-/** @name Reset Network
- *
- * @{
- * The following constants define various reset lines in the subsystem
- */
+#define FMC_ID_SLOT1 1 // defined to be 0xA0
+#define FMC_ID_SLOT2 2 // defined to be 0xA2 or 0xA4
+#define FMC_ID_ALL 0   // defined to be 0xA0, 0xA2, 0xA4, or 0xA6
+
 #define XVPROCSS_RSTMASK_VIDEO_IN                                    \
   (0x01) /**< Reset line going out of vpss */
 #define XVPROCSS_RSTMASK_IP_AXIS                                     \
@@ -94,8 +114,138 @@ static int SetupModeVCResampleOnly(XVprocSs *XVprocSsPtr);
 static int SetupModeHCResampleOnly(XVprocSs *XVprocSsPtr);
 static int SetupModeMax(XVprocSs *XVprocSsPtr);
 
-/***************** Macros (Inline Functions) Definitions
- * *********************/
+
+
+
+Xuint8 detect_ipmi_address(fmc_iic_t *pIIC, int fmcId) {
+  Xuint8 ipmi_address = 0x00;
+  Xuint8 min_address;
+  Xuint8 max_address;
+
+  Xuint8 iic_address;
+  Xuint8 iic_data;
+
+  switch (fmcId) {
+  case FMC_ID_SLOT1:
+    min_address = 0xA0;
+    max_address = 0xA0;
+    break;
+  case FMC_ID_SLOT2:
+    min_address = 0xA2;
+    max_address = 0xA4;
+    break;
+  case FMC_ID_ALL:
+    min_address = 0xA0;
+    max_address = 0xA6;
+    break;
+  default:
+    min_address = 0xA0;
+    max_address = 0xA6;
+    break;
+  }
+
+  for (ipmi_address = min_address; ipmi_address <= max_address;
+       ipmi_address += 2) {
+    // xil_printf( "Checking IPMI EEPROM at Address = 0x%02X\n\r",
+    // ipmi_address );
+    iic_address = ipmi_address >> 1;
+    if (pIIC->fpIicRead(pIIC, iic_address, 0, &iic_data, 1)) {
+      // xil_printf( "Detected IPMI EEPROM at Address = 0x%02X\n\r",
+      // ipmi_address );
+      break;
+    }
+  }
+  // If none were detected in range, use the max value
+  if (ipmi_address > max_address) {
+    ipmi_address = max_address;
+  }
+
+  return ipmi_address;
+}
+
+int fmc_ipmi_detect(fmc_iic_t *pIIC, char *szExpected, int fmcId) {
+  Xuint8 ipmi_eeprom_address;
+  struct fru_area_board board_info;
+  int retval;
+
+  xil_printf("FMC Module Validation\n\r");
+
+  // I2C Address of IPMI EEPROM
+  ipmi_eeprom_address = detect_ipmi_address(pIIC, fmcId);
+  // xil_printf( "IPMI EEPROM Address = 0x%02X\n\r",
+  // ipmi_eeprom_address );
+
+  // Read FRU Board Info from IPMI EEPROM
+  retval =
+      fmc_ipmi_get_board_info(pIIC, ipmi_eeprom_address, &board_info);
+  if (retval == FRU_SUCCESS) {
+    // Display Board Information
+    xil_printf("Board Information:\n\r");
+    xil_printf("\tManufacturer    = %s\n\r", board_info.mfg);
+    xil_printf("\tProduct Name    = %s\n\r", board_info.prod);
+    xil_printf("\tSerial Number   = %s\n\r", board_info.serial);
+    xil_printf("\tPart Number     = %s\n\r", board_info.part);
+
+    // Validate presence of FMC module
+    if (!strcmp(board_info.prod, szExpected)) {
+      xil_printf("SUCCESS : Detected %s module!\n\r",
+                 board_info.prod);
+      // fmc_ipmi_enable( pIIC, fmcId );
+      return 1;
+    } else {
+      // Error due to unexpected FMC module
+      xil_printf(
+          "ERROR : Unexpected %s module, Expected %s module\n\r",
+          board_info.prod, szExpected);
+      // fmc_ipmi_disable( pIIC, fmcId );
+      return 0;
+    }
+  } else if (retval == FRU_I2C_ERROR) {
+    // Error due to unpopulated FMC slot
+    xil_printf("ERROR : No FMC module detected\n\r");
+    // fmc_ipmi_disable( pIIC, fmcId );
+    return 0;
+  } else {
+    // Error due to invalid IPMI EEPROM
+    xil_printf("ERROR : FMC module does not have valid FRU content "
+               "in its IPMI EEPROM\n\r");
+    // fmc_ipmi_disable( pIIC, fmcId );
+    return 0;
+  }
+}
+
+int fmc_ipmi_enable(fmc_iic_t *pIIC, int fmcId) {
+  Xuint32 value;
+
+  pIIC->fpGpoRead(pIIC, &value);
+  if (fmcId == FMC_ID_SLOT1) {
+    value = value | 0x00000001; // Force bit 0 to 1
+  } else if (fmcId == FMC_ID_SLOT2) {
+    value = value | 0x00000002; // Force bit 1 to 1
+  } else {
+    value = value | 0x00000003; // Force bits 1:0 to 1
+  }
+  pIIC->fpGpoWrite(pIIC, value);
+
+  return 1;
+}
+
+int fmc_ipmi_disable(fmc_iic_t *pIIC, int fmcId) {
+  Xuint32 value;
+
+  pIIC->fpGpoRead(pIIC, &value);
+  if (fmcId == FMC_ID_SLOT1) {
+    value = value & 0xFFFFFFFE; // Force bit 0 to 0
+  } else if (fmcId == FMC_ID_SLOT2) {
+    value = value & 0xFFFFFFFD; // Force bit 1 to 0
+  } else {
+    value = value & 0xFFFFFFFC; // Force bits 1:0 to 0
+  }
+  pIIC->fpGpoWrite(pIIC, value);
+
+  return 1;
+}
+
 /*****************************************************************************/
 /**
  * This macro reads the subsystem reset network state
@@ -1897,36 +2047,10 @@ int XVprocSs_SetSubsystemConfig(XVprocSs *InstancePtr) {
   return (status);
 }
 
-#include "camera_app.h"
-#include "fmc_ipmi.h"
-#include "xil_cache.h"
-#include "xil_types.h"
-
 XVprocSs proc_ss_RGB_YCrCb_444;
 XVprocSs proc_ss_444_to_422;
 XVprocSs_Config *Config_ptr;
 XVprocSs_Config *Config_ptr_422;
-
-#define VITA_ENABLE_ATTEMPT_LIMIT 3
-#define INCR_DECR_VALUE 1
-#define XPAR_XV_DEMOSAIC_0_DEVICE_ID XPAR_V_DEMOSAIC_0_DEVICE_ID
-#define XPAR_XV_DEMOSAIC_0_S_AXI_CTRL_BASEADDR 0x43C40000
-#define XPAR_XV_DEMOSAIC_0_S_AXI_CTRL_HIGHADDR 0x43C4FFFF
-#define XPAR_XV_DEMOSAIC_0_SAMPLES_PER_CLOCK 1
-#define XPAR_XV_DEMOSAIC_0_MAX_COLS 3840
-#define XPAR_XV_DEMOSAIC_0_MAX_ROWS 2160
-#define XPAR_XV_DEMOSAIC_0_MAX_DATA_WIDTH 8
-#define XPAR_XV_DEMOSAIC_0_ALGORITHM 1
-#define XV_DEMOSAIC_CTRL_ADDR_AP_CTRL 0x00
-#define XV_DEMOSAIC_CTRL_ADDR_GIE 0x04
-#define XV_DEMOSAIC_CTRL_ADDR_IER 0x08
-#define XV_DEMOSAIC_CTRL_ADDR_ISR 0x0c
-#define XV_DEMOSAIC_CTRL_ADDR_HWREG_WIDTH_DATA 0x10
-#define XV_DEMOSAIC_CTRL_BITS_HWREG_WIDTH_DATA 16
-#define XV_DEMOSAIC_CTRL_ADDR_HWREG_HEIGHT_DATA 0x18
-#define XV_DEMOSAIC_CTRL_BITS_HWREG_HEIGHT_DATA 16
-#define XV_DEMOSAIC_CTRL_ADDR_HWREG_BAYER_PHASE_DATA 0x28
-#define XV_DEMOSAIC_CTRL_BITS_HWREG_BAYER_PHASE_DATA 16
 
 /// @brief fmc_imageon_enable Enable the FMC Imageon camera
 /// @param config the camera configuration to enable the camera with.
