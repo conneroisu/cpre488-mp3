@@ -11,806 +11,6 @@
 #include "xvprocss_vdma.h"
 #include <stdio.h>
 
-/* Definition for CPU ID */
-#define XPAR_CPU_ID 0U
-
-/* Definitions for peripheral PS7_CORTEXA9_0 */
-#define XPAR_PS7_CORTEXA9_0_CPU_CLK_FREQ_HZ 666666687
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral PS7_CORTEXA9_0 */
-#define XPAR_CPU_CORTEXA9_0_CPU_CLK_FREQ_HZ 666666687
-
-/******************************************************************/
-
-#include "xparameters_ps.h"
-
-#define STDIN_BASEADDRESS 0xE0001000
-#define STDOUT_BASEADDRESS 0xE0001000
-
-/******************************************************************/
-
-/* Platform specific definitions */
-#define PLATFORM_ZYNQ
-
-/* Definitions for sleep timer configuration */
-#define XSLEEP_TIMER_IS_DEFAULT_TIMER
-
-/******************************************************************/
-/* Definitions for driver AXIVDMA */
-#define XPAR_XAXIVDMA_NUM_INSTANCES 1U
-
-/* Definitions for peripheral AXI_VDMA_0 */
-#define XPAR_AXI_VDMA_0_DEVICE_ID 0U
-#define XPAR_AXI_VDMA_0_BASEADDR 0x43000000U
-#define XPAR_AXI_VDMA_0_HIGHADDR 0x4300FFFFU
-#define XPAR_AXI_VDMA_0_NUM_FSTORES 5U
-#define XPAR_AXI_VDMA_0_INCLUDE_MM2S 1U
-#define XPAR_AXI_VDMA_0_INCLUDE_MM2S_DRE 0U
-#define XPAR_AXI_VDMA_0_M_AXI_MM2S_DATA_WIDTH 64U
-#define XPAR_AXI_VDMA_0_INCLUDE_S2MM 1U
-#define XPAR_AXI_VDMA_0_INCLUDE_S2MM_DRE 0U
-#define XPAR_AXI_VDMA_0_M_AXI_S2MM_DATA_WIDTH 64U
-#define XPAR_AXI_VDMA_0_AXI_MM2S_ACLK_FREQ_HZ 0U
-#define XPAR_AXI_VDMA_0_AXI_S2MM_ACLK_FREQ_HZ 0U
-#define XPAR_AXI_VDMA_0_MM2S_GENLOCK_MODE 3U
-#define XPAR_AXI_VDMA_0_MM2S_GENLOCK_NUM_MASTERS 1U
-#define XPAR_AXI_VDMA_0_S2MM_GENLOCK_MODE 2U
-#define XPAR_AXI_VDMA_0_S2MM_GENLOCK_NUM_MASTERS 1U
-#define XPAR_AXI_VDMA_0_INCLUDE_SG 0U
-#define XPAR_AXI_VDMA_0_ENABLE_VIDPRMTR_READS 1U
-#define XPAR_AXI_VDMA_0_USE_FSYNC 1U
-#define XPAR_AXI_VDMA_0_FLUSH_ON_FSYNC 1U
-#define XPAR_AXI_VDMA_0_MM2S_LINEBUFFER_DEPTH 4096U
-#define XPAR_AXI_VDMA_0_S2MM_LINEBUFFER_DEPTH 4096U
-#define XPAR_AXI_VDMA_0_INCLUDE_INTERNAL_GENLOCK 1U
-#define XPAR_AXI_VDMA_0_S2MM_SOF_ENABLE 1U
-#define XPAR_AXI_VDMA_0_M_AXIS_MM2S_TDATA_WIDTH 16U
-#define XPAR_AXI_VDMA_0_S_AXIS_S2MM_TDATA_WIDTH 16U
-#define XPAR_AXI_VDMA_0_ENABLE_DEBUG_INFO_1 0U
-#define XPAR_AXI_VDMA_0_ENABLE_DEBUG_INFO_5 0U
-#define XPAR_AXI_VDMA_0_ENABLE_DEBUG_INFO_6 1U
-#define XPAR_AXI_VDMA_0_ENABLE_DEBUG_INFO_7 1U
-#define XPAR_AXI_VDMA_0_ENABLE_DEBUG_INFO_9 0U
-#define XPAR_AXI_VDMA_0_ENABLE_DEBUG_INFO_13 0U
-#define XPAR_AXI_VDMA_0_ENABLE_DEBUG_INFO_14 1U
-#define XPAR_AXI_VDMA_0_ENABLE_DEBUG_INFO_15 1U
-#define XPAR_AXI_VDMA_0_ENABLE_DEBUG_ALL 0U
-#define XPAR_AXI_VDMA_0_ADDR_WIDTH 32U
-#define XPAR_AXI_VDMA_0_ENABLE_VERT_FLIP 0U
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral AXI_VDMA_0 */
-#define XPAR_AXIVDMA_0_DEVICE_ID XPAR_AXI_VDMA_0_DEVICE_ID
-#define XPAR_AXIVDMA_0_BASEADDR 0x43000000U
-#define XPAR_AXIVDMA_0_HIGHADDR 0x4300FFFFU
-#define XPAR_AXIVDMA_0_NUM_FSTORES 5U
-#define XPAR_AXIVDMA_0_INCLUDE_MM2S 1U
-#define XPAR_AXIVDMA_0_INCLUDE_MM2S_DRE 0U
-#define XPAR_AXIVDMA_0_M_AXI_MM2S_DATA_WIDTH 64U
-#define XPAR_AXIVDMA_0_INCLUDE_S2MM 1U
-#define XPAR_AXIVDMA_0_INCLUDE_S2MM_DRE 0U
-#define XPAR_AXIVDMA_0_M_AXI_S2MM_DATA_WIDTH 64U
-#define XPAR_AXIVDMA_0_AXI_MM2S_ACLK_FREQ_HZ 0U
-#define XPAR_AXIVDMA_0_AXI_S2MM_ACLK_FREQ_HZ 0U
-#define XPAR_AXIVDMA_0_MM2S_GENLOCK_MODE 3U
-#define XPAR_AXIVDMA_0_MM2S_GENLOCK_NUM_MASTERS 1U
-#define XPAR_AXIVDMA_0_S2MM_GENLOCK_MODE 2U
-#define XPAR_AXIVDMA_0_S2MM_GENLOCK_NUM_MASTERS 1U
-#define XPAR_AXIVDMA_0_INCLUDE_SG 0U
-#define XPAR_AXIVDMA_0_ENABLE_VIDPRMTR_READS 1U
-#define XPAR_AXIVDMA_0_USE_FSYNC 1U
-#define XPAR_AXIVDMA_0_FLUSH_ON_FSYNC 1U
-#define XPAR_AXIVDMA_0_MM2S_LINEBUFFER_DEPTH 4096U
-#define XPAR_AXIVDMA_0_S2MM_LINEBUFFER_DEPTH 4096U
-#define XPAR_AXIVDMA_0_INCLUDE_INTERNAL_GENLOCK 1U
-#define XPAR_AXIVDMA_0_S2MM_SOF_ENABLE 1U
-#define XPAR_AXIVDMA_0_M_AXIS_MM2S_TDATA_WIDTH 16U
-#define XPAR_AXIVDMA_0_S_AXIS_S2MM_TDATA_WIDTH 16U
-
-/******************************************************************/
-
-/* Definitions for peripheral PS7_DDR_0 */
-#define XPAR_PS7_DDR_0_S_AXI_BASEADDR 0x00100000
-#define XPAR_PS7_DDR_0_S_AXI_HIGHADDR 0x1FFFFFFF
-
-/******************************************************************/
-
-/* Definitions for driver DEVCFG */
-#define XPAR_XDCFG_NUM_INSTANCES 1U
-
-/* Definitions for peripheral PS7_DEV_CFG_0 */
-#define XPAR_PS7_DEV_CFG_0_DEVICE_ID 0U
-#define XPAR_PS7_DEV_CFG_0_BASEADDR 0xF8007000U
-#define XPAR_PS7_DEV_CFG_0_HIGHADDR 0xF80070FFU
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral PS7_DEV_CFG_0 */
-#define XPAR_XDCFG_0_DEVICE_ID XPAR_PS7_DEV_CFG_0_DEVICE_ID
-#define XPAR_XDCFG_0_BASEADDR 0xF8007000U
-#define XPAR_XDCFG_0_HIGHADDR 0xF80070FFU
-
-/******************************************************************/
-
-/* Definitions for driver DMAPS */
-#define XPAR_XDMAPS_NUM_INSTANCES 2
-
-/* Definitions for peripheral PS7_DMA_NS */
-#define XPAR_PS7_DMA_NS_DEVICE_ID 0
-#define XPAR_PS7_DMA_NS_BASEADDR 0xF8004000
-#define XPAR_PS7_DMA_NS_HIGHADDR 0xF8004FFF
-
-/* Definitions for peripheral PS7_DMA_S */
-#define XPAR_PS7_DMA_S_DEVICE_ID 1
-#define XPAR_PS7_DMA_S_BASEADDR 0xF8003000
-#define XPAR_PS7_DMA_S_HIGHADDR 0xF8003FFF
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral PS7_DMA_NS */
-#define XPAR_XDMAPS_0_DEVICE_ID XPAR_PS7_DMA_NS_DEVICE_ID
-#define XPAR_XDMAPS_0_BASEADDR 0xF8004000
-#define XPAR_XDMAPS_0_HIGHADDR 0xF8004FFF
-
-/* Canonical definitions for peripheral PS7_DMA_S */
-#define XPAR_XDMAPS_1_DEVICE_ID XPAR_PS7_DMA_S_DEVICE_ID
-#define XPAR_XDMAPS_1_BASEADDR 0xF8003000
-#define XPAR_XDMAPS_1_HIGHADDR 0xF8003FFF
-
-/******************************************************************/
-
-/* Definitions for driver EMACPS */
-#define XPAR_XEMACPS_NUM_INSTANCES 1
-
-/* Definitions for peripheral PS7_ETHERNET_0 */
-#define XPAR_PS7_ETHERNET_0_DEVICE_ID 0
-#define XPAR_PS7_ETHERNET_0_BASEADDR 0xE000B000
-#define XPAR_PS7_ETHERNET_0_HIGHADDR 0xE000BFFF
-#define XPAR_PS7_ETHERNET_0_ENET_CLK_FREQ_HZ 125000000
-#define XPAR_PS7_ETHERNET_0_ENET_SLCR_1000MBPS_DIV0 8
-#define XPAR_PS7_ETHERNET_0_ENET_SLCR_1000MBPS_DIV1 1
-#define XPAR_PS7_ETHERNET_0_ENET_SLCR_100MBPS_DIV0 8
-#define XPAR_PS7_ETHERNET_0_ENET_SLCR_100MBPS_DIV1 5
-#define XPAR_PS7_ETHERNET_0_ENET_SLCR_10MBPS_DIV0 8
-#define XPAR_PS7_ETHERNET_0_ENET_SLCR_10MBPS_DIV1 50
-#define XPAR_PS7_ETHERNET_0_ENET_TSU_CLK_FREQ_HZ 0
-
-/******************************************************************/
-
-#define XPAR_PS7_ETHERNET_0_IS_CACHE_COHERENT 0
-#define XPAR_XEMACPS_0_IS_CACHE_COHERENT 0
-/* Canonical definitions for peripheral PS7_ETHERNET_0 */
-#define XPAR_XEMACPS_0_DEVICE_ID XPAR_PS7_ETHERNET_0_DEVICE_ID
-#define XPAR_XEMACPS_0_BASEADDR 0xE000B000
-#define XPAR_XEMACPS_0_HIGHADDR 0xE000BFFF
-#define XPAR_XEMACPS_0_ENET_CLK_FREQ_HZ 125000000
-#define XPAR_XEMACPS_0_ENET_SLCR_1000Mbps_DIV0 8
-#define XPAR_XEMACPS_0_ENET_SLCR_1000Mbps_DIV1 1
-#define XPAR_XEMACPS_0_ENET_SLCR_100Mbps_DIV0 8
-#define XPAR_XEMACPS_0_ENET_SLCR_100Mbps_DIV1 5
-#define XPAR_XEMACPS_0_ENET_SLCR_10Mbps_DIV0 8
-#define XPAR_XEMACPS_0_ENET_SLCR_10Mbps_DIV1 50
-#define XPAR_XEMACPS_0_ENET_TSU_CLK_FREQ_HZ 0
-
-/******************************************************************/
-
-/* Definitions for peripheral ONSEMI_VITA_CAM_0 */
-#define XPAR_ONSEMI_VITA_CAM_0_S00_AXI_BASEADDR 0x43C20000
-#define XPAR_ONSEMI_VITA_CAM_0_S00_AXI_HIGHADDR 0x43C2FFFF
-
-/* Definitions for peripheral ONSEMI_VITA_SPI_0 */
-#define XPAR_ONSEMI_VITA_SPI_0_S00_AXI_BASEADDR 0x43C30000
-#define XPAR_ONSEMI_VITA_SPI_0_S00_AXI_HIGHADDR 0x43C3FFFF
-
-/* Definitions for peripheral PS7_AFI_0 */
-#define XPAR_PS7_AFI_0_S_AXI_BASEADDR 0xF8008000
-#define XPAR_PS7_AFI_0_S_AXI_HIGHADDR 0xF8008FFF
-
-/* Definitions for peripheral PS7_AFI_1 */
-#define XPAR_PS7_AFI_1_S_AXI_BASEADDR 0xF8009000
-#define XPAR_PS7_AFI_1_S_AXI_HIGHADDR 0xF8009FFF
-
-/* Definitions for peripheral PS7_AFI_2 */
-#define XPAR_PS7_AFI_2_S_AXI_BASEADDR 0xF800A000
-#define XPAR_PS7_AFI_2_S_AXI_HIGHADDR 0xF800AFFF
-
-/* Definitions for peripheral PS7_AFI_3 */
-#define XPAR_PS7_AFI_3_S_AXI_BASEADDR 0xF800B000
-#define XPAR_PS7_AFI_3_S_AXI_HIGHADDR 0xF800BFFF
-
-/* Definitions for peripheral PS7_DDRC_0 */
-#define XPAR_PS7_DDRC_0_S_AXI_BASEADDR 0xF8006000
-#define XPAR_PS7_DDRC_0_S_AXI_HIGHADDR 0xF8006FFF
-
-/* Definitions for peripheral PS7_GLOBALTIMER_0 */
-#define XPAR_PS7_GLOBALTIMER_0_S_AXI_BASEADDR 0xF8F00200
-#define XPAR_PS7_GLOBALTIMER_0_S_AXI_HIGHADDR 0xF8F002FF
-
-/* Definitions for peripheral PS7_GPV_0 */
-#define XPAR_PS7_GPV_0_S_AXI_BASEADDR 0xF8900000
-#define XPAR_PS7_GPV_0_S_AXI_HIGHADDR 0xF89FFFFF
-
-/* Definitions for peripheral PS7_INTC_DIST_0 */
-#define XPAR_PS7_INTC_DIST_0_S_AXI_BASEADDR 0xF8F01000
-#define XPAR_PS7_INTC_DIST_0_S_AXI_HIGHADDR 0xF8F01FFF
-
-/* Definitions for peripheral PS7_IOP_BUS_CONFIG_0 */
-#define XPAR_PS7_IOP_BUS_CONFIG_0_S_AXI_BASEADDR 0xE0200000
-#define XPAR_PS7_IOP_BUS_CONFIG_0_S_AXI_HIGHADDR 0xE0200FFF
-
-/* Definitions for peripheral PS7_L2CACHEC_0 */
-#define XPAR_PS7_L2CACHEC_0_S_AXI_BASEADDR 0xF8F02000
-#define XPAR_PS7_L2CACHEC_0_S_AXI_HIGHADDR 0xF8F02FFF
-
-/* Definitions for peripheral PS7_OCMC_0 */
-#define XPAR_PS7_OCMC_0_S_AXI_BASEADDR 0xF800C000
-#define XPAR_PS7_OCMC_0_S_AXI_HIGHADDR 0xF800CFFF
-
-/* Definitions for peripheral PS7_PL310_0 */
-#define XPAR_PS7_PL310_0_S_AXI_BASEADDR 0xF8F02000
-#define XPAR_PS7_PL310_0_S_AXI_HIGHADDR 0xF8F02FFF
-
-/* Definitions for peripheral PS7_PMU_0 */
-#define XPAR_PS7_PMU_0_S_AXI_BASEADDR 0xF8891000
-#define XPAR_PS7_PMU_0_S_AXI_HIGHADDR 0xF8891FFF
-#define XPAR_PS7_PMU_0_PMU1_S_AXI_BASEADDR 0xF8893000
-#define XPAR_PS7_PMU_0_PMU1_S_AXI_HIGHADDR 0xF8893FFF
-
-/* Definitions for peripheral PS7_QSPI_LINEAR_0 */
-#define XPAR_PS7_QSPI_LINEAR_0_S_AXI_BASEADDR 0xFC000000
-#define XPAR_PS7_QSPI_LINEAR_0_S_AXI_HIGHADDR 0xFCFFFFFF
-
-/* Definitions for peripheral PS7_RAM_0 */
-#define XPAR_PS7_RAM_0_S_AXI_BASEADDR 0x00000000
-#define XPAR_PS7_RAM_0_S_AXI_HIGHADDR 0x0003FFFF
-
-/* Definitions for peripheral PS7_RAM_1 */
-#define XPAR_PS7_RAM_1_S_AXI_BASEADDR 0xFFFC0000
-#define XPAR_PS7_RAM_1_S_AXI_HIGHADDR 0xFFFFFFFF
-
-/* Definitions for peripheral PS7_SCUC_0 */
-#define XPAR_PS7_SCUC_0_S_AXI_BASEADDR 0xF8F00000
-#define XPAR_PS7_SCUC_0_S_AXI_HIGHADDR 0xF8F000FC
-
-/* Definitions for peripheral PS7_SLCR_0 */
-#define XPAR_PS7_SLCR_0_S_AXI_BASEADDR 0xF8000000
-#define XPAR_PS7_SLCR_0_S_AXI_HIGHADDR 0xF8000FFF
-
-/******************************************************************/
-
-/* Definitions for driver GPIO */
-#define XPAR_XGPIO_NUM_INSTANCES 2
-
-/* Definitions for peripheral AXI_GPIO_BTN */
-#define XPAR_AXI_GPIO_BTN_BASEADDR 0x41200000
-#define XPAR_AXI_GPIO_BTN_HIGHADDR 0x4120FFFF
-#define XPAR_AXI_GPIO_BTN_DEVICE_ID 0
-#define XPAR_AXI_GPIO_BTN_INTERRUPT_PRESENT 0
-#define XPAR_AXI_GPIO_BTN_IS_DUAL 0
-
-/* Definitions for peripheral AXI_GPIO_SW */
-#define XPAR_AXI_GPIO_SW_BASEADDR 0x41210000
-#define XPAR_AXI_GPIO_SW_HIGHADDR 0x4121FFFF
-#define XPAR_AXI_GPIO_SW_DEVICE_ID 1
-#define XPAR_AXI_GPIO_SW_INTERRUPT_PRESENT 0
-#define XPAR_AXI_GPIO_SW_IS_DUAL 0
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral AXI_GPIO_BTN */
-#define XPAR_GPIO_0_BASEADDR 0x41200000
-#define XPAR_GPIO_0_HIGHADDR 0x4120FFFF
-#define XPAR_GPIO_0_DEVICE_ID XPAR_AXI_GPIO_BTN_DEVICE_ID
-#define XPAR_GPIO_0_INTERRUPT_PRESENT 0
-#define XPAR_GPIO_0_IS_DUAL 0
-
-/* Canonical definitions for peripheral AXI_GPIO_SW */
-#define XPAR_GPIO_1_BASEADDR 0x41210000
-#define XPAR_GPIO_1_HIGHADDR 0x4121FFFF
-#define XPAR_GPIO_1_DEVICE_ID XPAR_AXI_GPIO_SW_DEVICE_ID
-#define XPAR_GPIO_1_INTERRUPT_PRESENT 0
-#define XPAR_GPIO_1_IS_DUAL 0
-
-/******************************************************************/
-
-/* Definitions for driver GPIOPS */
-#define XPAR_XGPIOPS_NUM_INSTANCES 1
-
-/* Definitions for peripheral PS7_GPIO_0 */
-#define XPAR_PS7_GPIO_0_DEVICE_ID 0
-#define XPAR_PS7_GPIO_0_BASEADDR 0xE000A000
-#define XPAR_PS7_GPIO_0_HIGHADDR 0xE000AFFF
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral PS7_GPIO_0 */
-#define XPAR_XGPIOPS_0_DEVICE_ID XPAR_PS7_GPIO_0_DEVICE_ID
-#define XPAR_XGPIOPS_0_BASEADDR 0xE000A000
-#define XPAR_XGPIOPS_0_HIGHADDR 0xE000AFFF
-
-/******************************************************************/
-
-/* Definitions for driver IIC */
-#define XPAR_XIIC_NUM_INSTANCES 2
-
-/* Definitions for peripheral FMC_IMAGEON_IIC_0 */
-#define XPAR_FMC_IMAGEON_IIC_0_DEVICE_ID 0
-#define XPAR_FMC_IMAGEON_IIC_0_BASEADDR 0x41600000
-#define XPAR_FMC_IMAGEON_IIC_0_HIGHADDR 0x4160FFFF
-#define XPAR_FMC_IMAGEON_IIC_0_TEN_BIT_ADR 0
-#define XPAR_FMC_IMAGEON_IIC_0_GPO_WIDTH 1
-
-/* Definitions for peripheral FMC_IPMI_ID_EEPROM_0 */
-#define XPAR_FMC_IPMI_ID_EEPROM_0_DEVICE_ID 1
-#define XPAR_FMC_IPMI_ID_EEPROM_0_BASEADDR 0x41610000
-#define XPAR_FMC_IPMI_ID_EEPROM_0_HIGHADDR 0x4161FFFF
-#define XPAR_FMC_IPMI_ID_EEPROM_0_TEN_BIT_ADR 0
-#define XPAR_FMC_IPMI_ID_EEPROM_0_GPO_WIDTH 8
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral FMC_IMAGEON_IIC_0 */
-#define XPAR_IIC_0_DEVICE_ID XPAR_FMC_IMAGEON_IIC_0_DEVICE_ID
-#define XPAR_IIC_0_BASEADDR 0x41600000
-#define XPAR_IIC_0_HIGHADDR 0x4160FFFF
-#define XPAR_IIC_0_TEN_BIT_ADR 0
-#define XPAR_IIC_0_GPO_WIDTH 1
-
-/* Canonical definitions for peripheral FMC_IPMI_ID_EEPROM_0 */
-#define XPAR_IIC_1_DEVICE_ID XPAR_FMC_IPMI_ID_EEPROM_0_DEVICE_ID
-#define XPAR_IIC_1_BASEADDR 0x41610000
-#define XPAR_IIC_1_HIGHADDR 0x4161FFFF
-#define XPAR_IIC_1_TEN_BIT_ADR 0
-#define XPAR_IIC_1_GPO_WIDTH 8
-
-/******************************************************************/
-
-/* Definitions for driver QSPIPS */
-#define XPAR_XQSPIPS_NUM_INSTANCES 1
-
-/* Definitions for peripheral PS7_QSPI_0 */
-#define XPAR_PS7_QSPI_0_DEVICE_ID 0
-#define XPAR_PS7_QSPI_0_BASEADDR 0xE000D000
-#define XPAR_PS7_QSPI_0_HIGHADDR 0xE000DFFF
-#define XPAR_PS7_QSPI_0_QSPI_CLK_FREQ_HZ 200000000
-#define XPAR_PS7_QSPI_0_QSPI_MODE 0
-#define XPAR_PS7_QSPI_0_QSPI_BUS_WIDTH 2
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral PS7_QSPI_0 */
-#define XPAR_XQSPIPS_0_DEVICE_ID XPAR_PS7_QSPI_0_DEVICE_ID
-#define XPAR_XQSPIPS_0_BASEADDR 0xE000D000
-#define XPAR_XQSPIPS_0_HIGHADDR 0xE000DFFF
-#define XPAR_XQSPIPS_0_QSPI_CLK_FREQ_HZ 200000000
-#define XPAR_XQSPIPS_0_QSPI_MODE 0
-#define XPAR_XQSPIPS_0_QSPI_BUS_WIDTH 2
-
-/******************************************************************/
-
-/* Definitions for Fabric interrupts connected to ps7_scugic_0 */
-#define XPAR_FABRIC_AXI_VDMA_0_MM2S_INTROUT_INTR 61U
-#define XPAR_FABRIC_AXI_VDMA_0_S2MM_INTROUT_INTR 62U
-
-/******************************************************************/
-
-/* Canonical definitions for Fabric interrupts connected to
- * ps7_scugic_0 */
-#define XPAR_FABRIC_AXIVDMA_0_MM2S_INTROUT_VEC_ID                    \
-  XPAR_FABRIC_AXI_VDMA_0_MM2S_INTROUT_INTR
-#define XPAR_FABRIC_AXIVDMA_0_S2MM_INTROUT_VEC_ID                    \
-  XPAR_FABRIC_AXI_VDMA_0_S2MM_INTROUT_INTR
-
-/******************************************************************/
-
-/* Definitions for driver SCUGIC */
-#define XPAR_XSCUGIC_NUM_INSTANCES 1U
-
-/* Definitions for peripheral PS7_SCUGIC_0 */
-#define XPAR_PS7_SCUGIC_0_DEVICE_ID 0U
-#define XPAR_PS7_SCUGIC_0_BASEADDR 0xF8F00100U
-#define XPAR_PS7_SCUGIC_0_HIGHADDR 0xF8F001FFU
-#define XPAR_PS7_SCUGIC_0_DIST_BASEADDR 0xF8F01000U
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral PS7_SCUGIC_0 */
-#define XPAR_SCUGIC_0_DEVICE_ID 0U
-#define XPAR_SCUGIC_0_CPU_BASEADDR 0xF8F00100U
-#define XPAR_SCUGIC_0_CPU_HIGHADDR 0xF8F001FFU
-#define XPAR_SCUGIC_0_DIST_BASEADDR 0xF8F01000U
-
-/******************************************************************/
-
-/* Definitions for driver SCUTIMER */
-#define XPAR_XSCUTIMER_NUM_INSTANCES 1
-
-/* Definitions for peripheral PS7_SCUTIMER_0 */
-#define XPAR_PS7_SCUTIMER_0_DEVICE_ID 0
-#define XPAR_PS7_SCUTIMER_0_BASEADDR 0xF8F00600
-#define XPAR_PS7_SCUTIMER_0_HIGHADDR 0xF8F0061F
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral PS7_SCUTIMER_0 */
-#define XPAR_XSCUTIMER_0_DEVICE_ID XPAR_PS7_SCUTIMER_0_DEVICE_ID
-#define XPAR_XSCUTIMER_0_BASEADDR 0xF8F00600
-#define XPAR_XSCUTIMER_0_HIGHADDR 0xF8F0061F
-
-/******************************************************************/
-
-/* Definitions for driver SCUWDT */
-#define XPAR_XSCUWDT_NUM_INSTANCES 1
-
-/* Definitions for peripheral PS7_SCUWDT_0 */
-#define XPAR_PS7_SCUWDT_0_DEVICE_ID 0
-#define XPAR_PS7_SCUWDT_0_BASEADDR 0xF8F00620
-#define XPAR_PS7_SCUWDT_0_HIGHADDR 0xF8F006FF
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral PS7_SCUWDT_0 */
-#define XPAR_SCUWDT_0_DEVICE_ID XPAR_PS7_SCUWDT_0_DEVICE_ID
-#define XPAR_SCUWDT_0_BASEADDR 0xF8F00620
-#define XPAR_SCUWDT_0_HIGHADDR 0xF8F006FF
-
-/******************************************************************/
-
-/* Definitions for driver SDPS */
-#define XPAR_XSDPS_NUM_INSTANCES 1
-
-/* Definitions for peripheral PS7_SD_0 */
-#define XPAR_PS7_SD_0_DEVICE_ID 0
-#define XPAR_PS7_SD_0_BASEADDR 0xE0100000
-#define XPAR_PS7_SD_0_HIGHADDR 0xE0100FFF
-#define XPAR_PS7_SD_0_SDIO_CLK_FREQ_HZ 50000000
-#define XPAR_PS7_SD_0_HAS_CD 1
-#define XPAR_PS7_SD_0_HAS_WP 1
-#define XPAR_PS7_SD_0_BUS_WIDTH 0
-#define XPAR_PS7_SD_0_MIO_BANK 0
-#define XPAR_PS7_SD_0_HAS_EMIO 0
-
-/******************************************************************/
-
-#define XPAR_PS7_SD_0_IS_CACHE_COHERENT 0
-/* Canonical definitions for peripheral PS7_SD_0 */
-#define XPAR_XSDPS_0_DEVICE_ID XPAR_PS7_SD_0_DEVICE_ID
-#define XPAR_XSDPS_0_BASEADDR 0xE0100000
-#define XPAR_XSDPS_0_HIGHADDR 0xE0100FFF
-#define XPAR_XSDPS_0_SDIO_CLK_FREQ_HZ 50000000
-#define XPAR_XSDPS_0_HAS_CD 1
-#define XPAR_XSDPS_0_HAS_WP 1
-#define XPAR_XSDPS_0_BUS_WIDTH 0
-#define XPAR_XSDPS_0_MIO_BANK 0
-#define XPAR_XSDPS_0_HAS_EMIO 0
-#define XPAR_XSDPS_0_IS_CACHE_COHERENT 0
-
-/******************************************************************/
-
-/* Definitions for driver TTCPS */
-#define XPAR_XTTCPS_NUM_INSTANCES 3U
-
-/* Definitions for peripheral PS7_TTC_0 */
-#define XPAR_PS7_TTC_0_DEVICE_ID 0U
-#define XPAR_PS7_TTC_0_BASEADDR 0XF8001000U
-#define XPAR_PS7_TTC_0_TTC_CLK_FREQ_HZ 111111115U
-#define XPAR_PS7_TTC_0_TTC_CLK_CLKSRC 0U
-#define XPAR_PS7_TTC_1_DEVICE_ID 1U
-#define XPAR_PS7_TTC_1_BASEADDR 0XF8001004U
-#define XPAR_PS7_TTC_1_TTC_CLK_FREQ_HZ 111111115U
-#define XPAR_PS7_TTC_1_TTC_CLK_CLKSRC 0U
-#define XPAR_PS7_TTC_2_DEVICE_ID 2U
-#define XPAR_PS7_TTC_2_BASEADDR 0XF8001008U
-#define XPAR_PS7_TTC_2_TTC_CLK_FREQ_HZ 111111115U
-#define XPAR_PS7_TTC_2_TTC_CLK_CLKSRC 0U
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral PS7_TTC_0 */
-#define XPAR_XTTCPS_0_DEVICE_ID XPAR_PS7_TTC_0_DEVICE_ID
-#define XPAR_XTTCPS_0_BASEADDR 0xF8001000U
-#define XPAR_XTTCPS_0_TTC_CLK_FREQ_HZ 111111115U
-#define XPAR_XTTCPS_0_TTC_CLK_CLKSRC 0U
-
-#define XPAR_XTTCPS_1_DEVICE_ID XPAR_PS7_TTC_1_DEVICE_ID
-#define XPAR_XTTCPS_1_BASEADDR 0xF8001004U
-#define XPAR_XTTCPS_1_TTC_CLK_FREQ_HZ 111111115U
-#define XPAR_XTTCPS_1_TTC_CLK_CLKSRC 0U
-
-#define XPAR_XTTCPS_2_DEVICE_ID XPAR_PS7_TTC_2_DEVICE_ID
-#define XPAR_XTTCPS_2_BASEADDR 0xF8001008U
-#define XPAR_XTTCPS_2_TTC_CLK_FREQ_HZ 111111115U
-#define XPAR_XTTCPS_2_TTC_CLK_CLKSRC 0U
-
-/******************************************************************/
-
-/* Definitions for driver UARTPS */
-#define XPAR_XUARTPS_NUM_INSTANCES 1
-
-/* Definitions for peripheral PS7_UART_1 */
-#define XPAR_PS7_UART_1_DEVICE_ID 0
-#define XPAR_PS7_UART_1_BASEADDR 0xE0001000
-#define XPAR_PS7_UART_1_HIGHADDR 0xE0001FFF
-#define XPAR_PS7_UART_1_UART_CLK_FREQ_HZ 50000000
-#define XPAR_PS7_UART_1_HAS_MODEM 0
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral PS7_UART_1 */
-#define XPAR_XUARTPS_0_DEVICE_ID XPAR_PS7_UART_1_DEVICE_ID
-#define XPAR_XUARTPS_0_BASEADDR 0xE0001000
-#define XPAR_XUARTPS_0_HIGHADDR 0xE0001FFF
-#define XPAR_XUARTPS_0_UART_CLK_FREQ_HZ 50000000
-#define XPAR_XUARTPS_0_HAS_MODEM 0
-
-/******************************************************************/
-
-/* Definition for input Clock */
-/* Definitions for driver USBPS */
-#define XPAR_XUSBPS_NUM_INSTANCES 1
-
-/* Definitions for peripheral PS7_USB_0 */
-#define XPAR_PS7_USB_0_DEVICE_ID 0
-#define XPAR_PS7_USB_0_BASEADDR 0xE0002000
-#define XPAR_PS7_USB_0_HIGHADDR 0xE0002FFF
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral PS7_USB_0 */
-#define XPAR_XUSBPS_0_DEVICE_ID XPAR_PS7_USB_0_DEVICE_ID
-#define XPAR_XUSBPS_0_BASEADDR 0xE0002000
-#define XPAR_XUSBPS_0_HIGHADDR 0xE0002FFF
-
-/******************************************************************/
-
-/* Definitions for driver V_CSC */
-#define XPAR_XV_CSC_NUM_INSTANCES 1
-
-/* Definitions for peripheral V_PROC_SS_0_CSC */
-#define XPAR_V_PROC_SS_0_CSC_DEVICE_ID 0
-#define XPAR_V_PROC_SS_0_CSC_S_AXI_CTRL_BASEADDR 0x00000000
-#define XPAR_V_PROC_SS_0_CSC_S_AXI_CTRL_HIGHADDR 0x0000FFFF
-#define XPAR_V_PROC_SS_0_CSC_SAMPLES_PER_CLOCK 1
-#define XPAR_V_PROC_SS_0_CSC_V_CSC_MAX_WIDTH 3840
-#define XPAR_V_PROC_SS_0_CSC_V_CSC_MAX_HEIGHT 2160
-#define XPAR_V_PROC_SS_0_CSC_MAX_DATA_WIDTH 8
-#define XPAR_V_PROC_SS_0_CSC_ENABLE_422 0
-#define XPAR_V_PROC_SS_0_CSC_ENABLE_420 0
-#define XPAR_V_PROC_SS_0_CSC_ENABLE_WINDOW 0
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral V_PROC_SS_0_CSC */
-#define XPAR_XV_CSC_0_DEVICE_ID XPAR_V_PROC_SS_0_CSC_DEVICE_ID
-#define XPAR_XV_CSC_0_S_AXI_CTRL_BASEADDR 0x00000000
-#define XPAR_XV_CSC_0_S_AXI_CTRL_HIGHADDR 0x0000FFFF
-#define XPAR_XV_CSC_0_SAMPLES_PER_CLOCK 1
-#define XPAR_XV_CSC_0_V_CSC_MAX_WIDTH 3840
-#define XPAR_XV_CSC_0_V_CSC_MAX_HEIGHT 2160
-#define XPAR_XV_CSC_0_MAX_DATA_WIDTH 8
-#define XPAR_XV_CSC_0_ENABLE_422 0
-#define XPAR_XV_CSC_0_ENABLE_420 0
-#define XPAR_XV_CSC_0_ENABLE_WINDOW 0
-
-/******************************************************************/
-
-/* Definitions for driver V_DEMOSAIC */
-#define XPAR_XV_DEMOSAIC_NUM_INSTANCES 1
-
-/* Definitions for peripheral V_DEMOSAIC_0 */
-#define XPAR_V_DEMOSAIC_0_DEVICE_ID 0
-#define XPAR_V_DEMOSAIC_0_S_AXI_CTRL_BASEADDR 0x43C40000
-#define XPAR_V_DEMOSAIC_0_S_AXI_CTRL_HIGHADDR 0x43C4FFFF
-#define XPAR_V_DEMOSAIC_0_SAMPLES_PER_CLOCK 1
-#define XPAR_V_DEMOSAIC_0_MAX_COLS 3840
-#define XPAR_V_DEMOSAIC_0_MAX_ROWS 2160
-#define XPAR_V_DEMOSAIC_0_MAX_DATA_WIDTH 8
-#define XPAR_V_DEMOSAIC_0_ALGORITHM 1
-#define XPAR_XV_DEMOSAIC_0_S_AXI_CTRL_BASEADDR 0x43C40000
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral V_PROC_SS_1_HCR */
-#define XPAR_XV_HCRESAMPLER_0_DEVICE_ID XPAR_V_PROC_SS_1_HCR_DEVICE_ID
-#define XPAR_XV_HCRESAMPLER_0_S_AXI_CTRL_BASEADDR 0x00000000
-#define XPAR_XV_HCRESAMPLER_0_S_AXI_CTRL_HIGHADDR 0x0000FFFF
-#define XPAR_XV_HCRESAMPLER_0_SAMPLES_PER_CLOCK 1
-#define XPAR_XV_HCRESAMPLER_0_MAX_COLS 3840
-#define XPAR_XV_HCRESAMPLER_0_MAX_ROWS 2160
-#define XPAR_XV_HCRESAMPLER_0_MAX_DATA_WIDTH 8
-#define XPAR_XV_HCRESAMPLER_0_CONVERT_TYPE 0
-#define XPAR_XV_HCRESAMPLER_0_NUM_H_TAPS 4
-
-/******************************************************************/
-
-/* Definitions for driver VPROCSS */
-#define XPAR_XVPROCSS_NUM_INSTANCES 2
-
-/* Definitions for peripheral V_PROC_SS_0 */
-#define XPAR_V_PROC_SS_0_BASEADDR 0x43C00000
-#define XPAR_V_PROC_SS_0_HIGHADDR 0x43C0FFFF
-#define XPAR_V_PROC_SS_0_DEVICE_ID 0
-#define XPAR_V_PROC_SS_0_SCALER_ALGORITHM 2
-#define XPAR_V_PROC_SS_0_TOPOLOGY 3
-#define XPAR_V_PROC_SS_0_SAMPLES_PER_CLK 1
-#define XPAR_V_PROC_SS_0_MAX_DATA_WIDTH 8
-#define XPAR_V_PROC_SS_0_NUM_VIDEO_COMPONENTS 3
-#define XPAR_V_PROC_SS_0_MAX_COLS 3840
-#define XPAR_V_PROC_SS_0_MAX_ROWS 2160
-#define XPAR_V_PROC_SS_0_H_SCALER_TAPS 6
-#define XPAR_V_PROC_SS_0_V_SCALER_TAPS 6
-#define XPAR_V_PROC_SS_0_H_SCALER_PHASES 64
-#define XPAR_V_PROC_SS_0_V_SCALER_PHASES 64
-#define XPAR_V_PROC_SS_0_CHROMA_ALGORITHM 2
-#define XPAR_V_PROC_SS_0_H_CHROMA_TAPS 4
-#define XPAR_V_PROC_SS_0_V_CHROMA_TAPS 4
-#define XPAR_V_PROC_SS_0_DEINT_MOTION_ADAPTIVE 1
-
-/* Definitions for peripheral V_PROC_SS_1 */
-#define XPAR_V_PROC_SS_1_BASEADDR 0x43C10000
-#define XPAR_V_PROC_SS_1_HIGHADDR 0x43C1FFFF
-#define XPAR_V_PROC_SS_1_DEVICE_ID 1
-#define XPAR_V_PROC_SS_1_SCALER_ALGORITHM 2
-#define XPAR_V_PROC_SS_1_TOPOLOGY 5
-#define XPAR_V_PROC_SS_1_SAMPLES_PER_CLK 1
-#define XPAR_V_PROC_SS_1_MAX_DATA_WIDTH 8
-#define XPAR_V_PROC_SS_1_NUM_VIDEO_COMPONENTS 3
-#define XPAR_V_PROC_SS_1_MAX_COLS 3840
-#define XPAR_V_PROC_SS_1_MAX_ROWS 2160
-#define XPAR_V_PROC_SS_1_H_SCALER_TAPS 6
-#define XPAR_V_PROC_SS_1_V_SCALER_TAPS 6
-#define XPAR_V_PROC_SS_1_H_SCALER_PHASES 64
-#define XPAR_V_PROC_SS_1_V_SCALER_PHASES 64
-#define XPAR_V_PROC_SS_1_CHROMA_ALGORITHM 2
-#define XPAR_V_PROC_SS_1_H_CHROMA_TAPS 4
-#define XPAR_V_PROC_SS_1_V_CHROMA_TAPS 4
-#define XPAR_V_PROC_SS_1_DEINT_MOTION_ADAPTIVE 1
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral V_PROC_SS_0 */
-#define XPAR_XVPROCSS_0_BASEADDR 0x43C00000
-#define XPAR_XVPROCSS_0_HIGHADDR 0x43C0FFFF
-#define XPAR_XVPROCSS_0_DEVICE_ID XPAR_V_PROC_SS_0_DEVICE_ID
-#define XPAR_XVPROCSS_0_SCALER_ALGORITHM 2
-#define XPAR_XVPROCSS_0_TOPOLOGY 3
-#define XPAR_XVPROCSS_0_SAMPLES_PER_CLK 1
-#define XPAR_XVPROCSS_0_MAX_DATA_WIDTH 8
-#define XPAR_XVPROCSS_0_NUM_VIDEO_COMPONENTS 3
-#define XPAR_XVPROCSS_0_MAX_COLS 3840
-#define XPAR_XVPROCSS_0_MAX_ROWS 2160
-#define XPAR_XVPROCSS_0_H_SCALER_TAPS 6
-#define XPAR_XVPROCSS_0_V_SCALER_TAPS 6
-#define XPAR_XVPROCSS_0_H_SCALER_PHASES 64
-#define XPAR_XVPROCSS_0_V_SCALER_PHASES 64
-#define XPAR_XVPROCSS_0_CHROMA_ALGORITHM 2
-#define XPAR_XVPROCSS_0_H_CHROMA_TAPS 4
-#define XPAR_XVPROCSS_0_V_CHROMA_TAPS 4
-#define XPAR_XVPROCSS_0_DEINT_MOTION_ADAPTIVE 1
-
-/* Canonical definitions for peripheral V_PROC_SS_1 */
-#define XPAR_XVPROCSS_1_BASEADDR 0x43C10000
-#define XPAR_XVPROCSS_1_HIGHADDR 0x43C1FFFF
-#define XPAR_XVPROCSS_1_DEVICE_ID XPAR_V_PROC_SS_1_DEVICE_ID
-#define XPAR_XVPROCSS_1_SCALER_ALGORITHM 2
-#define XPAR_XVPROCSS_1_TOPOLOGY 5
-#define XPAR_XVPROCSS_1_SAMPLES_PER_CLK 1
-#define XPAR_XVPROCSS_1_MAX_DATA_WIDTH 8
-#define XPAR_XVPROCSS_1_NUM_VIDEO_COMPONENTS 3
-#define XPAR_XVPROCSS_1_MAX_COLS 3840
-#define XPAR_XVPROCSS_1_MAX_ROWS 2160
-#define XPAR_XVPROCSS_1_H_SCALER_TAPS 6
-#define XPAR_XVPROCSS_1_V_SCALER_TAPS 6
-#define XPAR_XVPROCSS_1_H_SCALER_PHASES 64
-#define XPAR_XVPROCSS_1_V_SCALER_PHASES 64
-#define XPAR_XVPROCSS_1_CHROMA_ALGORITHM 2
-#define XPAR_XVPROCSS_1_H_CHROMA_TAPS 4
-#define XPAR_XVPROCSS_1_V_CHROMA_TAPS 4
-#define XPAR_XVPROCSS_1_DEINT_MOTION_ADAPTIVE 1
-
-/******************************************************************/
-
-/* Definitions for driver VTC */
-#define XPAR_XVTC_NUM_INSTANCES 1
-
-/* Definitions for peripheral V_TC_0 */
-#define XPAR_V_TC_0_DEVICE_ID 0
-#define XPAR_V_TC_0_BASEADDR 0x43C50000
-#define XPAR_V_TC_0_HIGHADDR 0x43C5FFFF
-#define XPAR_V_TC_0_GENERATE_EN 1
-#define XPAR_V_TC_0_DETECT_EN 0
-#define XPAR_V_TC_0_DET_HSYNC_EN 1
-#define XPAR_V_TC_0_DET_VSYNC_EN 1
-#define XPAR_V_TC_0_DET_HBLANK_EN 1
-#define XPAR_V_TC_0_DET_VBLANK_EN 1
-#define XPAR_V_TC_0_DET_AVIDEO_EN 1
-#define XPAR_V_TC_0_DET_ACHROMA_EN 0
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral V_TC_0 */
-#define XPAR_VTC_0_DEVICE_ID XPAR_V_TC_0_DEVICE_ID
-#define XPAR_VTC_0_BASEADDR 0x43C50000
-#define XPAR_VTC_0_HIGHADDR 0x43C5FFFF
-#define XPAR_VTC_0_GENERATE_EN 1
-#define XPAR_VTC_0_DETECT_EN 0
-#define XPAR_VTC_0_DET_HSYNC_EN 1
-#define XPAR_VTC_0_DET_VSYNC_EN 1
-#define XPAR_VTC_0_DET_HBLANK_EN 1
-#define XPAR_VTC_0_DET_VBLANK_EN 1
-#define XPAR_VTC_0_DET_AVIDEO_EN 1
-#define XPAR_VTC_0_DET_ACHROMA_EN 0
-
-/******************************************************************/
-
-/* Definitions for driver XADCPS */
-#define XPAR_XADCPS_NUM_INSTANCES 1
-
-/* Definitions for peripheral PS7_XADC_0 */
-#define XPAR_PS7_XADC_0_DEVICE_ID 0
-#define XPAR_PS7_XADC_0_BASEADDR 0xF8007100
-#define XPAR_PS7_XADC_0_HIGHADDR 0xF8007120
-
-/******************************************************************/
-
-/* Canonical definitions for peripheral PS7_XADC_0 */
-#define XPAR_XADCPS_0_DEVICE_ID XPAR_PS7_XADC_0_DEVICE_ID
-#define XPAR_XADCPS_0_BASEADDR 0xF8007100
-#define XPAR_XADCPS_0_HIGHADDR 0xF8007120
-
-/******************************************************************/
-
-/* Xilinx FAT File System Library (XilFFs) User Settings */
-#define FILE_SYSTEM_INTERFACE_SD
-#define FILE_SYSTEM_USE_MKFS
-#define FILE_SYSTEM_NUM_LOGIC_VOL 2
-#define FILE_SYSTEM_USE_STRFUNC 0
-#define FILE_SYSTEM_SET_FS_RPATH 0
-#define FILE_SYSTEM_WORD_ACCESS
-
-/* HW Reset Network GPIO Channel */
-#define GPIO_CH_RESET_SEL (1u)
-#define VITA_ENABLE_ATTEMPT_LIMIT 3
-#define INCR_DECR_VALUE 1
-#define XPAR_XV_DEMOSAIC_0_DEVICE_ID XPAR_V_DEMOSAIC_0_DEVICE_ID
-#define XPAR_XV_DEMOSAIC_0_S_AXI_CTRL_BASEADDR 0x43C40000
-#define XPAR_XV_DEMOSAIC_0_S_AXI_CTRL_HIGHADDR 0x43C4FFFF
-#define XPAR_XV_DEMOSAIC_0_SAMPLES_PER_CLOCK 1
-#define XPAR_XV_DEMOSAIC_0_MAX_COLS 3840
-#define XPAR_XV_DEMOSAIC_0_MAX_ROWS 2160
-#define XPAR_XV_DEMOSAIC_0_MAX_DATA_WIDTH 8
-#define XPAR_XV_DEMOSAIC_0_ALGORITHM 1
-#define XV_DEMOSAIC_CTRL_ADDR_AP_CTRL 0x00
-#define XV_DEMOSAIC_CTRL_ADDR_GIE 0x04
-#define XV_DEMOSAIC_CTRL_ADDR_IER 0x08
-#define XV_DEMOSAIC_CTRL_ADDR_ISR 0x0c
-#define XV_DEMOSAIC_CTRL_ADDR_HWREG_WIDTH_DATA 0x10
-#define XV_DEMOSAIC_CTRL_BITS_HWREG_WIDTH_DATA 16
-#define XV_DEMOSAIC_CTRL_ADDR_HWREG_HEIGHT_DATA 0x18
-#define XV_DEMOSAIC_CTRL_BITS_HWREG_HEIGHT_DATA 16
-#define XV_DEMOSAIC_CTRL_ADDR_HWREG_BAYER_PHASE_DATA 0x28
-#define XV_DEMOSAIC_CTRL_BITS_HWREG_BAYER_PHASE_DATA 16
-
-#define FMC_ID_SLOT1 1 // defined to be 0xA0
-#define FMC_ID_SLOT2 2 // defined to be 0xA2 or 0xA4
-#define FMC_ID_ALL 0   // defined to be 0xA0, 0xA2, 0xA4, or 0xA6
-
-#define XVPROCSS_RSTMASK_VIDEO_IN                                    \
-  (0x01) /**< Reset line going out of vpss */
-#define XVPROCSS_RSTMASK_IP_AXIS                                     \
-  (0x02) /**< Reset line for vpss internal video IP blocks */
-#define XVPROCSS_RSTMASK_IP_AXIMM                                    \
-  (0x01) /**< Reset line for vpss internal AXI-MM blocks */
-/*@}*/
-
-#define XVPROCSS_RSTMASK_ALL_BLOCKS                                  \
-  (XVPROCSS_RSTMASK_VIDEO_IN | XVPROCSS_RSTMASK_IP_AXIS)
-
-/**************************** Type Definitions
- * *******************************/
 /**
  * This typedef declares the driver instances of all the cores in the
  * subsystem
@@ -832,7 +32,7 @@ typedef struct {
 } XVprocSs_SubCores;
 
 // Define Driver instance of all sub-core included in the design */
-XVprocSs_SubCores subcoreRepo[XPAR_XVPROCSS_NUM_INSTANCES];
+XVprocSs_SubCores subcoreRepo[2];
 
 /** @name VDMA Alignment required step size
  *
@@ -882,15 +82,15 @@ Xuint8 detect_ipmi_address(fmc_iic_t *pIIC, int fmcId) {
   Xuint8 iic_data;
 
   switch (fmcId) {
-  case FMC_ID_SLOT1:
+  case 1:
     min_address = 0xA0;
     max_address = 0xA0;
     break;
-  case FMC_ID_SLOT2:
+  case 2:
     min_address = 0xA2;
     max_address = 0xA4;
     break;
-  case FMC_ID_ALL:
+  case 0:
     min_address = 0xA0;
     max_address = 0xA6;
     break;
@@ -934,7 +134,7 @@ int fmc_ipmi_detect(fmc_iic_t *pIIC, char *szExpected, int fmcId) {
   // Read FRU Board Info from IPMI EEPROM
   retval =
       fmc_ipmi_get_board_info(pIIC, ipmi_eeprom_address, &board_info);
-  if (retval == FRU_SUCCESS) {
+  if (retval == 0) {
     // Display Board Information
     xil_printf("Board Information:\n\r");
     xil_printf("\tManufacturer    = %s\n\r", board_info.mfg);
@@ -956,7 +156,7 @@ int fmc_ipmi_detect(fmc_iic_t *pIIC, char *szExpected, int fmcId) {
       // fmc_ipmi_disable( pIIC, fmcId );
       return 0;
     }
-  } else if (retval == FRU_I2C_ERROR) {
+  } else if (retval == -3) {
     // Error due to unpopulated FMC slot
     xil_printf("ERROR : No FMC module detected\n\r");
     // fmc_ipmi_disable( pIIC, fmcId );
@@ -974,9 +174,9 @@ int fmc_ipmi_enable(fmc_iic_t *pIIC, int fmcId) {
   Xuint32 value;
 
   pIIC->fpGpoRead(pIIC, &value);
-  if (fmcId == FMC_ID_SLOT1) {
+  if (fmcId == 1) {
     value = value | 0x00000001; // Force bit 0 to 1
-  } else if (fmcId == FMC_ID_SLOT2) {
+  } else if (fmcId == 2) {
     value = value | 0x00000002; // Force bit 1 to 1
   } else {
     value = value | 0x00000003; // Force bits 1:0 to 1
@@ -990,9 +190,9 @@ int fmc_ipmi_disable(fmc_iic_t *pIIC, int fmcId) {
   Xuint32 value;
 
   pIIC->fpGpoRead(pIIC, &value);
-  if (fmcId == FMC_ID_SLOT1) {
+  if (fmcId == 1) {
     value = value & 0xFFFFFFFE; // Force bit 0 to 0
-  } else if (fmcId == FMC_ID_SLOT2) {
+  } else if (fmcId == 2) {
     value = value & 0xFFFFFFFD; // Force bit 1 to 0
   } else {
     value = value & 0xFFFFFFFC; // Force bits 1:0 to 0
@@ -1179,8 +379,8 @@ static void GetIncludedSubcores(XVprocSs *XVprocSsPtr) {
  *the virtual base address. Otherwise, the physical address should be
  *         used.
  *
- * @return XST_SUCCESS if initialization is successful else
- *XST_FAILURE
+ * @return 0 if initialization is successful else
+ *1
  *
  ******************************************************************************/
 int XVprocSs_CfgInitialize(XVprocSs *InstancePtr,
@@ -1192,20 +392,17 @@ int XVprocSs_CfgInitialize(XVprocSs *InstancePtr,
   Xil_AssertNonvoid(EffectiveAddr != (UINTPTR)NULL);
 
   /* Log the start of initialization */
-  XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_INIT,
-                    XVPROCSS_EDAT_BEGIN);
+  XVprocSs_LogWrite(InstancePtr, 2, 0x00);
 
   /* Setup the instance */
   InstancePtr->Config = *CfgPtr;
   InstancePtr->Config.BaseAddress = EffectiveAddr;
 
-  if (XVprocSs_GetSubsystemTopology(InstancePtr) >=
-      XVPROCSS_TOPOLOGY_NUM_SUPPORTED) {
-    XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_CHK_TOPO,
-                      XVPROCSS_EDAT_FAILURE);
-    return (XST_FAILURE);
+  if (XVprocSs_GetSubsystemTopology(InstancePtr) >= 6) {
+    XVprocSs_LogWrite(InstancePtr, 19, 0xFF);
+    return (1);
   }
-  XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_CHK_TOPO,
+  XVprocSs_LogWrite(InstancePtr, 19,
                     XVprocSs_GetSubsystemTopology(InstancePtr));
 
   /* Determine sub-cores included in the provided instance of
@@ -1214,83 +411,81 @@ int XVprocSs_CfgInitialize(XVprocSs *InstancePtr,
 
   /* Initialize all included sub_cores */
   if (InstancePtr->RstAxisPtr) {
-    if (XVprocSs_SubcoreInitResetAxis(InstancePtr) != XST_SUCCESS) {
-      return (XST_FAILURE);
+    if (XVprocSs_SubcoreInitResetAxis(InstancePtr) != 0) {
+      return (1);
     }
   }
 
   if (InstancePtr->RstAximmPtr) {
-    if (XVprocSs_SubcoreInitResetAximm(InstancePtr) != XST_SUCCESS) {
-      return (XST_FAILURE);
+    if (XVprocSs_SubcoreInitResetAximm(InstancePtr) != 0) {
+      return (1);
     }
   }
 
   if (InstancePtr->RouterPtr) {
-    if (XVprocSs_SubcoreInitRouter(InstancePtr) != XST_SUCCESS) {
-      return (XST_FAILURE);
+    if (XVprocSs_SubcoreInitRouter(InstancePtr) != 0) {
+      return (1);
     }
   }
 
   if (InstancePtr->CscPtr) {
-    if (XVprocSs_SubcoreInitCsc(InstancePtr) != XST_SUCCESS) {
-      return (XST_FAILURE);
+    if (XVprocSs_SubcoreInitCsc(InstancePtr) != 0) {
+      return (1);
     }
   }
 
   if (InstancePtr->HscalerPtr) {
-    if (XVprocSs_SubcoreInitHScaler(InstancePtr) != XST_SUCCESS) {
-      return (XST_FAILURE);
+    if (XVprocSs_SubcoreInitHScaler(InstancePtr) != 0) {
+      return (1);
     }
   }
 
   if (InstancePtr->VscalerPtr) {
-    if (XVprocSs_SubcoreInitVScaler(InstancePtr) != XST_SUCCESS) {
-      return (XST_FAILURE);
+    if (XVprocSs_SubcoreInitVScaler(InstancePtr) != 0) {
+      return (1);
     }
   }
 
   if (InstancePtr->HcrsmplrPtr) {
-    if (XVprocSs_SubcoreInitHCrsmplr(InstancePtr) != XST_SUCCESS) {
-      return (XST_FAILURE);
+    if (XVprocSs_SubcoreInitHCrsmplr(InstancePtr) != 0) {
+      return (1);
     }
   }
 
   if (InstancePtr->VcrsmplrInPtr) {
-    if (XVprocSs_SubcoreInitVCrsmpleIn(InstancePtr) != XST_SUCCESS) {
-      return (XST_FAILURE);
+    if (XVprocSs_SubcoreInitVCrsmpleIn(InstancePtr) != 0) {
+      return (1);
     }
   }
 
   if (InstancePtr->VcrsmplrOutPtr) {
-    if (XVprocSs_SubcoreInitVCrsmpleOut(InstancePtr) != XST_SUCCESS) {
-      return (XST_FAILURE);
+    if (XVprocSs_SubcoreInitVCrsmpleOut(InstancePtr) != 0) {
+      return (1);
     }
   }
 
   if (InstancePtr->LboxPtr) {
-    if (XVprocSs_SubcoreInitLetterbox(InstancePtr) != XST_SUCCESS) {
-      return (XST_FAILURE);
+    if (XVprocSs_SubcoreInitLetterbox(InstancePtr) != 0) {
+      return (1);
     }
   }
 
   if (InstancePtr->VdmaPtr) {
-    if (XVprocSs_SubcoreInitVdma(InstancePtr) != XST_SUCCESS) {
-      return (XST_FAILURE);
+    if (XVprocSs_SubcoreInitVdma(InstancePtr) != 0) {
+      return (1);
     }
     /* If VDMA is included, Buffer address must be set */
     if (InstancePtr->FrameBufBaseaddr == 0) {
-      XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_CHK_BASEADDR,
-                        XVPROCSS_EDAT_FAILURE);
-      return (XST_FAILURE);
+      XVprocSs_LogWrite(InstancePtr, 20, 0xFF);
+      return (1);
     }
   }
 
   if (InstancePtr->DeintPtr) {
     u32 vdmaBufReq, bufsize;
 
-    if (XVprocSs_SubcoreInitDeinterlacer(InstancePtr) !=
-        XST_SUCCESS) {
-      return (XST_FAILURE);
+    if (XVprocSs_SubcoreInitDeinterlacer(InstancePtr) != 0) {
+      return (1);
     }
 
     /* Set Deinterlacer buffer offset in allocated DDR Frame Buffer
@@ -1316,9 +511,8 @@ int XVprocSs_CfgInitialize(XVprocSs *InstancePtr,
     /* If MADI is included, Buffer address must be set */
     if ((InstancePtr->Config.HasMADI) &&
         (InstancePtr->FrameBufBaseaddr == 0)) {
-      XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_CHK_BASEADDR,
-                        XVPROCSS_EDAT_FAILURE);
-      return (XST_FAILURE);
+      XVprocSs_LogWrite(InstancePtr, 20, 0xFF);
+      return (1);
     }
 
     /* Set Deint Buffer Address Offset
@@ -1336,13 +530,12 @@ int XVprocSs_CfgInitialize(XVprocSs *InstancePtr,
   SetPowerOnDefaultState(InstancePtr);
 
   /* Set the flag to indicate the subsystem is ready */
-  InstancePtr->IsReady = XIL_COMPONENT_IS_READY;
+  InstancePtr->IsReady = 0x11111111U;
 
   /* Log the end of initialization */
-  XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_INIT,
-                    XVPROCSS_EDAT_END);
+  XVprocSs_LogWrite(InstancePtr, 2, 0x01);
 
-  return (XST_SUCCESS);
+  return (0);
 }
 
 /*****************************************************************************/
@@ -1367,9 +560,9 @@ static void SetPowerOnDefaultState(XVprocSs *XVprocSsPtr) {
   memset(&vidStrmOut, 0, sizeof(XVidC_VideoStream));
 
   /* Setup Default Output Stream configuration */
-  vidStrmOut.VmId = XVIDC_VM_1920x1080_60_P;
-  vidStrmOut.ColorFormatId = XVIDC_CSF_RGB;
-  vidStrmOut.FrameRate = XVIDC_FR_60HZ;
+  vidStrmOut.VmId = 120;
+  vidStrmOut.ColorFormatId = 0;
+  vidStrmOut.FrameRate = 60;
   vidStrmOut.IsInterlaced = FALSE;
   vidStrmOut.ColorDepth =
       (XVidC_ColorDepth)XVprocSsPtr->Config.ColorDepth;
@@ -1455,15 +648,14 @@ static void SetPowerOnDefaultState(XVprocSs *XVprocSsPtr) {
     win.Height = 400;
     win.StartX = win.StartY = 0;
 
-    XVprocSs_SetZoomPipWindow(XVprocSsPtr, XVPROCSS_ZOOM_WIN, &win);
+    XVprocSs_SetZoomPipWindow(XVprocSsPtr, 0, &win);
 
     /* Set default PIP Window */
-    XVprocSs_SetZoomPipWindow(XVprocSsPtr, XVPROCSS_PIP_WIN, &win);
+    XVprocSs_SetZoomPipWindow(XVprocSsPtr, 1, &win);
   }
 
   /* Release reset before programming any IP Block */
-  XVprocSs_EnableBlock(XVprocSsPtr->RstAxisPtr, GPIO_CH_RESET_SEL,
-                       XVPROCSS_RSTMASK_ALL_BLOCKS);
+  XVprocSs_EnableBlock(XVprocSsPtr->RstAxisPtr, 1u, (0x01 | 0x02));
 }
 
 /****************************************************************************/
@@ -1488,39 +680,37 @@ void XVprocSs_Start(XVprocSs *InstancePtr) {
 
   StartCorePtr = &InstancePtr->CtxtData.StartCore[0];
 
-  if (StartCorePtr[XVPROCSS_SUBCORE_CR_V_OUT])
+  if (StartCorePtr[7])
     XV_VCrsmplStart(InstancePtr->VcrsmplrOutPtr);
 
-  if (StartCorePtr[XVPROCSS_SUBCORE_CR_H])
+  if (StartCorePtr[5])
     XV_HCrsmplStart(InstancePtr->HcrsmplrPtr);
 
-  if (StartCorePtr[XVPROCSS_SUBCORE_CSC])
+  if (StartCorePtr[8])
     XV_CscStart(InstancePtr->CscPtr);
 
-  if (StartCorePtr[XVPROCSS_SUBCORE_LBOX])
+  if (StartCorePtr[4])
     XV_LBoxStart(InstancePtr->LboxPtr);
 
-  if (StartCorePtr[XVPROCSS_SUBCORE_SCALER_H])
+  if (StartCorePtr[2])
     XV_HScalerStart(InstancePtr->HscalerPtr);
 
-  if (StartCorePtr[XVPROCSS_SUBCORE_SCALER_V])
+  if (StartCorePtr[1])
     XV_VScalerStart(InstancePtr->VscalerPtr);
 
-  if (StartCorePtr[XVPROCSS_SUBCORE_VDMA])
+  if (StartCorePtr[3])
     XVprocSs_VdmaStartTransfer(InstancePtr);
 
-  if (StartCorePtr[XVPROCSS_SUBCORE_DEINT])
+  if (StartCorePtr[9])
     XV_DeintStart(InstancePtr->DeintPtr);
 
-  if (StartCorePtr[XVPROCSS_SUBCORE_CR_V_IN])
+  if (StartCorePtr[6])
     XV_VCrsmplStart(InstancePtr->VcrsmplrInPtr);
 
   /* Subsystem ready to accept axis - Enable Video Input */
-  XVprocSs_EnableBlock(InstancePtr->RstAxisPtr, GPIO_CH_RESET_SEL,
-                       XVPROCSS_RSTMASK_VIDEO_IN);
+  XVprocSs_EnableBlock(InstancePtr->RstAxisPtr, 1u, 0x01);
 
-  XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_START_VPSS,
-                    XVPROCSS_EDAT_SUCCESS);
+  XVprocSs_LogWrite(InstancePtr, 28, 0x00);
 }
 
 /*****************************************************************************/
@@ -1601,14 +791,12 @@ void XVprocSs_Reset(XVprocSs *InstancePtr) {
 
   /* Reset All IP Blocks on AXIS interface and wait before doing the
    * aximm reset*/
-  XVprocSs_ResetBlock(InstancePtr->RstAxisPtr, GPIO_CH_RESET_SEL,
-                      XVPROCSS_RSTMASK_ALL_BLOCKS);
+  XVprocSs_ResetBlock(InstancePtr->RstAxisPtr, 1u, (0x01 | 0x02));
   WaitUs(InstancePtr,
          100); /* hold reset line for 100us before resetting Aximm */
 
   /* Reset All IP Blocks on AXI-MM interface*/
-  XVprocSs_ResetBlock(InstancePtr->RstAximmPtr, GPIO_CH_RESET_SEL,
-                      XVPROCSS_RSTMASK_IP_AXIMM);
+  XVprocSs_ResetBlock(InstancePtr->RstAximmPtr, 1u, 0x01);
 
   WaitUs(InstancePtr, 100); /* hold reset line for 100us */
   /*
@@ -1616,19 +804,16 @@ void XVprocSs_Reset(XVprocSs *InstancePtr) {
    * programmed when held in reset. Will cause Axi-Lite bus to lock.
    * Release IP reset - but hold vid_in in reset
    */
-  XVprocSs_EnableBlock(InstancePtr->RstAximmPtr, GPIO_CH_RESET_SEL,
-                       XVPROCSS_RSTMASK_IP_AXIMM);
+  XVprocSs_EnableBlock(InstancePtr->RstAximmPtr, 1u, 0x01);
   WaitUs(InstancePtr, 1000); /* wait 1ms for AXI-MM to stabilize */
-  XVprocSs_EnableBlock(InstancePtr->RstAxisPtr, GPIO_CH_RESET_SEL,
-                       XVPROCSS_RSTMASK_IP_AXIS);
+  XVprocSs_EnableBlock(InstancePtr->RstAxisPtr, 1u, 0x02);
   WaitUs(InstancePtr, 1000); /* wait 1ms for AXIS to stabilize */
 
   /* Reset start core flags */
   memset(InstancePtr->CtxtData.StartCore, 0,
          sizeof(InstancePtr->CtxtData.StartCore));
 
-  XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_RESET_VPSS,
-                    XVPROCSS_EDAT_SUCCESS);
+  XVprocSs_LogWrite(InstancePtr, 27, 0x00);
 }
 
 /*****************************************************************************/
@@ -1639,7 +824,7 @@ void XVprocSs_Reset(XVprocSs *InstancePtr) {
  *worked on.
  * @param  StrmIn is the pointer to input stream configuration
  *
- * @return XST_SUCCESS
+ * @return 0
  *
  ******************************************************************************/
 int XVprocSs_SetVidStreamIn(XVprocSs *InstancePtr,
@@ -1653,7 +838,7 @@ int XVprocSs_SetVidStreamIn(XVprocSs *InstancePtr,
   /* set stream properties */
   InstancePtr->VidIn = *StrmIn;
 
-  return (XST_SUCCESS);
+  return (0);
 }
 
 /*****************************************************************************/
@@ -1664,7 +849,7 @@ int XVprocSs_SetVidStreamIn(XVprocSs *InstancePtr,
  *worked on.
  * @param  StrmOut is the pointer to input stream configuration
  *
- * @return XST_SUCCESS
+ * @return 0
  *
  ******************************************************************************/
 int XVprocSs_SetVidStreamOut(XVprocSs *InstancePtr,
@@ -1678,7 +863,7 @@ int XVprocSs_SetVidStreamOut(XVprocSs *InstancePtr,
   /* set stream properties */
   InstancePtr->VidOut = *StrmOut;
 
-  return (XST_SUCCESS);
+  return (0);
 }
 
 /*****************************************************************************/
@@ -1693,7 +878,7 @@ configured
 * @param  Timing is the timing parameters of the new resolution to be
 set
 
-* @return XST_SUCCESS if successful else XST_FAILURE
+* @return 0 if successful else 1
 ******************************************************************************/
 int XVprocSs_SetStreamResolution(XVidC_VideoStream *StreamPtr,
                                  const XVidC_VideoMode VmId,
@@ -1704,13 +889,13 @@ int XVprocSs_SetStreamResolution(XVidC_VideoStream *StreamPtr,
   Xil_AssertNonvoid((Timing->HActive > 0) && (Timing->VActive > 0));
 
   /* Video Mode could be from the list of supported modes or custom */
-  if (VmId != XVIDC_VM_NOT_SUPPORTED) {
+  if (VmId != 202) {
     /* update stream timing properties */
     StreamPtr->VmId = VmId;
     StreamPtr->Timing = *Timing;
-    return (XST_SUCCESS);
+    return (0);
   } else {
-    return (XST_FAILURE);
+    return (1);
   }
 }
 
@@ -1738,11 +923,9 @@ void XVprocSs_UpdateZoomPipWindow(XVprocSs *InstancePtr) {
   if (XVprocSs_IsConfigModeMax(InstancePtr)) {
     /* send Vdma update window to IP */
     if (XVprocSs_IsPipModeOn(InstancePtr)) {
-      XVprocSs_VdmaSetWinToDnScaleMode(InstancePtr,
-                                       XVPROCSS_VDMA_UPDATE_WR_CH);
+      XVprocSs_VdmaSetWinToDnScaleMode(InstancePtr, 1);
     } else {
-      XVprocSs_VdmaSetWinToUpScaleMode(InstancePtr,
-                                       XVPROCSS_VDMA_UPDATE_RD_CH);
+      XVprocSs_VdmaSetWinToUpScaleMode(InstancePtr, 0);
     }
 
     XVprocSs_VdmaStartTransfer(InstancePtr);
@@ -1757,12 +940,10 @@ void XVprocSs_UpdateZoomPipWindow(XVprocSs *InstancePtr) {
                           InstancePtr->VidOut.Timing.HActive,
                           InstancePtr->VidOut.Timing.VActive);
     }
-    XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_UPDATE_ZPWIN,
-                      XVPROCSS_EDAT_SUCCESS);
+    XVprocSs_LogWrite(InstancePtr, 26, 0x00);
   } else {
     // streaming Config - no PIP or ZOOM window
-    XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_UPDATE_ZPWIN,
-                      XVPROCSS_EDAT_FAILURE);
+    XVprocSs_LogWrite(InstancePtr, 26, 0xFF);
   }
 }
 
@@ -1815,8 +996,7 @@ void XVprocSs_SetZoomPipWindow(XVprocSs *InstancePtr,
       InstancePtr->CtxtData.RdWindow.Width = win->Width;
       InstancePtr->CtxtData.RdWindow.Height = win->Height;
 
-      XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_SET_ZOOMWIN,
-                        XVPROCSS_EDAT_SUCCESS);
+      XVprocSs_LogWrite(InstancePtr, 24, 0x00);
     } else { // PIP
       /* If DMA engine does not support unaligned transfers then
        * - align window StartX to next PixelHStepSize boundary
@@ -1840,101 +1020,15 @@ void XVprocSs_SetZoomPipWindow(XVprocSs *InstancePtr,
       InstancePtr->CtxtData.WrWindow.Width = win->Width;
       InstancePtr->CtxtData.WrWindow.Height = win->Height;
 
-      XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_SET_PIPWIN,
-                        XVPROCSS_EDAT_SUCCESS);
+      XVprocSs_LogWrite(InstancePtr, 23, 0x00);
     }
   } else { // streaming Config - no PIP or ZOOM window
     if (mode == XVPROCSS_ZOOM_WIN)
-      XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_SET_ZOOMWIN,
-                        XVPROCSS_EDAT_FAILURE);
+      XVprocSs_LogWrite(InstancePtr, 24, 0xFF);
     else
-      XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_SET_PIPWIN,
-                        XVPROCSS_EDAT_FAILURE);
+      XVprocSs_LogWrite(InstancePtr, 23, 0xFF);
   }
 }
-
-/*****************************************************************************/
-/**
- * This function reads the user defined Zoom/Pip window from scratch
- *pad memory
- *
- * @param  InstancePtr is a pointer to the Subsystem instance to be
- *worked on.
- * @param  mode is feature (PIP or ZOOM) whose window coordinates are
- *to be retrieved
- * @param  win is structure that will contain read window coordinates
- *and size
- *
- ** @note For Zoom mode RD client window is read from scratch pad
- *memory For Pip mode WR client window is read from scratch pad memory
- *        This function is not applicable in Subsystem Stream Mode
- *Configuration
- *
- ******************************************************************************/
-void XVprocSs_GetZoomPipWindow(XVprocSs *InstancePtr,
-                               XVprocSs_Win mode,
-                               XVidC_VideoWindow *win) {
-  /* Verify arguments */
-  Xil_AssertVoid(InstancePtr != NULL);
-  Xil_AssertVoid(win != NULL);
-
-  if (XVprocSs_IsConfigModeMax(InstancePtr)) {
-    if (mode == XVPROCSS_ZOOM_WIN) {
-      win->StartX = InstancePtr->CtxtData.RdWindow.StartX;
-      win->StartY = InstancePtr->CtxtData.RdWindow.StartY;
-      win->Width = InstancePtr->CtxtData.RdWindow.Width;
-      win->Height = InstancePtr->CtxtData.RdWindow.Height;
-    } else { // PIP
-      win->StartX = InstancePtr->CtxtData.WrWindow.StartX;
-      win->StartY = InstancePtr->CtxtData.WrWindow.StartY;
-      win->Width = InstancePtr->CtxtData.WrWindow.Width;
-      win->Height = InstancePtr->CtxtData.WrWindow.Height;
-    }
-    XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_GET_ZPWIN,
-                      XVPROCSS_EDAT_SUCCESS);
-  } else { // streaming Config - no PIP or ZOOM window
-    XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_GET_ZPWIN,
-                      XVPROCSS_EDAT_FAILURE);
-  }
-}
-
-/*****************************************************************************/
-/**
- * This function configures the video subsystem to enable/disable ZOOM
- *feature If ZOOM mode is set to ON but user has not set window
- *coordinates then quarter of input stream resolution at coordinates
- *0,0 is set as the default zoom window
- *
- * @param  InstancePtr is a pointer to the Subsystem instance to be
- *worked on.
- * @param  OnOff is the action required
- *
- * @return None
- *
- * @note User must call XVprocSs_ConfigureSubsystem() for change to
- *take effect This call has not been added here such that it provides
- *an opportunity to make the change during vertical blanking at system
- *level. This behavior will change once shadow register support is
- *available in sub-core IP's This function is not applicable in
- *Subsystem Stream Mode Configuration
- *
- ******************************************************************************/
-void XVprocSs_SetZoomMode(XVprocSs *InstancePtr, u8 OnOff) {
-  /* Verify arguments */
-  Xil_AssertVoid(InstancePtr != NULL);
-
-  if (XVprocSs_IsConfigModeMax(InstancePtr)) {
-    InstancePtr->CtxtData.ZoomEn = OnOff;
-    InstancePtr->CtxtData.PipEn = FALSE;
-
-    XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_SET_ZOOMMODE,
-                      InstancePtr->CtxtData.ZoomEn);
-  } else { // streaming Config - no ZOOM window
-    XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_SET_ZOOMMODE,
-                      XVPROCSS_EDAT_FAILURE);
-  }
-}
-
 /*****************************************************************************/
 /**
  * This function configures the video subsystem to enable/disable PIP
@@ -1980,7 +1074,7 @@ void XVprocSs_SetPipMode(XVprocSs *InstancePtr, u8 OnOff) {
  * @param  XVprocSsPtr is a pointer to the Subsystem instance to be
  *worked on.
  *
- * @return XST_SUCCESS if successful else XST_FAILURE
+ * @return 0 if successful else 1
  *
  * @note This function is applicable only for Stream mode
  *configuration of the subsystem. In this mode only picture resizing
@@ -1990,31 +1084,27 @@ static int ValidateScalerOnlyConfig(XVprocSs *XVprocSsPtr) {
   XVidC_VideoStream *pStrmIn = &XVprocSsPtr->VidIn;
   XVidC_VideoStream *pStrmOut = &XVprocSsPtr->VidOut;
 
-  if ((pStrmIn->ColorFormatId == XVIDC_CSF_YCRCB_420) &&
+  if ((pStrmIn->ColorFormatId == 3) &&
       !XV_VscalerIs420Enabled(XVprocSsPtr->VscalerPtr)) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_VSCALER,
-                      XVPROCSS_EDAT_NO420);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 11, 0xFB);
+    return (1);
   }
 
   if ((pStrmIn->ColorFormatId == XVIDC_CSF_YCRCB_422) &&
       !XV_HscalerIs422Enabled(XVprocSsPtr->HscalerPtr)) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_HSCALER,
-                      XVPROCSS_EDAT_NO422);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 10, 0xFC);
+    return (1);
   }
 
   if (!XV_HScalerValidateConfig(XVprocSsPtr->HscalerPtr,
                                 pStrmIn->ColorFormatId,
                                 pStrmOut->ColorFormatId)) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_HSCALER,
-                      XVPROCSS_EDAT_FAILURE);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 10, 0xFF);
+    return (1);
   }
 
-  XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_HSCALER,
-                    XVPROCSS_EDAT_VALID);
-  return (XST_SUCCESS);
+  XVprocSs_LogWrite(XVprocSsPtr, 10, 0x02);
+  return (0);
 }
 
 /*****************************************************************************/
@@ -2025,7 +1115,7 @@ static int ValidateScalerOnlyConfig(XVprocSs *XVprocSsPtr) {
  * @param  pStrmIn is a pointer to the input stream
  * @param  pStrmOut is a pointer to the output stream
  *
- * @return XST_SUCCESS if successful else XST_FAILURE
+ * @return 0 if successful else 1
  *
  * @note This function is applicable only for Stream mode
  *configuration of the subsystem. In this mode very limited
@@ -2042,43 +1132,38 @@ static int ValidateCscOnlyConfig(XVprocSs *XVprocSsPtr,
   //   is allowed 2) if Vin or Vout are 420, and 420 is enabled, the
   //   case is allowed
 
-  if (((pStrmIn->ColorFormatId == XVIDC_CSF_YCRCB_422) ||
-       (pStrmOut->ColorFormatId == XVIDC_CSF_YCRCB_422)) &&
+  if (((pStrmIn->ColorFormatId == 2) ||
+       (pStrmOut->ColorFormatId == 2)) &&
       (!Allow422)) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_CSC,
-                      XVPROCSS_EDAT_NO422);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 12, 0xFC);
+    return (1);
   }
 
-  if (((pStrmIn->ColorFormatId == XVIDC_CSF_YCRCB_420) ||
-       (pStrmOut->ColorFormatId == XVIDC_CSF_YCRCB_420)) &&
+  if (((pStrmIn->ColorFormatId == 3) ||
+       (pStrmOut->ColorFormatId == 3)) &&
       (!Allow420)) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_CSC,
-                      XVPROCSS_EDAT_NO420);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 12, 0xFB);
+    return (1);
   }
 
   if (pStrmIn->VmId != pStrmOut->VmId) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_CSC,
-                      XVPROCSS_EDAT_VMDIFF);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 12, 0xF6);
+    return (1);
   }
 
   if (pStrmIn->Timing.HActive != pStrmOut->Timing.HActive) {
     XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_CSC,
                       XVPROCSS_EDAT_HDIFF);
-    return (XST_FAILURE);
+    return (1);
   }
 
   if (pStrmIn->Timing.VActive != pStrmOut->Timing.VActive) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_CSC,
-                      XVPROCSS_EDAT_VDIFF);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 12, 0xF9);
+    return (1);
   }
 
-  XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_CSC,
-                    XVPROCSS_EDAT_VALID);
-  return (XST_SUCCESS);
+  XVprocSs_LogWrite(XVprocSsPtr, 12, 0x02);
+  return (0);
 }
 
 /*****************************************************************************/
@@ -2089,7 +1174,7 @@ static int ValidateCscOnlyConfig(XVprocSs *XVprocSsPtr,
  * @param  pStrmIn is a pointer to the input stream
  * @param  pStrmOut is a pointer to the output stream
  *
- * @return XST_SUCCESS if successful else XST_FAILURE
+ * @return 0 if successful else 1
  *
  * @note This function is applicable only for Stream mode
  *configuration of the subsystem. In this mode very limited
@@ -2100,26 +1185,22 @@ static int ValidateDeintOnlyConfig(XVprocSs *XVprocSsPtr) {
   XVidC_VideoStream *pStrmOut = &XVprocSsPtr->VidOut;
 
   if (pStrmOut->IsInterlaced) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_DEINT,
-                      XVPROCSS_EDAT_INTPRG);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 13, 0xFA);
+    return (1);
   }
 
   if (pStrmIn->ColorFormatId != pStrmOut->ColorFormatId) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_DEINT,
-                      XVPROCSS_EDAT_CDIFF);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 13, 0xF7);
+    return (1);
   }
 
   if (pStrmIn->Timing.HActive != pStrmOut->Timing.HActive) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_DEINT,
-                      XVPROCSS_EDAT_HDIFF);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 13, 0xF8);
+    return (1);
   }
 
-  XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_DEINT,
-                    XVPROCSS_EDAT_VALID);
-  return (XST_SUCCESS);
+  XVprocSs_LogWrite(XVprocSsPtr, 13, 0x02);
+  return (0);
 }
 
 /*****************************************************************************/
@@ -2130,7 +1211,7 @@ static int ValidateDeintOnlyConfig(XVprocSs *XVprocSsPtr) {
  * @param  pStrmIn is a pointer to the input stream
  * @param  pStrmOut is a pointer to the output stream
  *
- * @return XST_SUCCESS if successful else XST_FAILURE
+ * @return 0 if successful else 1
  *
  * @note This function is applicable only for Stream mode
  *configuration of the subsystem. In this mode very limited
@@ -2140,41 +1221,35 @@ static int ValidateVCResampleOnlyConfig(XVprocSs *XVprocSsPtr) {
   XVidC_VideoStream *pStrmIn = &XVprocSsPtr->VidIn;
   XVidC_VideoStream *pStrmOut = &XVprocSsPtr->VidOut;
 
-  if ((pStrmIn->ColorFormatId != XVIDC_CSF_YCRCB_420) &&
-      (pStrmIn->ColorFormatId != XVIDC_CSF_YCRCB_422)) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_VCRI,
-                      XVPROCSS_EDAT_CFIN);
-    return (XST_FAILURE);
+  if ((pStrmIn->ColorFormatId != 3) &&
+      (pStrmIn->ColorFormatId != 2)) {
+    XVprocSs_LogWrite(XVprocSsPtr, 14, 0xFD);
+    return (1);
   }
 
-  if ((pStrmOut->ColorFormatId != XVIDC_CSF_YCRCB_420) &&
-      (pStrmOut->ColorFormatId != XVIDC_CSF_YCRCB_422)) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_VCRI,
-                      XVPROCSS_EDAT_CFOUT);
-    return (XST_FAILURE);
+  if ((pStrmOut->ColorFormatId != 3) &&
+      (pStrmOut->ColorFormatId != 2)) {
+    XVprocSs_LogWrite(XVprocSsPtr, 14, 0xFE);
+    return (1);
   }
 
   if (pStrmIn->VmId != pStrmOut->VmId) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_VCRI,
-                      XVPROCSS_EDAT_VMDIFF);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 14, 0xF6);
+    return (1);
   }
 
   if (pStrmIn->Timing.HActive != pStrmOut->Timing.HActive) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_VCRI,
-                      XVPROCSS_EDAT_HDIFF);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 14, 0xF8);
+    return (1);
   }
 
   if (pStrmIn->Timing.VActive != pStrmOut->Timing.VActive) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_VCRI,
-                      XVPROCSS_EDAT_VDIFF);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 14, 0xF9);
+    return (1);
   }
 
-  XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_VCRI,
-                    XVPROCSS_EDAT_VALID);
-  return (XST_SUCCESS);
+  XVprocSs_LogWrite(XVprocSsPtr, 14, 0x02);
+  return (0);
 }
 
 /*****************************************************************************/
@@ -2185,7 +1260,7 @@ static int ValidateVCResampleOnlyConfig(XVprocSs *XVprocSsPtr) {
  * @param  pStrmIn is a pointer to the input stream
  * @param  pStrmOut is a pointer to the output stream
  *
- * @return XST_SUCCESS if successful else XST_FAILURE
+ * @return 0 if successful else 1
  *
  * @note This function is applicable only for Stream mode
  *configuration of the subsystem. In this mode very limited
@@ -2195,41 +1270,35 @@ static int ValidateHCResampleOnlyConfig(XVprocSs *XVprocSsPtr) {
   XVidC_VideoStream *pStrmIn = &XVprocSsPtr->VidIn;
   XVidC_VideoStream *pStrmOut = &XVprocSsPtr->VidOut;
 
-  if ((pStrmIn->ColorFormatId != XVIDC_CSF_YCRCB_422) &&
-      (pStrmIn->ColorFormatId != XVIDC_CSF_YCRCB_444)) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_HCR,
-                      XVPROCSS_EDAT_CFIN);
-    return (XST_FAILURE);
+  if ((pStrmIn->ColorFormatId != 2) &&
+      (pStrmIn->ColorFormatId != 1)) {
+    XVprocSs_LogWrite(XVprocSsPtr, 16, 0xFD);
+    return (1);
   }
 
-  if ((pStrmOut->ColorFormatId != XVIDC_CSF_YCRCB_422) &&
-      (pStrmOut->ColorFormatId != XVIDC_CSF_YCRCB_444)) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_HCR,
-                      XVPROCSS_EDAT_CFOUT);
-    return (XST_FAILURE);
+  if ((pStrmOut->ColorFormatId != 2) &&
+      (pStrmOut->ColorFormatId != 1)) {
+    XVprocSs_LogWrite(XVprocSsPtr, 16, 0xFE);
+    return (1);
   }
 
   if (pStrmIn->VmId != pStrmOut->VmId) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_HCR,
-                      XVPROCSS_EDAT_VMDIFF);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 16, 0xF6);
+    return (1);
   }
 
   if (pStrmIn->Timing.HActive != pStrmOut->Timing.HActive) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_HCR,
-                      XVPROCSS_EDAT_HDIFF);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 16, 0xF8);
+    return (1);
   }
 
   if (pStrmIn->Timing.VActive != pStrmOut->Timing.VActive) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_HCR,
-                      XVPROCSS_EDAT_VDIFF);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 16, 0xF9);
+    return (1);
   }
 
-  XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_HCR,
-                    XVPROCSS_EDAT_VALID);
-  return (XST_SUCCESS);
+  XVprocSs_LogWrite(XVprocSsPtr, 16, 0x02);
+  return (0);
 }
 
 /*****************************************************************************/
@@ -2240,7 +1309,7 @@ static int ValidateHCResampleOnlyConfig(XVprocSs *XVprocSsPtr) {
  * @param  XVprocSsPtr is a pointer to the Subsystem instance to be
  *worked on.
  *
- * @return XST_SUCCESS if successful else XST_FAILURE
+ * @return 0 if successful else 1
  *
  * @note If use case is possible the subsystem will configure the
  *sub-cores accordingly else will ignore the request
@@ -2249,27 +1318,25 @@ static int ValidateHCResampleOnlyConfig(XVprocSs *XVprocSsPtr) {
 static int SetupModeScalerOnly(XVprocSs *XVprocSsPtr) {
   u32 vsc_WidthIn, vsc_HeightIn, vsc_HeightOut;
   u32 hsc_HeightIn, hsc_WidthIn, hsc_WidthOut, hsc_ColorFormatIn;
-  int status = XST_SUCCESS;
+  int status = 0;
 
   vsc_WidthIn = vsc_HeightIn = vsc_HeightOut = 0;
   hsc_HeightIn = hsc_WidthIn = hsc_WidthOut = 0;
 
   if (!XVprocSsPtr->VscalerPtr) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_VSCALER,
-                      XVPROCSS_EDAT_IPABSENT);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 11, 0xF1);
+    return (1);
   }
 
   if (!XVprocSsPtr->HscalerPtr) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_HSCALER,
-                      XVPROCSS_EDAT_IPABSENT);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 10, 0xF1);
+    return (1);
   }
 
   /* check if input/output stream configuration is supported */
   status = ValidateScalerOnlyConfig(XVprocSsPtr);
 
-  if (status == XST_SUCCESS) {
+  if (status == 0) {
     /* Reset the IP Blocks inside the VPSS */
     XVprocSs_Reset(XVprocSsPtr);
 
@@ -2301,13 +1368,10 @@ static int SetupModeScalerOnly(XVprocSs *XVprocSsPtr) {
     XV_VScalerStart(XVprocSsPtr->VscalerPtr);
 
     /* Subsystem Ready to accept input stream - Enable Video Input */
-    XVprocSs_EnableBlock(XVprocSsPtr->RstAxisPtr, GPIO_CH_RESET_SEL,
-                         XVPROCSS_RSTMASK_VIDEO_IN);
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_HSCALER,
-                      XVPROCSS_EDAT_SETUPOK);
+    XVprocSs_EnableBlock(XVprocSsPtr->RstAxisPtr, 1u, 0x01);
+    XVprocSs_LogWrite(XVprocSsPtr, 10, 0x04);
   } else {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_HSCALER,
-                      XVPROCSS_EDAT_IGNORE);
+    XVprocSs_LogWrite(XVprocSsPtr, 10, 0xF4);
   }
   return (status);
 }
@@ -2320,7 +1384,7 @@ static int SetupModeScalerOnly(XVprocSs *XVprocSsPtr) {
  * @param  XVprocSsPtr is a pointer to the Subsystem instance to be
  *worked on.
  *
- * @return XST_SUCCESS if successful else XST_FAILURE
+ * @return 0 if successful else 1
  *
  * @note If use case is possible the subsystem will configure the
  *sub-cores accordingly else will ignore the request
@@ -2335,12 +1399,11 @@ static int SetupModeCscOnly(XVprocSs *XVprocSsPtr) {
   u32 WidthOut = 0;
   u16 Allow422;
   u16 Allow420;
-  int status = XST_SUCCESS;
+  int status = 0;
 
   if (!XVprocSsPtr->CscPtr) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_CSC,
-                      XVPROCSS_EDAT_IPABSENT);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 12, 0xF1);
+    return (1);
   }
 
   Allow422 = XV_CscIs422Enabled(XVprocSsPtr->CscPtr);
@@ -2349,7 +1412,7 @@ static int SetupModeCscOnly(XVprocSs *XVprocSsPtr) {
   /* check if input/output stream configuration is supported */
   status = ValidateCscOnlyConfig(XVprocSsPtr, Allow422, Allow420);
 
-  if (status == XST_SUCCESS) {
+  if (status == 0) {
     /* In the single-IP cases the reset has been done outside this
      * routine */
 
@@ -2378,11 +1441,9 @@ static int SetupModeCscOnly(XVprocSs *XVprocSsPtr) {
 
     /* Start Csc sub-core */
     XV_CscStart(XVprocSsPtr->CscPtr);
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_CSC,
-                      XVPROCSS_EDAT_SETUPOK);
+    XVprocSs_LogWrite(XVprocSsPtr, 12, 0x04);
   } else {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_CSC,
-                      XVPROCSS_EDAT_IGNORE);
+    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_CSC, 0xF4);
   }
   return (status);
 }
@@ -2395,7 +1456,7 @@ static int SetupModeCscOnly(XVprocSs *XVprocSsPtr) {
  * @param  XVprocSsPtr is a pointer to the Subsystem instance to be
  *worked on.
  *
- * @return XST_SUCCESS if successful else XST_FAILURE
+ * @return 0 if successful else 1
  *
  * @note If use case is possible the subsystem will configure the
  *sub-cores accordingly else will ignore the request
@@ -2404,18 +1465,18 @@ static int SetupModeCscOnly(XVprocSs *XVprocSsPtr) {
 static int SetupModeDeintOnly(XVprocSs *XVprocSsPtr) {
   XVprocSs_ContextData *CtxtPtr = &XVprocSsPtr->CtxtData;
   XVidC_VideoStream *pStrmIn = &XVprocSsPtr->VidIn;
-  int status = XST_SUCCESS;
+  int status = 0;
 
   if (!XVprocSsPtr->DeintPtr) {
     XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_DEINT,
                       XVPROCSS_EDAT_IPABSENT);
-    return (XST_FAILURE);
+    return (1);
   }
 
   /* check if input/output stream configuration is supported */
   status = ValidateDeintOnlyConfig(XVprocSsPtr);
 
-  if (status == XST_SUCCESS) {
+  if (status == 0) {
     /* In the single-IP cases the reset has been done outside this
      * routine */
 
@@ -2442,16 +1503,13 @@ static int SetupModeDeintOnly(XVprocSs *XVprocSsPtr) {
                                         0);
 
     if (!pStrmIn->IsInterlaced)
-      XV_deinterlacer_Set_algo(&XVprocSsPtr->DeintPtr->Deint,
-                               XV_DEINTERLACER_MEMORY_PASSTHROUGH);
+      XV_deinterlacer_Set_algo(&XVprocSsPtr->DeintPtr->Deint, 6);
 
     /* Start Deint sub-core */
     XV_DeintStart(XVprocSsPtr->DeintPtr);
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_DEINT,
-                      XVPROCSS_EDAT_SETUPOK);
+    XVprocSs_LogWrite(XVprocSsPtr, 13, 0x04);
   } else {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_DEINT,
-                      XVPROCSS_EDAT_IGNORE);
+    XVprocSs_LogWrite(XVprocSsPtr, 13, 0xF4);
   }
   return (status);
 }
@@ -2464,7 +1522,7 @@ static int SetupModeDeintOnly(XVprocSs *XVprocSsPtr) {
  * @param  XVprocSsPtr is a pointer to the Subsystem instance to be
  *worked on.
  *
- * @return XST_SUCCESS if successful else XST_FAILURE
+ * @return 0 if successful else 1
  *
  * @note If use case is possible the subsystem will configure the
  *sub-cores accordingly else will ignore the request
@@ -2472,18 +1530,17 @@ static int SetupModeDeintOnly(XVprocSs *XVprocSsPtr) {
  ******************************************************************************/
 static int SetupModeVCResampleOnly(XVprocSs *XVprocSsPtr) {
   XVprocSs_ContextData *CtxtPtr = &XVprocSsPtr->CtxtData;
-  int status = XST_SUCCESS;
+  int status = 0;
 
   if (!XVprocSsPtr->VcrsmplrInPtr) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_VCRI,
-                      XVPROCSS_EDAT_IPABSENT);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 14, 0xF1);
+    return (1);
   }
 
   /* check if input/output stream configuration is supported */
   status = ValidateVCResampleOnlyConfig(XVprocSsPtr);
 
-  if (status == XST_SUCCESS) {
+  if (status == 0) {
     /* In the single-IP cases the reset has been done outside this
      * routine */
 
@@ -2501,11 +1558,9 @@ static int SetupModeVCResampleOnly(XVprocSs *XVprocSsPtr) {
 
     /* Start V Chroma Resampler-In sub-core */
     XV_VCrsmplStart(XVprocSsPtr->VcrsmplrInPtr);
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_VCRI,
-                      XVPROCSS_EDAT_SETUPOK);
+    XVprocSs_LogWrite(XVprocSsPtr, 14, 0x04);
   } else {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_VCRI,
-                      XVPROCSS_EDAT_IGNORE);
+    XVprocSs_LogWrite(XVprocSsPtr, 14, 0xF4);
   }
 
   return (status);
@@ -2519,7 +1574,7 @@ static int SetupModeVCResampleOnly(XVprocSs *XVprocSsPtr) {
  * @param  XVprocSsPtr is a pointer to the Subsystem instance to be
  *worked on.
  *
- * @return XST_SUCCESS if successful else XST_FAILURE
+ * @return 0 if successful else 1
  *
  * @note If use case is possible the subsystem will configure the
  *sub-cores accordingly else will ignore the request
@@ -2529,18 +1584,17 @@ static int SetupModeHCResampleOnly(XVprocSs *XVprocSsPtr) {
   XVidC_ColorFormat HcrIn, HcrOut;
   u32 HeightOut = 0;
   u32 WidthOut = 0;
-  int status = XST_SUCCESS;
+  int status = 0;
 
   if (!XVprocSsPtr->HcrsmplrPtr) {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_HCR,
-                      XVPROCSS_EDAT_IPABSENT);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(XVprocSsPtr, 16, 0xF1);
+    return (1);
   }
 
   /* check if input/output stream configuration is supported */
   status = ValidateHCResampleOnlyConfig(XVprocSsPtr);
 
-  if (status == XST_SUCCESS) {
+  if (status == 0) {
     /* In the single-IP cases the reset has been done outside this
      * routine */
 
@@ -2557,11 +1611,9 @@ static int SetupModeHCResampleOnly(XVprocSs *XVprocSsPtr) {
 
     /* Start chroma resampler sub-core */
     XV_HCrsmplStart(XVprocSsPtr->HcrsmplrPtr);
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_HCR,
-                      XVPROCSS_EDAT_SETUPOK);
+    XVprocSs_LogWrite(XVprocSsPtr, 16, 0x04);
   } else {
-    XVprocSs_LogWrite(XVprocSsPtr, XVPROCSS_EVT_CFG_HCR,
-                      XVPROCSS_EDAT_IGNORE);
+    XVprocSs_LogWrite(XVprocSsPtr, 16, 0xF4);
   }
 
   return (status);
@@ -2575,7 +1627,7 @@ static int SetupModeHCResampleOnly(XVprocSs *XVprocSsPtr) {
  * @param  XVprocSsPtr is a pointer to the Subsystem instance to be
  *worked on.
  *
- * @return XST_SUCCESS if successful else XST_FAILURE
+ * @return 0 if successful else 1
  *
  ******************************************************************************/
 static int SetupModeMax(XVprocSs *XVprocSsPtr) {
@@ -2584,7 +1636,7 @@ static int SetupModeMax(XVprocSs *XVprocSsPtr) {
   /* Build Routing table for the Video Data Flow */
   status = XVprocSs_BuildRoutingTable(XVprocSsPtr);
 
-  if (status == XST_SUCCESS) {
+  if (status == 0) {
     /* Reset the IP Blocks inside the VPSS */
     XVprocSs_Reset(XVprocSsPtr);
 
@@ -2605,7 +1657,7 @@ static int SetupModeMax(XVprocSs *XVprocSsPtr) {
  * @param  InstancePtr is a pointer to the Subsystem instance to be
  *worked on.
  *
- * @return XST_SUCCESS if successful else XST_FAILURE
+ * @return 0 if successful else 1
  *
  ******************************************************************************/
 static int ValidateSubsystemConfig(XVprocSs *InstancePtr) {
@@ -2634,9 +1686,8 @@ static int ValidateSubsystemConfig(XVprocSs *InstancePtr) {
   if ((XVprocSs_GetSubsystemTopology(InstancePtr) !=
        XVPROCSS_TOPOLOGY_FULL_FLEDGED) &&
       (StrmIn->FrameRate != StrmOut->FrameRate)) {
-    XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_CFG_VPSS,
-                      XVPROCSS_EDAT_VPSS_FRDIFF);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(InstancePtr, 18, 0xE5);
+    return (1);
   }
 
   /* Check input resolution is supported by HW */
@@ -2644,9 +1695,8 @@ static int ValidateSubsystemConfig(XVprocSs *InstancePtr) {
       (StrmIn->Timing.HActive == 0) ||
       (StrmIn->Timing.VActive > InstancePtr->Config.MaxHeight) ||
       (StrmIn->Timing.VActive == 0)) {
-    XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_CFG_VPSS,
-                      XVPROCSS_EDAT_VPSS_IVRANGE);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(InstancePtr, 18, 0xE6);
+    return (1);
   }
 
   /* Check output resolution is supported by HW */
@@ -2654,9 +1704,8 @@ static int ValidateSubsystemConfig(XVprocSs *InstancePtr) {
       (StrmOut->Timing.HActive == 0) ||
       (StrmOut->Timing.VActive > InstancePtr->Config.MaxHeight) ||
       (StrmOut->Timing.VActive == 0)) {
-    XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_CFG_VPSS,
-                      XVPROCSS_EDAT_VPSS_OVRANGE);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(InstancePtr, 18, 0xE7);
+    return (1);
   }
 
   /* Check Stream Width is aligned at Samples/Clock boundary */
@@ -2664,40 +1713,36 @@ static int ValidateSubsystemConfig(XVprocSs *InstancePtr) {
        0) ||
       ((StrmOut->Timing.HActive % InstancePtr->Config.PixPerClock) !=
        0)) {
-    XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_CFG_VPSS,
-                      XVPROCSS_EDAT_VPSS_WIDBAD);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(InstancePtr, 18, 0xE8);
+    return (1);
   }
 
   /* Check for HCResamp required, but not present */
   if (XVprocSs_IsConfigModeMax(InstancePtr) &&
-      ((StrmIn->ColorFormatId == XVIDC_CSF_YCRCB_420) ||
-       (StrmIn->ColorFormatId == XVIDC_CSF_YCRCB_422)) &&
-      ((StrmOut->ColorFormatId == XVIDC_CSF_YCRCB_444) ||
-       (StrmOut->ColorFormatId == XVIDC_CSF_RGB)) &&
+      ((StrmIn->ColorFormatId == 3) ||
+       (StrmIn->ColorFormatId == 2)) &&
+      ((StrmOut->ColorFormatId == 1) ||
+       (StrmOut->ColorFormatId == 0)) &&
       (InstancePtr->HcrsmplrPtr == NULL)) {
-    XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_CFG_VPSS,
-                      XVPROCSS_EDAT_VPSS_NOHCR);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(InstancePtr, 18, 0xEC);
+    return (1);
   }
 
   /* Check for YUV422 In/Out stream width is even */
-  if (((StrmIn->ColorFormatId == XVIDC_CSF_YCRCB_422) &&
+  if (((StrmIn->ColorFormatId == 2) &&
        ((StrmIn->Timing.HActive % 2) != 0)) ||
-      ((StrmOut->ColorFormatId == XVIDC_CSF_YCRCB_422) &&
+      ((StrmOut->ColorFormatId == 2) &&
        ((StrmOut->Timing.HActive % 2) != 0))) {
-    XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_CFG_VPSS,
-                      XVPROCSS_EDAT_VPSS_WIDODD);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(InstancePtr, 18, 0xEA);
+    return (1);
   }
 
   /* Check for YUV420 In stream width and height is even */
-  if ((StrmIn->ColorFormatId == XVIDC_CSF_YCRCB_420) &&
+  if ((StrmIn->ColorFormatId == 3) &&
       (((StrmIn->Timing.HActive % 2) != 0) &&
        ((StrmIn->Timing.VActive % 2) != 0))) {
-    XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_CFG_VPSS,
-                      XVPROCSS_EDAT_VPSS_SIZODD);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(InstancePtr, 18, 0xEB);
+    return (1);
   }
 
   /* Check for VCResamp required, but not present */
@@ -2705,37 +1750,32 @@ static int ValidateSubsystemConfig(XVprocSs *InstancePtr) {
    * "VcrsmplrOut" */
   /* In the VCResample-only case, the Output V C Resampler is
    * "VcrsmplrIn" */
-  if (((StrmOut->ColorFormatId == XVIDC_CSF_YCRCB_420) &&
+  if (((StrmOut->ColorFormatId == 3) &&
        XVprocSs_IsConfigModeMax(InstancePtr) &&
        !InstancePtr->VcrsmplrOutPtr)) {
-    XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_CFG_VPSS,
-                      XVPROCSS_EDAT_VPSS_NOVCRO);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(InstancePtr, 18, 0xEE);
+    return (1);
   }
-  if (((StrmIn->ColorFormatId == XVIDC_CSF_YCRCB_420) &&
+  if (((StrmIn->ColorFormatId == 3) &&
        XVprocSs_IsConfigModeMax(InstancePtr) &&
        !InstancePtr->VcrsmplrInPtr)) {
-    XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_CFG_VPSS,
-                      XVPROCSS_EDAT_VPSS_NOVCRI);
-    return (XST_FAILURE);
+    XVprocSs_LogWrite(InstancePtr, 18, 0xED);
+    return (1);
   }
 
   /* Check for Interlaced input limitation */
   if (StrmIn->IsInterlaced) {
-    if (StrmIn->ColorFormatId == XVIDC_CSF_YCRCB_420) {
-      XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_CFG_VPSS,
-                        XVPROCSS_EDAT_NO420);
-      return (XST_FAILURE);
+    if (StrmIn->ColorFormatId == 3) {
+      XVprocSs_LogWrite(InstancePtr, 18, 0xFB);
+      return (1);
     }
     if (!InstancePtr->DeintPtr) {
-      XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_CFG_VPSS,
-                        XVPROCSS_EDAT_VPSS_NODEIN);
-      return (XST_FAILURE);
+      XVprocSs_LogWrite(InstancePtr, 18, 0xEF);
+      return (1);
     }
   }
-  XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_CFG_VPSS,
-                    XVPROCSS_EDAT_VALID);
-  return (XST_SUCCESS);
+  XVprocSs_LogWrite(InstancePtr, 18, 0x02);
+  return (0);
 }
 
 /*****************************************************************************/
@@ -2750,54 +1790,53 @@ static int ValidateSubsystemConfig(XVprocSs *InstancePtr) {
  * @param  InstancePtr is a pointer to the Subsystem instance to be
  *worked on.
  *
- * @return XST_SUCCESS if successful else XST_FAILURE
+ * @return 0 if successful else 1
  *
  ******************************************************************************/
 int XVprocSs_SetSubsystemConfig(XVprocSs *InstancePtr) {
-  int status = XST_SUCCESS;
+  int status = 0;
 
   /* Verify arguments */
   Xil_AssertNonvoid(InstancePtr != NULL);
 
   /* validate subsystem configuration */
-  if (ValidateSubsystemConfig(InstancePtr) != XST_SUCCESS) {
-    return (XST_FAILURE);
+  if (ValidateSubsystemConfig(InstancePtr) != 0) {
+    return (1);
   }
 
   switch (XVprocSs_GetSubsystemTopology(InstancePtr)) {
-  case XVPROCSS_TOPOLOGY_FULL_FLEDGED:
+  case 1:
     status = SetupModeMax(InstancePtr);
     break;
 
-  case XVPROCSS_TOPOLOGY_SCALER_ONLY:
+  case 0:
     // Only configuration supported is Scaler-only
     status = SetupModeScalerOnly(InstancePtr);
     break;
 
-  case XVPROCSS_TOPOLOGY_CSC_ONLY:
+  case 3:
     // Only configuration supported is CSC-only
     status = SetupModeCscOnly(InstancePtr);
     break;
 
-  case XVPROCSS_TOPOLOGY_DEINTERLACE_ONLY:
+  case 2:
     // Only configuration supported is Deint-only
     status = SetupModeDeintOnly(InstancePtr);
     break;
 
-  case XVPROCSS_TOPOLOGY_VCRESAMPLE_ONLY:
+  case 4:
     // Only configurations supported are 420 <-> 422
     status = SetupModeVCResampleOnly(InstancePtr);
     break;
 
-  case XVPROCSS_TOPOLOGY_HCRESAMPLE_ONLY:
+  case 5:
     // Only configurations supported are 422 <-> 444
     status = SetupModeHCResampleOnly(InstancePtr);
     break;
 
   default:
-    XVprocSs_LogWrite(InstancePtr, XVPROCSS_EVT_CHK_TOPO,
-                      XVPROCSS_EDAT_FAILURE);
-    status = XST_FAILURE;
+    XVprocSs_LogWrite(InstancePtr, 19, 0xFF);
+    status = 1;
     break;
   }
   return (status);
@@ -2829,9 +1868,8 @@ int fmc_imageon_enable(camera_config_t *config) {
   }
 
   // FMC Module Validation
-  if (fmc_ipmi_detect(&(config->fmc_ipmi_iic), "FMC-IMAGEON",
-                      FMC_ID_ALL)) {
-    fmc_ipmi_enable(&(config->fmc_ipmi_iic), FMC_ID_SLOT1);
+  if (fmc_ipmi_detect(&(config->fmc_ipmi_iic), "FMC-IMAGEON", 0)) {
+    fmc_ipmi_enable(&(config->fmc_ipmi_iic), 1);
   } else {
     xil_printf("fail validate FMC-IPMI I2C Controller.\n\r");
     return 1;
@@ -2848,8 +1886,7 @@ int fmc_imageon_enable(camera_config_t *config) {
   fmc_imageon_init(&(config->fmc_imageon), "FMC-IMAGEON",
                    &(config->fmc_imageon_iic));
   fmc_imageon_vclk_init(&(config->fmc_imageon));
-  fmc_imageon_vclk_config(&(config->fmc_imageon),
-                          FMC_IMAGEON_VCLK_FREQ_148_500_000);
+  fmc_imageon_vclk_config(&(config->fmc_imageon), 6);
 
   reset_dcms(config);
 
@@ -2939,9 +1976,8 @@ int fmc_imageon_enable(camera_config_t *config) {
   int vita_enable_attempt = 1;
   do {
     vita_enabled_error = fmc_imageon_enable_vita(config);
-    if (vita_enable_attempt > VITA_ENABLE_ATTEMPT_LIMIT) {
-      xil_printf("VITA Camera failed init after %d attempts\r\n",
-                 VITA_ENABLE_ATTEMPT_LIMIT);
+    if (vita_enable_attempt > 3) {
+      xil_printf("VITA Camera failed init after %d attempts\r\n", 3);
       return -1;
     }
   } while (vita_enabled_error != 0);
@@ -2964,15 +2000,15 @@ int fmc_imageon_enable_vita(camera_config_t *config) {
   int ret;
 
   // VITA-2000 Initialization
-  ret = onsemi_vita_sensor_initialize(
-      &(config->onsemi_vita), SENSOR_INIT_ENABLE, config->bVerbose);
+  ret = onsemi_vita_sensor_initialize(&(config->onsemi_vita), 101,
+                                      config->bVerbose);
   if (ret == 0) {
     xil_printf("VITA sensor init failed\n\r");
     return -1;
   }
 
-  onsemi_vita_sensor_initialize(
-      &(config->onsemi_vita), SENSOR_INIT_STREAMON, config->bVerbose);
+  onsemi_vita_sensor_initialize(&(config->onsemi_vita), 103,
+                                config->bVerbose);
   sleep(1);
 
   ret = onsemi_vita_sensor_1080P60(&(config->onsemi_vita),
@@ -3020,77 +2056,68 @@ int fmc_imageon_enable_ipipe(camera_config_t *config) {
   Config_ptr_422 = XVprocSs_LookupConfig(XPAR_XVPROCSS_1_DEVICE_ID);
 
   result = XVprocSs_CfgInitialize(&proc_ss_444_to_422, Config_ptr_422,
-                                  XPAR_XVPROCSS_1_BASEADDR //
+                                  0x43C10000 //
   );
-  if (result != XST_SUCCESS) {
+  if (result != 0) {
     xil_printf("fail init 4:4:4 to 4:2:2\n\r");
     return -1;
   }
 
   // Set Up HW REG Width for SS1
-  Xil_Out16((XPAR_V_PROC_SS_1_BASEADDR) +
-                (XV_HCRESAMPLER_CTRL_ADDR_HWREG_WIDTH_DATA),
+  Xil_Out16((0x43C10000) + (0x10),
             (u16)(1920) // Number of Active Pixels per Scanline
   );
   // Set Up HW REG Height for SS1
-  Xil_Out16((XPAR_V_PROC_SS_1_BASEADDR) +
-                (XV_HCRESAMPLER_CTRL_ADDR_HWREG_HEIGHT_DATA),
+  Xil_Out16((0x43C10000) + (0x18),
             (u16)(1080) // Number of Active Lines per Frame
   );
   // Set HW REG Input Video Format for SS1
-  Xil_Out8(
-      (XPAR_V_PROC_SS_1_BASEADDR) +
-          (XV_HCRESAMPLER_CTRL_ADDR_HWREG_INPUT_VIDEO_FORMAT_DATA),
-      (u8)(0x01));
+  Xil_Out8((0x43C10000) + (0x20), (u8)(0x01));
   // Set HW REG Output Video Format for SS1
-  Xil_Out8(
-      (XPAR_V_PROC_SS_1_BASEADDR) +
-          (XV_HCRESAMPLER_CTRL_ADDR_HWREG_OUTPUT_VIDEO_FORMAT_DATA),
-      (u8)(0x02));
+  Xil_Out8((0x43C10000) + (0x28), (u8)(0x02));
   // Set Mode for SS1
-  Xil_Out32((XPAR_V_PROC_SS_1_BASEADDR) +
-                (XV_HCRESAMPLER_CTRL_ADDR_AP_CTRL),
+  Xil_Out32((0x43C10000) + (0x00),
             (u32)(0x81) // Control 0x10000001 means start and freerun
                         // mode (page 16 in PG231)
   );
 
   XVprocSs_Start(&proc_ss_444_to_422);
 
-  Config_ptr = XVprocSs_LookupConfig(XPAR_XVPROCSS_0_DEVICE_ID);
+  Config_ptr = XVprocSs_LookupConfig(0);
 
   result = XVprocSs_CfgInitialize(&proc_ss_RGB_YCrCb_444, Config_ptr,
-                                  XPAR_XVPROCSS_0_BASEADDR //
+                                  0x43C00000 //
   );
-  if (result != XST_SUCCESS) {
+  if (result != 0) {
     xil_printf("failed init RGB to 4:4:4\n\r");
     return -1;
   }
 
   result = XV_CscSetColorspace(proc_ss_RGB_YCrCb_444.CscPtr,
-                               XVIDC_CSF_RGB,       //
-                               XVIDC_CSF_YCRCB_444, //
-                               XVIDC_BT_709,        //
-                               XVIDC_BT_709,        //
-                               XVIDC_CR_0_255       //
+                               0, //
+                               1, //
+                               1, //
+                               1, //
+                               2  //
   );
-  if (result != XST_SUCCESS) {
+  if (result != 0) {
     xil_printf("failed colorspace RGB to YCrCb 4:4:4\n\r");
     return -1;
   }
 
   result = XVprocSs_SetSubsystemConfig(&proc_ss_RGB_YCrCb_444);
-  if (result != XST_SUCCESS) {
+  if (result != 0) {
     xil_printf("failed ss configuration for RGB to 4:4:4\n\r");
     return -1;
   }
   result = XV_CscSetColorspace(proc_ss_RGB_YCrCb_444.CscPtr,
-                               XVIDC_CSF_RGB,       //
-                               XVIDC_CSF_YCRCB_444, //
-                               XVIDC_BT_709,        //
-                               XVIDC_BT_709,        //
-                               XVIDC_CR_0_255       //
+                               0, //
+                               1, //
+                               1, //
+                               1, //
+                               2  //
   );
-  if (result != XST_SUCCESS) {
+  if (result != 0) {
     xil_printf("failed colorspace RGB to YCrCb 4:4:4\n\r");
     return -1;
   }
@@ -3100,29 +2127,25 @@ int fmc_imageon_enable_ipipe(camera_config_t *config) {
 
   // Additional Register 1 (Demosaic)
   // Active Width Configuration (Number of Active Pixels per Scanline)
-  Xil_Out32((XPAR_XV_DEMOSAIC_0_S_AXI_CTRL_BASEADDR) +
-                (XV_DEMOSAIC_CTRL_ADDR_HWREG_WIDTH_DATA),
+  Xil_Out32((0x43C40000) + (0x10),
             (u32)(1920) // Number of Active Pixels per Scanline
   );
 
   // Additional Register 2 (Demosaic)
   // Active Height Configuration (Number of Active Scanlines per
   // Frame)
-  Xil_Out32((XPAR_XV_DEMOSAIC_0_S_AXI_CTRL_BASEADDR) +
-                (XV_DEMOSAIC_CTRL_ADDR_HWREG_HEIGHT_DATA),
+  Xil_Out32((0x43C40000) + (0x18),
             (u32)(1080) // Number of Active Lines per Frame
   );
 
   // Additional Register 3 (Demosaic)
   // Bayer Phase Configuration (Bayer Pattern)
-  Xil_Out32((XPAR_XV_DEMOSAIC_0_S_AXI_CTRL_BASEADDR) +
-                (XV_DEMOSAIC_CTRL_ADDR_HWREG_BAYER_PHASE_DATA),
+  Xil_Out32((0x43C40000) + (0x28),
             (u32)(0) // Bayer sampling grid starting postition
   );
 
   // 0b10000001 means start and freerun mode (page 16 in PG286)
-  Xil_Out32((XPAR_XV_DEMOSAIC_0_S_AXI_CTRL_BASEADDR) +
-                (XV_DEMOSAIC_CTRL_ADDR_AP_CTRL),
+  Xil_Out32((0x43C40000) + (0x00),
             (u32)(0x81) // start and freerun mode (page 16 in PG286)
   );
 
@@ -3143,12 +2166,11 @@ void enable_ssc(camera_config_t *config) {
       {0x12, 0xDB}  //
   };
 
-  fmc_imageon_iic_mux(&(config->fmc_imageon),
-                      FMC_IMAGEON_I2C_SELECT_VID_CLK);
+  fmc_imageon_iic_mux(&(config->fmc_imageon), 3);
 
   for (i = 0; i < 3; i++) {
     config->fmc_imageon.pIIC->fpIicWrite(
-        config->fmc_imageon.pIIC, FMC_IMAGEON_VID_CLK_ADDR,
+        config->fmc_imageon.pIIC, 0x65,
         (0x80 | iic_cdce913_ssc_on[i][0]),
         &(iic_cdce913_ssc_on[i][1]), 1 //
     );
