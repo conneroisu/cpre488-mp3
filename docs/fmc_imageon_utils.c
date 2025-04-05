@@ -25,11 +25,11 @@ int fmc_imageon_enable( camera_config_t *config )
 {
    int ret;
 
-   xil_printf("\n\r");
-   xil_printf("------------------------------------------------\n\r");
-   xil_printf("--    FMC-IMAGEON Camera Application (MP-2)   --\n\r");
-   xil_printf("------------------------------------------------\n\r");
-   xil_printf("\n\r");
+//   xil_printf("\n\r");
+//   xil_printf("------------------------------------------------\n\r");
+//   xil_printf("--    FMC-IMAGEON Camera Application (MP-2)   --\n\r");
+//   xil_printf("------------------------------------------------\n\r");
+//   xil_printf("\n\r");
 
    config->bVerbose = 1;
    config->vita_aec = 0;       // off
@@ -38,10 +38,10 @@ int fmc_imageon_enable( camera_config_t *config )
    config->vita_exposure = 90; // 90% of frame period
 
 
-   xil_printf("FMC-IPMI Initialization ...\n\r");
+//   xil_printf("FMC-IPMI Initialization ...\n\r");
    ret = fmc_iic_axi_init(&(config->fmc_ipmi_iic), "FMC-IPMI I2C Controller", config->uBaseAddr_IIC_FmcIpmi);
    if (!ret ) {
-      xil_printf("ERROR: Failed to open FMC-IIC driver,\n\r");
+//      xil_printf("ERROR: Failed to open FMC-IIC driver,\n\r");
       exit(1);
    }
 
@@ -51,28 +51,28 @@ int fmc_imageon_enable( camera_config_t *config )
       fmc_ipmi_enable( &(config->fmc_ipmi_iic), 1 );
    }
    else {
-	   xil_printf("ERROR: Failed to validate FMC-IPMI I2C Controller.\n\r");
+//	   xil_printf("ERROR: Failed to validate FMC-IPMI I2C Controller.\n\r");
        exit(1);
    }
 
 
-   xil_printf("FMC-IMAGEON I2C Initialization ...\n\r");
+//   xil_printf("FMC-IMAGEON I2C Initialization ...\n\r");
    ret = fmc_iic_axi_init(&(config->fmc_imageon_iic), "FMC-IMAGEON I2C Controller", config->uBaseAddr_IIC_FmcImageon);
    if (!ret) {
-      xil_printf( "ERROR: Failed to open FMC-IIC driver\n\r");
+//      xil_printf( "ERROR: Failed to open FMC-IIC driver\n\r");
       exit(1);
    }
 
-   xil_printf("FMC-IMAGEON Video Clock Initialization ...\n\r");
+//   xil_printf("FMC-IMAGEON Video Clock Initialization ...\n\r");
    fmc_imageon_init(&(config->fmc_imageon), "FMC-IMAGEON", &(config->fmc_imageon_iic));
    fmc_imageon_vclk_init( &(config->fmc_imageon) );
    fmc_imageon_vclk_config( &(config->fmc_imageon), 6);
 
-   xil_printf("Resetting clock generator ...\n\r");
+//   xil_printf("Resetting clock generator ...\n\r");
    reset_dcms(config);
 
    // Initialize Video Output Timing
-   xil_printf("Initializing Video Output for 1080P60 ...\n\r");
+//   xil_printf("Initializing Video Output for 1080P60 ...\n\r");
 
    config->hdmio_width  = 1920;
    config->hdmio_height = 1080;
@@ -92,7 +92,7 @@ int fmc_imageon_enable( camera_config_t *config )
    config->hdmio_timing.VBackPorch    =   36;
 
    if (config->bVerbose) {
-  	   xil_printf("ADV7511 Video Output Information\n\r");
+//  	   xil_printf("ADV7511 Video Output Information\n\r");
     	   xil_printf( "\tHSYNC Timing     = hav=%04d, hfp=%02d, hsw=%02d(hsp=%d), hbp=%03d\n\r",
       			   config->hdmio_timing.HActiveVideo,
       			   config->hdmio_timing.HFrontPorch,
@@ -108,24 +108,24 @@ int fmc_imageon_enable( camera_config_t *config )
    }
 
    config->hdmio_resolution = vres_detect(config->hdmio_width, config->hdmio_height);
-   xil_printf("\tVideo Resolution = %s\n\r", vres_get_name(config->hdmio_resolution));
+//   xil_printf("\tVideo Resolution = %s\n\r", vres_get_name(config->hdmio_resolution));
 
-   xil_printf( "Video Generator Configuration ...\n\r");
+//   xil_printf( "Video Generator Configuration ...\n\r");
    vgen_init( &(config->vtc_tpg), config->uDeviceId_VTC_tpg);
    vgen_config( &(config->vtc_tpg ), config->hdmio_resolution, 1);
 
 
    // FMC-IMAGEON HDMI Output Initialization
-   xil_printf( "FMC-IMAGEON HDMI Output Initialization ...\n\r" );
+//   xil_printf( "FMC-IMAGEON HDMI Output Initialization ...\n\r" );
    ret = fmc_imageon_hdmio_init(&(config->fmc_imageon), 1, &(config->hdmio_timing), 0);
    if (!ret) {
-      xil_printf("ERROR : Failed to init FMC-IMAGEON HDMI Output Interface\n\r");
+//      xil_printf("ERROR : Failed to init FMC-IMAGEON HDMI Output Interface\n\r");
       exit(0);
    }
 
 
    // FMC-IMAGEON VITA Camera Receiver Initialization
-   xil_printf( "FMC-IMAGEON VITA Camera Initialization ...\n\r" );
+//   xil_printf( "FMC-IMAGEON VITA Camera Initialization ...\n\r" );
    onsemi_vita_init( &(config->onsemi_vita), "VITA-2000", config->uBaseAddr_VITA_SPI, config->uBaseAddr_VITA_CAM);
    config->onsemi_vita.uManualTap = 25;
    // Assuming a 75 MHz AXI-Lite SPI bus
@@ -141,7 +141,7 @@ int fmc_imageon_enable( camera_config_t *config )
    Xuint32 storage_size = config->uNumFrames_HdmiFrameBuffer * ((1920*1080)<<1);
    volatile Xuint32 *pStorageMem = (Xuint32 *)config->uBaseAddr_MEM_HdmiFrameBuffer;
 
-   xil_printf("pStorageMem = %X\n\r", pStorageMem);
+//   xil_printf("pStorageMem = %X\n\r", pStorageMem);
 
    // Frame #1 - Red pixels
    for (i = 0; i < storage_size / config->uNumFrames_HdmiFrameBuffer; i += 4) {
@@ -159,7 +159,7 @@ int fmc_imageon_enable( camera_config_t *config )
    Xil_DCacheFlush(); // Flush Cache
 
    // Initialize Output Side of AXI VDMA
-   xil_printf( "Video DMA (Output Side) Initialization ...\n\r" );
+//   xil_printf( "Video DMA (Output Side) Initialization ...\n\r" );
    vfb_common_init(
       config->uDeviceId_VDMA_HdmiFrameBuffer, // uDeviceId
       &(config->vdma_hdmi)                    // pAxiVdma
@@ -175,12 +175,12 @@ int fmc_imageon_enable( camera_config_t *config )
 
 
    // Output static Frame buffer for 5 seconds
-   xil_printf( "Output static Frame buffer for 5 seconds\n\r" );
+//   xil_printf( "Output static Frame buffer for 5 seconds\n\r" );
    sleep(5);
 
 
    // Initialize Input Side of AXI VDMA
-   xil_printf( "Video DMA (Input Side) Initialization ...\n\r" );
+//   xil_printf( "Video DMA (Input Side) Initialization ...\n\r" );
    vfb_rx_init(
       &(config->vdma_hdmi),                   // pAxiVdma
       &(config->vdmacfg_hdmi_write),          // pWriteCfg
@@ -200,7 +200,7 @@ int fmc_imageon_enable( camera_config_t *config )
    int vita_enabled_error = 0;
    int vita_enable_attempt=1;
    do {
-	   xil_printf("\r\n\n\nFMC_IMAGEON_ENABLE_VITA, attempt %d\r\n\n\n", vita_enable_attempt++);
+//	   xil_printf("\r\n\n\nFMC_IMAGEON_ENABLE_VITA, attempt %d\r\n\n\n", vita_enable_attempt++);
 	   vita_enabled_error = fmc_imageon_enable_vita(config);
    } while(vita_enabled_error != 0);
 
@@ -211,9 +211,9 @@ int fmc_imageon_enable( camera_config_t *config )
    fmc_imageon_enable_ipipe(config);
 
 
-   // Output Video input source in Hardware mode for 10 seconds
-   xil_printf( "Output Video input source in Hardware mode for 10 seconds\n\r" );
-   sleep(10);
+//   // Output Video input source in Hardware mode for 10 seconds
+//   xil_printf( "Output Video input source in Hardware mode for 10 seconds\n\r" );
+//   sleep(10);
 
 
    // Status of AXI VDMA
@@ -222,83 +222,83 @@ int fmc_imageon_enable( camera_config_t *config )
       vfb_dump_registers( &(config->vdma_hdmi) );
    }
 
-   xil_printf("\n\r");
-   xil_printf( "Done\n\r" );
-   xil_printf("\n\r");
+//   xil_printf("\n\r");
+//   xil_printf( "Done\n\r" );
+//   xil_printf("\n\r");
 
    return 0;
 }
 
 
 
-int fmc_imageon_enable_tpg( camera_config_t *config ) {
-   Xuint32 Reg32Value;
-   Xuint32 CurrentSpeed;
+//int fmc_imageon_enable_tpg( camera_config_t *config ) {
+//   Xuint32 Reg32Value;
+//   Xuint32 CurrentSpeed;
+//
+//   // Define convenient volatile pointers for accessing TPG registers
+//   volatile unsigned int *TPG_CR       = config->uBaseAddr_TPG_PatternGenerator + 0;    // TPG Control
+//   volatile unsigned int *TPG_Act_H    = config->uBaseAddr_TPG_PatternGenerator + 0x10; // Active Height
+//   volatile unsigned int *TPG_Act_W    = config->uBaseAddr_TPG_PatternGenerator + 0x18; // Active Width
+//   volatile unsigned int *TPG_BGP      = config->uBaseAddr_TPG_PatternGenerator + 0x20; // Background Pattern
+//   volatile unsigned int *TPG_FGP      = config->uBaseAddr_TPG_PatternGenerator + 0x28; // Foreground Pattern
+//   volatile unsigned int *TPG_MS       = config->uBaseAddr_TPG_PatternGenerator + 0x38; // Motion Speed
+//   volatile unsigned int *TPG_CF       = config->uBaseAddr_TPG_PatternGenerator + 0x40; // TPG Color Format
+//
+//
+//   xil_printf("Test Pattern Generator Initialization ...\n\r");
+//
+//   // Direct Memory Mapped access of TPG configuration registers
+//   // See TPG data sheet for configuring the TPG for other features
+//   TPG_Act_H[0]  = 0x438; // Active Height
+//   TPG_Act_W[0]  = 0x780; // Active Width
+//   TPG_BGP[0]    = 0x0A;  // Background Pattern
+//   TPG_FGP[0]    = 0x00;  // Foreground Pattern
+//   TPG_MS[0]     = 0x04;  // Motion Speed
+//   TPG_CF[0]     = 0x02;  // TPG Color Format
+//   TPG_CR[0]     = 0x81;  // TPG Control
+//
+//
+//   // (UNDER CONSTRUCTION: DO NOT USE!!) Useful portable wrapper functions for accessing TPG configuration registers
+//   /*
+//   // See TPG data sheet for configuring the TPG for other features
+//
+//   xTPG_config(config->hdmio_width, config->hdmio_height, config->uBaseAddr_TPG_PatternGenerator, 1);
+//
+//   // Default to Zone Plate
+//   Reg32Value = XTPG_mReadSlaveReg0(config->uBaseAddr_TPG_PatternGenerator, 0);
+//   XTPG_mWriteSlaveReg0(config->uBaseAddr_TPG_PatternGenerator, 0, (Reg32Value & 0xFFFFFFF0) | 10);
+//   ZPlate_config(config->hdmio_width, config->hdmio_height, config->uBaseAddr_TPG_PatternGenerator);
+//
+//   // Enable motion
+//   Reg32Value = XTPG_mReadSlaveReg1(config->uBaseAddr_TPG_PatternGenerator, 0);
+//   if ((Reg32Value & 0x00000001)==0)
+//	   XTPG_mWriteSlaveReg1(config->uBaseAddr_TPG_PatternGenerator, 0, (Reg32Value | 0x00000001));
+//   else
+//	   XTPG_mWriteSlaveReg1(config->uBaseAddr_TPG_PatternGenerator, 0, (Reg32Value & 0xFFFFFFFE));
+//
+//   // Speed = 4
+//   Reg32Value = XTPG_mReadSlaveReg1(config->uBaseAddr_TPG_PatternGenerator, 0);
+//   CurrentSpeed = (Reg32Value&0x000001fe)>>1;
+//   CurrentSpeed = 4;
+//   XTPG_mWriteSlaveReg1(config->uBaseAddr_TPG_PatternGenerator, 0, (CurrentSpeed<<1)|(Reg32Value & 0x00000001));
+//
+//   */
+//
+//   return 0;
+//}
 
-   // Define convenient volatile pointers for accessing TPG registers
-   volatile unsigned int *TPG_CR       = config->uBaseAddr_TPG_PatternGenerator + 0;    // TPG Control
-   volatile unsigned int *TPG_Act_H    = config->uBaseAddr_TPG_PatternGenerator + 0x10; // Active Height
-   volatile unsigned int *TPG_Act_W    = config->uBaseAddr_TPG_PatternGenerator + 0x18; // Active Width
-   volatile unsigned int *TPG_BGP      = config->uBaseAddr_TPG_PatternGenerator + 0x20; // Background Pattern
-   volatile unsigned int *TPG_FGP      = config->uBaseAddr_TPG_PatternGenerator + 0x28; // Foreground Pattern
-   volatile unsigned int *TPG_MS       = config->uBaseAddr_TPG_PatternGenerator + 0x38; // Motion Speed
-   volatile unsigned int *TPG_CF       = config->uBaseAddr_TPG_PatternGenerator + 0x40; // TPG Color Format
 
-
-   xil_printf("Test Pattern Generator Initialization ...\n\r");
-
-   // Direct Memory Mapped access of TPG configuration registers
-   // See TPG data sheet for configuring the TPG for other features
-   TPG_Act_H[0]  = 0x438; // Active Height
-   TPG_Act_W[0]  = 0x780; // Active Width
-   TPG_BGP[0]    = 0x0A;  // Background Pattern
-   TPG_FGP[0]    = 0x00;  // Foreground Pattern
-   TPG_MS[0]     = 0x04;  // Motion Speed
-   TPG_CF[0]     = 0x02;  // TPG Color Format
-   TPG_CR[0]     = 0x81;  // TPG Control
-
-
-   // (UNDER CONSTRUCTION: DO NOT USE!!) Useful portable wrapper functions for accessing TPG configuration registers
-   /*
-   // See TPG data sheet for configuring the TPG for other features
-
-   xTPG_config(config->hdmio_width, config->hdmio_height, config->uBaseAddr_TPG_PatternGenerator, 1);
-
-   // Default to Zone Plate
-   Reg32Value = XTPG_mReadSlaveReg0(config->uBaseAddr_TPG_PatternGenerator, 0);
-   XTPG_mWriteSlaveReg0(config->uBaseAddr_TPG_PatternGenerator, 0, (Reg32Value & 0xFFFFFFF0) | 10);
-   ZPlate_config(config->hdmio_width, config->hdmio_height, config->uBaseAddr_TPG_PatternGenerator);
-
-   // Enable motion
-   Reg32Value = XTPG_mReadSlaveReg1(config->uBaseAddr_TPG_PatternGenerator, 0);
-   if ((Reg32Value & 0x00000001)==0)
-	   XTPG_mWriteSlaveReg1(config->uBaseAddr_TPG_PatternGenerator, 0, (Reg32Value | 0x00000001));
-   else
-	   XTPG_mWriteSlaveReg1(config->uBaseAddr_TPG_PatternGenerator, 0, (Reg32Value & 0xFFFFFFFE));
-
-   // Speed = 4
-   Reg32Value = XTPG_mReadSlaveReg1(config->uBaseAddr_TPG_PatternGenerator, 0);
-   CurrentSpeed = (Reg32Value&0x000001fe)>>1;
-   CurrentSpeed = 4;
-   XTPG_mWriteSlaveReg1(config->uBaseAddr_TPG_PatternGenerator, 0, (CurrentSpeed<<1)|(Reg32Value & 0x00000001));
-
-   */
-
-   return 0;
-}
-
-
-// Disable Test Pattern Generator (TPG)
-int fmc_imageon_disable_tpg( camera_config_t *config ) {
-
-	// Define convenient volatile pointers for accessing TPG registers
-   volatile unsigned int *TPG_CR  = config->uBaseAddr_TPG_PatternGenerator + 0;    // TPG Control
-
-   xil_printf("Test Pattern Generator Disable ...\n\r");
-   TPG_CR[0]     = 0x00;  // TPG Control Register (Disable TPG)
-
-   return 0;
-}
+//// Disable Test Pattern Generator (TPG)
+//int fmc_imageon_disable_tpg( camera_config_t *config ) {
+//
+//	// Define convenient volatile pointers for accessing TPG registers
+//   volatile unsigned int *TPG_CR  = config->uBaseAddr_TPG_PatternGenerator + 0;    // TPG Control
+//
+//   xil_printf("Test Pattern Generator Disable ...\n\r");
+//   TPG_CR[0]     = 0x00;  // TPG Control Register (Disable TPG)
+//
+//   return 0;
+//}
 
 
 
@@ -306,20 +306,20 @@ int fmc_imageon_enable_vita( camera_config_t *config ) {
    int ret;
 
    // VITA-2000 Initialization
-   xil_printf( "FMC-IMAGEON VITA Initialization ...\n\r" );
+//   xil_printf( "FMC-IMAGEON VITA Initialization ...\n\r" );
    ret = onsemi_vita_sensor_initialize( &(config->onsemi_vita), 101, config->bVerbose );
    if (ret == 0) {
-      xil_printf("VITA sensor failed to initialize ...\n\r");
+//      xil_printf("VITA sensor failed to initialize ...\n\r");
       return -1;
    }
 
    onsemi_vita_sensor_initialize( &(config->onsemi_vita), 103, config->bVerbose);
    sleep(1);
 
-   xil_printf("FMC-IMAGEON VITA Configuration for 1080P60 timing ...\n\r");
+//   xil_printf("FMC-IMAGEON VITA Configuration for 1080P60 timing ...\n\r");
    ret = onsemi_vita_sensor_1080P60( &(config->onsemi_vita), config->bVerbose);
    if (ret == 0 ) {
-      xil_printf( "VITA sensor failed to configure for 1080P60 timing ...\n\r" );
+//      xil_printf( "VITA sensor failed to configure for 1080P60 timing ...\n\r" );
       return -1;
    }
    sleep(1);
@@ -333,11 +333,11 @@ int fmc_imageon_enable_vita( camera_config_t *config ) {
    vita_height = config->vita_status_t1.cntImageLines;
    vita_rate = config->vita_status_t2.cntFrames - config->vita_status_t1.cntFrames;
    vita_crc = config->vita_status_t2.crcStatus;
-   xil_printf("VITA Status = \n\r");
-   xil_printf("\tImage Width  = %d\n\r", vita_width);
-   xil_printf("\tImage Height = %d\n\r", vita_height);
-   xil_printf("\tFrame Rate   = %d frames/sec\n\r", vita_rate);
-   xil_printf("\tCRC = %d\n\r", vita_crc);
+//   xil_printf("VITA Status = \n\r");
+//   xil_printf("\tImage Width  = %d\n\r", vita_width);
+//   xil_printf("\tImage Height = %d\n\r", vita_height);
+//   xil_printf("\tFrame Rate   = %d frames/sec\n\r", vita_rate);
+//   xil_printf("\tCRC = %d\n\r", vita_crc);
 
    if ( config->bVerbose )
    {
@@ -360,7 +360,7 @@ int fmc_imageon_enable_vita( camera_config_t *config ) {
 int fmc_imageon_enable_ipipe( camera_config_t *config ) {
 
 
-   xil_printf("Hardware Image Processing Pipeline (iPIPE) Initialization ...\n\r" );
+//   xil_printf("Hardware Image Processing Pipeline (iPIPE) Initialization ...\n\r" );
 
    //// TODO:
    // Video Processing Subsystem (Only re-sampling) 4:4:4 to 4:2:2  (See IP documentation for register details)
@@ -379,12 +379,12 @@ int fmc_imageon_enable_ipipe( camera_config_t *config ) {
 
 
    //Xil_Out32((XPAR_V_PROC_SS_1_BASEADDR) + 0x30, (u32)(0x0));  // Set chroma phase
-   xil_printf("4:4:4 to 4:2:2 Re-sampling IP Configuration and Enable done\r\n");
+//   xil_printf("4:4:4 to 4:2:2 Re-sampling IP Configuration and Enable done\r\n");
 
 
    // Uncomment as part of Re-sampler IP setup
    Xil_Out32((0x43C50000) + (0x00), (u32)(0x81));  // Control
-   xil_printf("4:4:4 to 4:2:2 Re-sampling IP Configuration and Enable done\r\n");
+//   xil_printf("4:4:4 to 4:2:2 Re-sampling IP Configuration and Enable done\r\n");
 
    // Video Processing Subsystem Hardware IP (configured for Only Color Conversion) from 24-bit RGB to YCrCb 4:4:4
    // For this IP core there was a High level API for setting it up.  Trace through these calls to see how much work they do.
@@ -396,7 +396,7 @@ int fmc_imageon_enable_ipipe( camera_config_t *config ) {
    XVprocSs_SetSubsystemConfig(&proc_ss_RGB_YCrCb_444);
    XV_CscSetColorspace(proc_ss_RGB_YCrCb_444.CscPtr, XVIDC_CSF_RGB, XVIDC_CSF_YCRCB_444, XVIDC_BT_709, XVIDC_BT_709, XVIDC_CR_0_255);
    XVprocSs_Start(&proc_ss_RGB_YCrCb_444);
-   xil_printf("RGB to 4:4:4 IP Configuration and Enable done\r\n");
+//   xil_printf("RGB to 4:4:4 IP Configuration and Enable done\r\n");
 
 
    // Demosaic to convert sensor Bayer pattern into 24-bit RGB
@@ -410,7 +410,7 @@ int fmc_imageon_enable_ipipe( camera_config_t *config ) {
 
    // Uncomment as part of Demosaic IP setup
    Xil_Out32((0x43C00000) + (0x00), (u32)(0x81));// 0b10000001 means start and freerun mode (page 16 in PG286)
-   xil_printf("Demosaic IP Configuring and Enable done\r\n"); // RGRG sensor pattern
+//   xil_printf("Demosaic IP Configuring and Enable done\r\n"); // RGRG sensor pattern
 
    return 0;
 }
@@ -427,8 +427,8 @@ void enable_ssc(camera_config_t *config) {
 			{0x12, 0xDB}  //
 	};
 
-	xil_printf( "Enabling spread-spectrum clocking (SSC)\n\r" );
-	xil_printf( "\ttype=down-spread, amount=-0.75%%\n\r" );
+//	xil_printf( "Enabling spread-spectrum clocking (SSC)\n\r" );
+//	xil_printf( "\ttype=down-spread, amount=-0.75%%\n\r" );
 	fmc_imageon_iic_mux( &(config->fmc_imageon), 3 );
 
 	for ( i = 0; i < 3; i++ ) {
