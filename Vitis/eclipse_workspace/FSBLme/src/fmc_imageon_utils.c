@@ -4,7 +4,6 @@
  * *********************************/
 #include "sleep.h"
 #include "xenv.h"
-#include "xvprocss.h"
 #include "xvprocss_coreinit.h"
 #include "xvprocss_router.h"
 #include "xvprocss_vdma.h"
@@ -53,12 +52,8 @@ typedef struct {
   XV_Deint_l2 Deint;
 } XVprocSs_SubCores;
 
-/**************************** Local Global
- * ***********************************/
 // Define Driver instance of all sub-core included in the design */
 XVprocSs_SubCores subcoreRepo[XPAR_XVPROCSS_NUM_INSTANCES];
-
-
 
 /** @name VDMA Alignment required step size
  *
@@ -259,27 +254,6 @@ static void GetIncludedSubcores(XVprocSs *XVprocSsPtr) {
       ((XVprocSsPtr->Config.RstAximm.IsPresent)
            ? (&subcoreRepo[XVprocSsPtr->Config.DeviceId].RstAximm)
            : NULL);
-}
-
-/*****************************************************************************/
-/**
- * This function sets the base address of the video frame buffers used
- *by the subsystem instance
- *
- * @param  InstancePtr is a pointer to the Subsystem instance to be
- *worked on.
- * @param  addr is the base address of the video frame buffers
- *
- * @return None
- *
- ******************************************************************************/
-void XVprocSs_SetFrameBufBaseaddr(XVprocSs *InstancePtr,
-                                  UINTPTR addr) {
-  /* Verify arguments */
-  Xil_AssertVoid(InstancePtr != NULL);
-  Xil_AssertVoid(addr != 0);
-
-  InstancePtr->FrameBufBaseaddr = addr;
 }
 
 /*****************************************************************************/
