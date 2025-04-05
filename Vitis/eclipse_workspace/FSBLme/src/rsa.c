@@ -1,34 +1,3 @@
-/******************************************************************************
- * Copyright (c) 2012 - 2020 Xilinx, Inc.  All rights reserved.
- * SPDX-License-Identifier: MIT
- ******************************************************************************/
-
-/*****************************************************************************/
-/**
- *
- * @file rsa.c
- *
- * Contains code for the RSA authentication
- *
- * <pre>
- * MODIFICATION HISTORY:
- *
- * Ver	Who	Date		Changes
- * ----- ---- --------
- *------------------------------------------------------- 4.00a sgd
- *02/28/13 Initial release 6.00a kc	07/30/13 Added FSBL_DEBUG_RSA
- *to print more RSA buffers Fix for CR#724165 - Partition Header used
- *by FSBL is not authenticated Fix for CR#724166 - FSBL doesn’t use
- *PPK authenticated by Boot ROM for authenticating the Partition
- *images Fix for CR#722979 - Provide customer-friendly changelogs in
- *FSBL 9.00a kc  04/16/14 Fix for CR#724166 - SetPpk() will fail on
- *secure fallback unless FSBL* and FSBL are identical in length Fix
- *for CR#791245 - Use of xilrsa in FSBL
- * </pre>
- *
- * @note
- *
- ******************************************************************************/
 
 /***************************** Include Files
  * *********************************/

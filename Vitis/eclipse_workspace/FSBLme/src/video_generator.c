@@ -89,9 +89,7 @@ int vgen_init(XVtc *pVtc, u16 VtcDeviceID) {
   int Status;
   XVtc_Config *VtcCfgPtr;
 
-  Xuint32 Width;
-  Xuint32 Height;
-  int ResolutionId;
+
 
   /* Look for the device configuration info for the Video Timing
    * Controller.
@@ -139,7 +137,6 @@ int vgen_init(XVtc *pVtc, u16 VtcDeviceID) {
  *
  **/
 int vgen_config(XVtc *pVtc, int ResolutionId, int bVerbose) {
-  int Status;
 
   XVtc_Signal Signal;           /* VTC Signal configuration */
   XVtc_Polarity Polarity;       /* Polarity configuration */
