@@ -242,7 +242,7 @@ int fmc_imageon_enable_ipipe(camera_config_t *config) {
                                   XPAR_XVPROCSS_1_BASEADDR //
   );
   if (result != XST_SUCCESS) {
-    xil_printf("Error init 4:4:4 to 4:2:2\n\r");
+    xil_printf("fail init 4:4:4 to 4:2:2\n\r");
     return -1;
   }
 
