@@ -69,8 +69,7 @@ Xint32 vres_detect(Xuint32 width, Xuint32 height) {
 
   for (i = 0; i < NUM_VIDEO_RESOLUTIONS; i++) {
     if (width == vres_get_width(i) && height == vres_get_height(i)) {
-      xil_printf("Detected Video Resolution = %s\r\n",
-                 vres_get_name(i));
+      xil_printf("Res = %s\r\n", vres_get_name(i));
       resolution = i;
       break;
     }
