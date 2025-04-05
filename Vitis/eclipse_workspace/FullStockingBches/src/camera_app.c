@@ -170,24 +170,6 @@ void camera_config_init(camera_config_t *config) {
 	return;
 }
 
-int vfb_common_init(u16 uDeviceId, XAxiVdma *pAxiVdma) {
-	int Status;
-	XAxiVdma_Config *Config;
-
-	Config = XAxiVdma_LookupConfig(uDeviceId);
-	if (!Config) {
-		return 1;
-	}
-
-	/* Initialize DMA engine */
-	Status = XAxiVdma_CfgInitialize(pAxiVdma, Config, Config->BaseAddress);
-	if (Status != 0L) {
-		return 1;
-	}
-
-	return 0;
-}
-
 int vfb_tx_setup(XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pReadCfg,
 		Xuint32 uVideoResolution, Xuint32 uStorageResolution, Xuint32 uMemAddr,
 		Xuint32 uNumFrames) {
@@ -236,17 +218,7 @@ int vfb_tx_setup(XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pReadCfg,
 	return 0L;
 }
 
-int vfb_tx_start(XAxiVdma *pAxiVdma) {
-	int Status;
 
-	// MM2S Startup
-	Status = XAxiVdma_DmaStart(pAxiVdma, 2);
-	if (Status != 0L) {
-		return 1L;
-	}
-
-	return 0L;
-}
 int vfb_tx_init(XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pReadCfg,
 		Xuint32 uVideoResolution, Xuint32 uStorageResolution, Xuint32 uMemAddr,
 		Xuint32 uNumFrames) {
@@ -259,9 +231,10 @@ int vfb_tx_init(XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pReadCfg,
 		return 1;
 	}
 	/* Start the DMA engine to transfer */
-	Status = vfb_tx_start(pAxiVdma);
-	if (Status != 0) {
-		return 1;
+	// MM2S Startup
+	Status = XAxiVdma_DmaStart(pAxiVdma, 2);
+	if (Status != 0L) {
+		return 1L;
 	}
 #if 0
 	// This function returns prematurely due to (!Channel->GenLock) evaluating to false
@@ -398,12 +371,18 @@ int fmc_imageon_enable_vita(camera_config_t *config) {
 
 int fmc_imageon_enable(camera_config_t *config) {
 	Xuint32 i;
+	int Status;
+	XAxiVdma_Config *vdmaConfigPtr;
+	XVtc_Config *VtcCfgPtr;
+	int vita_enabled_error = 0;
+	int vita_enable_attempt = 1;
+	int re;
+
 	config->bVerbose = 1;
 	config->vita_aec = 0;       // off
 	config->vita_again = 0;     // 1.0
 	config->vita_dgain = 128;   // 1.0
 	config->vita_exposure = 90; // 90% of frame period
-	int re;
 	re = fmc_iic_axi_init(&(config->fmc_ipmi_iic), "FMC-IPMI I2C Controller",
 			config->uBaseAddr_IIC_FmcIpmi);
 	if (!re) {
@@ -456,8 +435,6 @@ int fmc_imageon_enable(camera_config_t *config) {
 	config->hdmio_timing.VBackPorch = 36;
 	config->hdmio_resolution = vres_detect(config->hdmio_width,
 			config->hdmio_height);
-	int Status;
-	XVtc_Config *VtcCfgPtr;
 	VtcCfgPtr = XVtc_LookupConfig(config->uDeviceId_VTC_tpg);
 	if (VtcCfgPtr == NULL) {
 		return 1;
@@ -487,7 +464,6 @@ int fmc_imageon_enable(camera_config_t *config) {
 	onsemi_vita_spi_config(&(config->onsemi_vita), (75000000 / 10000000) // AXI-Lite SPI Speed (HZ) / 10,000,000 Hz
 			);
 	// enable_ssc
-
 	Xuint8 iic_cdce913_ssc_on[3][2] = { { 0x10, 0x6D }, // SSC = 011 (0.75%)
 			{ 0x11, 0xB6 }, //
 			{ 0x12, 0xDB }  //
@@ -516,10 +492,20 @@ int fmc_imageon_enable(camera_config_t *config) {
 		*pStorageMem++ = 0x6E29F029; // Blue
 	}
 	Xil_DCacheFlush();                          // Flush Cache
-	vfb_common_init(                            //
-			config->uDeviceId_VDMA_HdmiFrameBuffer, // uDeviceId
-			&(config->vdma_hdmi)                    // pAxiVdma
-			);
+
+	// vfb_common_init
+	vdmaConfigPtr = XAxiVdma_LookupConfig(
+			config->uDeviceId_VDMA_HdmiFrameBuffer);
+	if (!vdmaConfigPtr) {
+		return 1;
+	}
+	/* Initialize DMA engine */
+	Status = XAxiVdma_CfgInitialize(&(config->vdma_hdmi), vdmaConfigPtr,
+			vdmaConfigPtr->BaseAddress);
+	if (Status != 0L) {
+		return 1;
+	}
+
 	vfb_tx_init(&(config->vdma_hdmi),         // pAxiVdma
 			&(config->vdmacfg_hdmi_read), // pReadCfg
 			config->hdmio_resolution,     // uVideoResolution
@@ -535,8 +521,7 @@ int fmc_imageon_enable(camera_config_t *config) {
 			config->uBaseAddr_MEM_HdmiFrameBuffer, // uMemAddr
 			config->uNumFrames_HdmiFrameBuffer     // uNumFrames
 			);
-	int vita_enabled_error = 0;
-	int vita_enable_attempt = 1;
+
 	do {
 		vita_enabled_error = fmc_imageon_enable_vita(config);
 		if (vita_enable_attempt > 3) {
