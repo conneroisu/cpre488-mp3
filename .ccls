@@ -1,15 +1,14 @@
 clang
 %c -std=c11
 %cpp -std=c++2a
-%h %hpp --include=./Vitis/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/include/*.h
-%h %hpp --include=./Vitis/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/libsrc/**/**/*.h
+%h %hpp --include=./Vitis/ps7_cortexa9_0/include/*.h
+%h %hpp --include=./Vitis/ps7_cortexa9_0/libsrc/**/**/*.h
 
 -Iinc
 -DMACRO
--I./Vitis/eclipse_workspace/TPG/hw
--I./Vitis/eclipse_workspace/MP2-TPG/src/lib
--I./Vitis/eclipse_workspace/TPG/zynq_fsbl
 -I./Vitis/eclipse_workspace/TPG/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/include
--I./Vitis/eclipse_workspace/TPG/ps7_cortexa9_0/standalone_domain/bsp/ps7_cortexa9_0/libsrc
+-I./Vitis/ps7_cortexa9_0/include
+-I./Vitis/ps7_cortexa9_0/libsrc
+-I./Vitis/ps7_cortexa9_0/libsrc/**/**/
 -D__KERNEL__
 -DMODULE
