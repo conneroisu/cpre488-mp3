@@ -50,18 +50,18 @@
  *
  ****************************************************************************/
 u32 FsblHookBeforeBitstreamDload(void) {
-  u32 Status;
+	u32 Status;
 
-  Status = XST_SUCCESS;
+	Status = XST_SUCCESS;
 
-  /*
-   * User logic to be added here. Errors to be stored in the status
-   * variable and returned
-   */
-  fsbl_printf(DEBUG_INFO,
-              "In FsblHookBeforeBitstreamDload function \r\n");
+	/*
+	 * User logic to be added here. Errors to be stored in the status
+	 * variable and returned
+	 */
+	fsbl_printf(DEBUG_INFO,
+			"In FsblHookBeforeBitstreamDload function \r\n");
 
-  return (Status);
+	return (Status);
 }
 
 /******************************************************************************
@@ -77,18 +77,18 @@ u32 FsblHookBeforeBitstreamDload(void) {
  *
  ****************************************************************************/
 u32 FsblHookAfterBitstreamDload(void) {
-  u32 Status;
+	u32 Status;
 
-  Status = XST_SUCCESS;
+	Status = XST_SUCCESS;
 
-  /*
-   * User logic to be added here.
-   * Errors to be stored in the status variable and returned
-   */
-  fsbl_printf(DEBUG_INFO,
-              "In FsblHookAfterBitstreamDload function \r\n");
+	/*
+	 * User logic to be added here.
+	 * Errors to be stored in the status variable and returned
+	 */
+	fsbl_printf(DEBUG_INFO,
+			"In FsblHookAfterBitstreamDload function \r\n");
 
-  return (Status);
+	return (Status);
 }
 
 /******************************************************************************
@@ -105,19 +105,19 @@ u32 FsblHookAfterBitstreamDload(void) {
  *
  ****************************************************************************/
 u32 FsblHookBeforeHandoff(void) {
-  u32 Status;
+	u32 Status;
 
-  Status = XST_SUCCESS;
+	Status = XST_SUCCESS;
 
-  /*
-   * User logic to be added here.
-   * Errors to be stored in the status variable and returned
-   */
-  fsbl_printf(DEBUG_INFO, "In FsblHookBeforeHandoff function \r\n");
+	/*
+	 * User logic to be added here.
+	 * Errors to be stored in the status variable and returned
+	 */
+	fsbl_printf(DEBUG_INFO, "In FsblHookBeforeHandoff function \r\n");
 
-  camera_main();
+	camera_main();
 
-  return (Status);
+	return (Status);
 }
 
 /******************************************************************************
@@ -130,11 +130,11 @@ u32 FsblHookBeforeHandoff(void) {
  *
  ****************************************************************************/
 void FsblHookFallback(void) {
-  /*
-   * User logic to be added here.
-   * Errors to be stored in the status variable and returned
-   */
-  fsbl_printf(DEBUG_INFO, "In FsblHookFallback function \r\n");
-  while (1)
-    ;
+	/*
+	 * User logic to be added here.
+	 * Errors to be stored in the status variable and returned
+	 */
+	fsbl_printf(DEBUG_INFO, "In FsblHookFallback function \r\n");
+	while (1)
+		;
 }

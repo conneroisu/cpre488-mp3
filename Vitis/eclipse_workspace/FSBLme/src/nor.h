@@ -26,6 +26,7 @@
  ******************************************************************************/
 #ifndef ___NOR_H___
 #define ___NOR_H___
+#include "xil_types.h"
 
 #ifdef __cplusplus
 extern "C" {
