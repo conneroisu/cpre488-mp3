@@ -1,8 +1,3 @@
-
-
-#ifndef __CAMERA_APP_H__
-#define __CAMERA_APP_H__
-
 #include "fmc_iic.h"
 #include "fmc_imageon.h"
 #include "onsemi_vita_sw.h"
@@ -72,17 +67,6 @@ struct struct_camera_config_t {
 };
 typedef struct struct_camera_config_t camera_config_t;
 
-// Video resolution macros and structure
-#define VIDEO_RESOLUTION_VGA 0
-#define VIDEO_RESOLUTION_NTSC 1
-#define VIDEO_RESOLUTION_SVGA 2
-#define VIDEO_RESOLUTION_XGA 3
-#define VIDEO_RESOLUTION_720P 4
-#define VIDEO_RESOLUTION_SXGA 5
-#define VIDEO_RESOLUTION_1080P 6
-#define VIDEO_RESOLUTION_UXGA 7
-#define NUM_VIDEO_RESOLUTIONS 8
-
 struct struct_vres_timing_t {
 	char *pName;
 	Xuint32 VActiveVideo;
@@ -117,10 +101,6 @@ Xuint32 vres_get_height(Xuint32 resolutionId);
 Xuint32 vres_get_timing(Xuint32 resolutionId, vres_timing_t *pTiming);
 Xint32 vres_detect(Xuint32 width, Xuint32 height);
 
-// Function prototypes (video_generator.c)
-int vgen_init(XVtc *pVtc, u16 VtcDeviceID);
-int vgen_config(XVtc *pVtc, int ResolutionId, int bVerbose);
-
 // Function prototypes (video_detector.c)
 int vdet_init(XVtc *pVtc, u16 VtcDeviceID);
 int vdet_detect(XVtc *pVtc, int bVerbose);
@@ -133,5 +113,3 @@ int vfb_dump_registers(XAxiVdma *pAxiVdma);
 int vfb_check_errors(XAxiVdma *pAxiVdma, u8 bClearErrors);
 
 int camera_main();
-
-#endif // __CAMERA_APP_H__
