@@ -58,10 +58,7 @@ typedef struct {
 // Define Driver instance of all sub-core included in the design */
 XVprocSs_SubCores subcoreRepo[XPAR_XVPROCSS_NUM_INSTANCES];
 
-static const char *XVprocSsIpStr[XVPROCSS_SUBCORE_MAX] = {
-    "VidOut", "SCALER-V", "SCALER-H", "VDMA", "LBOX",
-    "CR-H",   "CR-VIn",   "CR-VOut",  "CSC",  "DEINT",
-};
+
 
 /** @name VDMA Alignment required step size
  *
