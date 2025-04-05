@@ -4,8 +4,9 @@
     <configBuildOptions xsi:type="sdkproject:SdkOptions"/>
     <lastBuildOptions xsi:type="sdkproject:SdkOptions"/>
   </configuration>
-  <configuration name="Release" id="xilinx.gnu.armv7.exe.release.52624082" dirty="true">
+  <configuration name="Release" id="xilinx.gnu.armv7.exe.release.52624082">
     <configBuildOptions xsi:type="sdkproject:SdkOptions"/>
+    <lastBuildOptions xsi:type="sdkproject:SdkOptions"/>
   </configuration>
   <template appTemplateName="zynq_fsbl" hasBspSettings="true"/>
 </sdkproject:SdkProject>

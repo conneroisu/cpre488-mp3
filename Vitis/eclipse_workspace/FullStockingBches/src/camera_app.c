@@ -553,128 +553,125 @@ int fmc_imageon_enable(camera_config_t *config) {
     }
   } while (vita_enabled_error != 0);
 
-  xil_printf("Hardware Image Processing Pipeline (iPIPE) Initialization ...\n\r");
+  xil_printf("Hardware Image Processing Pipeline (iPIPE) "
+             "Initialization ...\n\r");
 
-   // Video Processing Subsystem (Only re-sampling) 4:4:4 to 4:2:2  (See IP documentation for register details)
-   // TODO Add additional register assignments here to fully configure this core.
-   // See Video Processing Subsystem IP documentation for register details.
-   // - [ ] Hint 1: You will need to configure 4 additional registers. You will need to dig through some header files for some of the values.
+  // Video Processing Subsystem (Only re-sampling) 4:4:4 to 4:2:2 (See
+  // IP documentation for register details)
+  // TODO Add additional register assignments here to fully configure
+  // this core. See Video Processing Subsystem IP documentation for
+  // register details.
+  // - [ ] Hint 1: You will need to configure 4 additional registers.
+  // You will need to dig through some header files for some of the
+  // values.
 
+  // # Re-Sampling Subsystem IP Setup (PG231)
+  // 444 => 422
 
-   // # Re-Sampling Subsystem IP Setup (PG231)
-   // 444 => 422
+  Config_ptr_422 = XVprocSs_LookupConfig(XPAR_XVPROCSS_1_DEVICE_ID);
 
-   Config_ptr_422 = XVprocSs_LookupConfig(XPAR_XVPROCSS_1_DEVICE_ID);
+  result = XVprocSs_CfgInitialize(&proc_ss_444_to_422, Config_ptr_422,
+                                  XPAR_XVPROCSS_1_BASEADDR //
+  );
+  if (result != XST_SUCCESS) {
+    xil_printf("Error initializing 4:4:4 to 4:2:2 conversion\n\r");
+    return -1;
+  }
 
-   result = XVprocSs_CfgInitialize(
-       &proc_ss_444_to_422,
-       Config_ptr_422,
-       XPAR_XVPROCSS_1_BASEADDR //
-   );
-   if (result != XST_SUCCESS)
-   {
-      xil_printf("Error initializing 4:4:4 to 4:2:2 conversion\n\r");
-      return -1;
-   }
+  // Set Up HW REG Width for SS1
+  Xil_Out16((XPAR_V_PROC_SS_1_BASEADDR) +
+                (XV_HCRESAMPLER_CTRL_ADDR_HWREG_WIDTH_DATA),
+            (u16)(1920) // Number of Active Pixels per Scanline
+  );
+  // Set Up HW REG Height for SS1
+  Xil_Out16((XPAR_V_PROC_SS_1_BASEADDR) +
+                (XV_HCRESAMPLER_CTRL_ADDR_HWREG_HEIGHT_DATA),
+            (u16)(1080) // Number of Active Lines per Frame
+  );
+  // Set HW REG Input Video Format for SS1
+  Xil_Out8(
+      (XPAR_V_PROC_SS_1_BASEADDR) +
+          (XV_HCRESAMPLER_CTRL_ADDR_HWREG_INPUT_VIDEO_FORMAT_DATA),
+      (u8)(0x01));
+  // Set HW REG Output Video Format for SS1
+  Xil_Out8(
+      (XPAR_V_PROC_SS_1_BASEADDR) +
+          (XV_HCRESAMPLER_CTRL_ADDR_HWREG_OUTPUT_VIDEO_FORMAT_DATA),
+      (u8)(0x02));
+  // Set Mode for SS1
+  Xil_Out32((XPAR_V_PROC_SS_1_BASEADDR) +
+                (XV_HCRESAMPLER_CTRL_ADDR_AP_CTRL),
+            (u32)(0x81) // Control 0x10000001 means start and freerun
+                        // mode (page 16 in PG231)
+  );
 
-   // Set Up HW REG Width for SS1
-   Xil_Out16(
-       (XPAR_V_PROC_SS_1_BASEADDR) + (XV_HCRESAMPLER_CTRL_ADDR_HWREG_WIDTH_DATA),
-       (u16)(1920) // Number of Active Pixels per Scanline
-   );
-   // Set Up HW REG Height for SS1
-   Xil_Out16(
-       (XPAR_V_PROC_SS_1_BASEADDR) + (XV_HCRESAMPLER_CTRL_ADDR_HWREG_HEIGHT_DATA),
-       (u16)(1080) // Number of Active Lines per Frame
-   );
-   // Set HW REG Input Video Format for SS1
-   Xil_Out8(
-       (XPAR_V_PROC_SS_1_BASEADDR) + (XV_HCRESAMPLER_CTRL_ADDR_HWREG_INPUT_VIDEO_FORMAT_DATA),
-       (u8)(0x01));
-   // Set HW REG Output Video Format for SS1
-   Xil_Out8(
-       (XPAR_V_PROC_SS_1_BASEADDR) + (XV_HCRESAMPLER_CTRL_ADDR_HWREG_OUTPUT_VIDEO_FORMAT_DATA),
-       (u8)(0x02));
-   // Set Mode for SS1
-   Xil_Out32(
-       (XPAR_V_PROC_SS_1_BASEADDR) + (XV_HCRESAMPLER_CTRL_ADDR_AP_CTRL),
-       (u32)(0x81) // Control 0x10000001 means start and freerun mode (page 16 in PG231)
-   );
+  xil_printf("4:4:4 to 4:2:2 Starting ...\n\r");
+  XVprocSs_Start(&proc_ss_444_to_422);
+  xil_printf("4:4:4 to 4:2:2 Started ...\n\r");
 
-   xil_printf("4:4:4 to 4:2:2 Starting ...\n\r");
-   XVprocSs_Start(&proc_ss_444_to_422);
-   xil_printf("4:4:4 to 4:2:2 Started ...\n\r");
+  Config_ptr = XVprocSs_LookupConfig(XPAR_XVPROCSS_0_DEVICE_ID);
 
-   Config_ptr = XVprocSs_LookupConfig(XPAR_XVPROCSS_0_DEVICE_ID);
+  xil_printf("RGB to 4:4:4 Conversion IP Initialization ...\n\r");
+  result = XVprocSs_CfgInitialize(&proc_ss_RGB_YCrCb_444, Config_ptr,
+                                  XPAR_XVPROCSS_0_BASEADDR //
+  );
+  if (result != XST_SUCCESS) {
+    xil_printf("Error initializing RGB to 4:4:4 conversion\n\r");
+    return -1;
+  }
 
-   xil_printf("RGB to 4:4:4 Conversion IP Initialization ...\n\r");
-   result = XVprocSs_CfgInitialize(
-       &proc_ss_RGB_YCrCb_444,
-       Config_ptr,
-       XPAR_XVPROCSS_0_BASEADDR //
-   );
-   if (result != XST_SUCCESS)
-   {
-      xil_printf("Error initializing RGB to 4:4:4 conversion\n\r");
-      return -1;
-   }
+  result = XV_CscSetColorspace(proc_ss_RGB_YCrCb_444.CscPtr,
+                               XVIDC_CSF_RGB,       //
+                               XVIDC_CSF_YCRCB_444, //
+                               XVIDC_BT_709,        //
+                               XVIDC_BT_709,        //
+                               XVIDC_CR_0_255       //
+  );
+  if (result != 0) {
+    return -1;
+  }
 
-   result = XV_CscSetColorspace(
-       proc_ss_RGB_YCrCb_444.CscPtr,
-       XVIDC_CSF_RGB,       //
-       XVIDC_CSF_YCRCB_444, //
-       XVIDC_BT_709,        //
-       XVIDC_BT_709,        //
-       XVIDC_CR_0_255       //
-   );
-   if (result != 0)
-   {
-      return -1;
-   }
+  result = XVprocSs_SetSubsystemConfig(&proc_ss_RGB_YCrCb_444);
+  if (result != 0) {
+    return -1;
+  }
+  result = XV_CscSetColorspace(proc_ss_RGB_YCrCb_444.CscPtr,
+                               0, //
+                               1, //
+                               1, //
+                               1, //
+                               2  //
+  );
+  if (result != 0) {
+    return -1;
+  }
+  XVprocSs_Start(&proc_ss_RGB_YCrCb_444);
 
-   result = XVprocSs_SetSubsystemConfig(&proc_ss_RGB_YCrCb_444);
-   if (result != 0)
-   {
-      return -1;
-   }
-   result = XV_CscSetColorspace(
-       proc_ss_RGB_YCrCb_444.CscPtr,
-       0,       //
-       1, //
-       1,        //
-       1,        //
-       2       //
-   );
-   if (result != 0)
-   {
-      return -1;
-   }
-   XVprocSs_Start(&proc_ss_RGB_YCrCb_444);
+  // # Demosaic Bayer Pattern to 24b RGB IP Setup (PG286)
+  // Additional Register 1 (Demosaic)
+  // Active Width Configuration (Number of Active Pixels per Scanline)
+  Xil_Out32(0x43C40010,
+            (u32)(1920)); // Number of Active Pixels per Scanline
+  // Additional Register 2 (Demosaic)
+  // Active Height Configuration (Number of Active Scanlines per
+  // Frame)
+  Xil_Out32((XPAR_XV_DEMOSAIC_0_S_AXI_CTRL_BASEADDR) + (0x18),
+            (u32)(1080) // Number of Active Lines per Frame
+  );
+  // Additional Register 3 (Demosaic)
+  // Bayer Phase Configuration (Bayer Pattern)
+  Xil_Out32((XPAR_XV_DEMOSAIC_0_S_AXI_CTRL_BASEADDR) + (0x28),
+            (u32)(0) // Bayer sampling grid starting postition
+  );
 
-   // # Demosaic Bayer Pattern to 24b RGB IP Setup (PG286)
-   // Additional Register 1 (Demosaic)
-   // Active Width Configuration (Number of Active Pixels per Scanline)
-   Xil_Out32( 0x43C40010, (u32)(1920)); // Number of Active Pixels per Scanline
-   // Additional Register 2 (Demosaic)
-   // Active Height Configuration (Number of Active Scanlines per Frame)
-   Xil_Out32(
-       (XPAR_XV_DEMOSAIC_0_S_AXI_CTRL_BASEADDR) + (0x18),
-       (u32)(1080) // Number of Active Lines per Frame
-   );
-   // Additional Register 3 (Demosaic)
-   // Bayer Phase Configuration (Bayer Pattern)
-   Xil_Out32(
-       (XPAR_XV_DEMOSAIC_0_S_AXI_CTRL_BASEADDR) + (0x28),
-       (u32)(0) // Bayer sampling grid starting postition
-   );
+  // 0b10000001 means start and freerun mode (page 16 in PG286)
+  Xil_Out32((XPAR_XV_DEMOSAIC_0_S_AXI_CTRL_BASEADDR) + (0x0),
+            (u32)(0x81) // start and freerun mode (page 16 in PG286)
+  );
 
-   // 0b10000001 means start and freerun mode (page 16 in PG286)
-   Xil_Out32(
-       (XPAR_XV_DEMOSAIC_0_S_AXI_CTRL_BASEADDR) + (0x0),
-       (u32)(0x81) // start and freerun mode (page 16 in PG286)
-   );
-
-   xil_printf("Demosaic IP Configuring and Enable done\r\n"); // RGRG sensor pattern
+  xil_printf(
+      "Demosaic IP Configuring and Enable done\r\n"); // RGRG sensor
+                                                      // pattern
 
   return 0;
 }
