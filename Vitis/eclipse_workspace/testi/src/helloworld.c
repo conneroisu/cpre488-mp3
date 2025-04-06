@@ -104,22 +104,24 @@ void camera_config_init(camera_config_t *config) {
   config->uBaseAddr_VITA_CAM = 0x43C20000; // Device for receiving
   config->uDeviceId_VTC_tpg = 0; // Video Timer Controller (VTC) ID
   config->uDeviceId_VDMA_HdmiFrameBuffer = 0U; // VDMA ID
-  config->uBaseAddr_MEM_HdmiFrameBuffer =
-      0x10000000; // VDMA base address for Frame buffers
-  config->uNumFrames_HdmiFrameBuffer =
-      5U; // NUmber of VDMA Frame buffers
+  // VDMA base address for Frame buffers
+  config->uBaseAddr_MEM_HdmiFrameBuffer = 0x10000000;
+  // Number of VDMA Frame buffers
+  config->uNumFrames_HdmiFrameBuffer = 5U;
   return;
 }
 
-int vfb_tx_setup(XAxiVdma *pAxiVdma,
-                 XAxiVdma_DmaSetup *pReadCfg,
-                 Xuint32 uVideoResolution,
-                 Xuint32 uStorageResolution,
-                 Xuint32 uMemAddr,
-                 Xuint32 uNumFrames) {
+int vfb_tx_init(XAxiVdma *pAxiVdma,
+                XAxiVdma_DmaSetup *pReadCfg,
+                Xuint32 uVideoResolution,
+                Xuint32 uStorageResolution,
+                Xuint32 uMemAddr,
+                Xuint32 uNumFrames) {
+  int Status;
+  u32 uBaseAddr;
+  u32 uDMACR;
   int i;
   u32 Addr;
-  int Status;
   Xuint32 video_width, video_height;
   Xuint32 storage_width, storage_height, storage_stride, storage_size,
       storage_offset;
@@ -158,24 +160,6 @@ int vfb_tx_setup(XAxiVdma *pAxiVdma,
                                      pReadCfg->FrameStoreStartAddr);
   if (Status != 0L) {
     return 1L;
-  }
-
-  return 0L;
-}
-
-int vfb_tx_init(XAxiVdma *pAxiVdma,
-                XAxiVdma_DmaSetup *pReadCfg,
-                Xuint32 uVideoResolution,
-                Xuint32 uStorageResolution,
-                Xuint32 uMemAddr,
-                Xuint32 uNumFrames) {
-  int Status;
-  u32 uBaseAddr;
-  u32 uDMACR;
-  Status = vfb_tx_setup(pAxiVdma, pReadCfg, uVideoResolution,
-                        uStorageResolution, uMemAddr, uNumFrames);
-  if (Status != 0L) {
-    return 1;
   }
   /* Start the DMA engine to transfer */
   // MM2S Startup
@@ -285,7 +269,9 @@ int fmc_imageon_enable(camera_config_t *config) {
   int VBackPorch;
   int LineWidth;
   int FrameHeight;
+
   XVtc *pVtc = &(config->vtc_tpg);
+
   Xuint32 storage_size =
       config->uNumFrames_HdmiFrameBuffer * ((1920 * 1080) << 1);
   volatile Xuint32 *pStorageMem =
