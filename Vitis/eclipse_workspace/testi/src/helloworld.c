@@ -268,37 +268,6 @@ int vfb_rx_start(XAxiVdma *pAxiVdma) {
   return 0L;
 }
 
-int fmc_imageon_enable_vita(camera_config_t *config) {
-  int vita_width, vita_height, vita_rate, result;
-
-  result =
-      onsemi_vita_sensor_initialize(&(config->onsemi_vita), 101, 0);
-  if (result == 0) {
-    return -1;
-  }
-  onsemi_vita_sensor_initialize(&(config->onsemi_vita), 103, 0);
-  sleep(1);
-  result = onsemi_vita_sensor_1080P60(&(config->onsemi_vita),
-                                      config->bVerbose);
-  if (result == 0) {
-    return -1;
-  }
-  sleep(1);
-  onsemi_vita_get_status(&(config->onsemi_vita),
-                         &(config->vita_status_t1), 0);
-  sleep(1);
-  onsemi_vita_get_status(&(config->onsemi_vita),
-                         &(config->vita_status_t2), 0);
-  vita_width = config->vita_status_t1.cntImagePixels * 4;
-  vita_height = config->vita_status_t1.cntImageLines;
-  vita_rate = config->vita_status_t2.cntFrames -
-              config->vita_status_t1.cntFrames;
-  if ((vita_width != 1920) || (vita_height != 1080) ||
-      (vita_rate == 0)) {
-    return 1;
-  }
-  return 0;
-}
 
 int fmc_imageon_enable(camera_config_t *config) {
   Xuint32 i;
@@ -308,7 +277,6 @@ int fmc_imageon_enable(camera_config_t *config) {
   int vita_enabled_error = 0;
   int vita_enable_attempt = 1;
   Xuint32 value;
-  int result;
   XVprocSs proc_ss_RGB_YCrCb_444;
   XVprocSs proc_ss_444_to_422;
   XVprocSs_Config *Config_ptr;
@@ -346,8 +314,8 @@ int fmc_imageon_enable(camera_config_t *config) {
   config->vita_dgain = 128;   // 1.0
   config->vita_exposure = 90; // 90% of frame period
   Status = fmc_iic_axi_init(&(config->fmc_ipmi_iic),
-                        "FMC-IPMI I2C Controller",
-                        config->uBaseAddr_IIC_FmcIpmi);
+                            "FMC-IPMI I2C Controller",
+                            config->uBaseAddr_IIC_FmcIpmi);
   if (!Status) {
     return 1;
   }
@@ -359,8 +327,8 @@ int fmc_imageon_enable(camera_config_t *config) {
     return 1;
   }
   Status = fmc_iic_axi_init(&(config->fmc_imageon_iic),
-                        "FMC-IMAGEON I2C Controller",
-                        config->uBaseAddr_IIC_FmcImageon);
+                            "FMC-IMAGEON I2C Controller",
+                            config->uBaseAddr_IIC_FmcImageon);
   if (!Status) {
     return 1;
   }
@@ -470,10 +438,10 @@ int fmc_imageon_enable(camera_config_t *config) {
   SourceSelect.HFrontPorchSrc = 1;
   SourceSelect.HTotalSrc = 1;
   XVtc_SetSource(pVtc, &SourceSelect);
-// vgen_config :end:
+  // vgen_config :end:
 
   Status = fmc_imageon_hdmio_init(&(config->fmc_imageon), 1,
-                              &(config->hdmio_timing), 0);
+                                  &(config->hdmio_timing), 0);
   if (!Status) {
     return 1;
   }
@@ -498,8 +466,6 @@ int fmc_imageon_enable(camera_config_t *config) {
         (0x80 | iic_cdce913_ssc_on[i][0]),
         &(iic_cdce913_ssc_on[i][1]), 1);
   }
-
-
 
   for (i = 0; i < storage_size / config->uNumFrames_HdmiFrameBuffer;
        i += 4) {                 // Frame #1 - Red pixels
@@ -553,7 +519,37 @@ int fmc_imageon_enable(camera_config_t *config) {
   XAxiVdma_FsyncSrcSelect(&(config->vdma_hdmi), 2, 1);
 
   do {
-    vita_enabled_error = fmc_imageon_enable_vita(config);
+    int vita_width, vita_height, vita_rate, result;
+
+    result =
+        onsemi_vita_sensor_initialize(&(config->onsemi_vita), 101, 0);
+    if (result == 0) {
+      vita_enabled_error = -1;
+    }
+    onsemi_vita_sensor_initialize(&(config->onsemi_vita), 103, 0);
+    sleep(1);
+    result = onsemi_vita_sensor_1080P60(&(config->onsemi_vita),
+                                        config->bVerbose);
+    if (result == 0) {
+      vita_enabled_error = -1;
+    }
+    sleep(1);
+    onsemi_vita_get_status(&(config->onsemi_vita),
+                           &(config->vita_status_t1), 0);
+    sleep(1);
+    onsemi_vita_get_status(&(config->onsemi_vita),
+                           &(config->vita_status_t2), 0);
+    vita_width = config->vita_status_t1.cntImagePixels * 4;
+    vita_height = config->vita_status_t1.cntImageLines;
+    vita_rate = config->vita_status_t2.cntFrames -
+                config->vita_status_t1.cntFrames;
+    if ((vita_width != 1920) || (vita_height != 1080) ||
+        (vita_rate == 0)) {
+      vita_enabled_error = 1;
+    } else {
+        vita_enabled_error = 0;
+    }
+
     if (vita_enable_attempt > 3) {
       return -1;
     }
@@ -568,9 +564,9 @@ int fmc_imageon_enable(camera_config_t *config) {
 
   Config_ptr_422 = XVprocSs_LookupConfig(1);
 
-  result = XVprocSs_CfgInitialize(&proc_ss_444_to_422, Config_ptr_422,
+  Status = XVprocSs_CfgInitialize(&proc_ss_444_to_422, Config_ptr_422,
                                   0x43C10000);
-  if (result != 0L) {
+  if (Status != 0L) {
     return -1;
   }
 
@@ -596,35 +592,35 @@ int fmc_imageon_enable(camera_config_t *config) {
 
   Config_ptr = XVprocSs_LookupConfig(0);
 
-  result = XVprocSs_CfgInitialize(&proc_ss_RGB_YCrCb_444, Config_ptr,
+  Status = XVprocSs_CfgInitialize(&proc_ss_RGB_YCrCb_444, Config_ptr,
                                   0x43C00000);
-  if (result != 0L) {
+  if (Status != 0L) {
     return -1;
   }
 
-  result = XV_CscSetColorspace(proc_ss_RGB_YCrCb_444.CscPtr,
+  Status = XV_CscSetColorspace(proc_ss_RGB_YCrCb_444.CscPtr,
                                0, //
                                1, //
                                1, //
                                1, //
                                2  //
   );
-  if (result != 0L) {
+  if (Status != 0L) {
     return -1;
   }
 
-  result = XVprocSs_SetSubsystemConfig(&proc_ss_RGB_YCrCb_444);
-  if (result != 0L) {
+  Status = XVprocSs_SetSubsystemConfig(&proc_ss_RGB_YCrCb_444);
+  if (Status != 0L) {
     return -1;
   }
-  result = XV_CscSetColorspace(proc_ss_RGB_YCrCb_444.CscPtr,
+  Status = XV_CscSetColorspace(proc_ss_RGB_YCrCb_444.CscPtr,
                                0, //
                                1, //
                                1, //
                                1, //
                                2  //
   );
-  if (result != 0L) {
+  if (Status != 0L) {
     return -1;
   }
   XVprocSs_Start(&proc_ss_RGB_YCrCb_444);
