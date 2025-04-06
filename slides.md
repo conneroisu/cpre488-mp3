@@ -18,3 +18,10 @@ Autonomous Turret
 ```bash
 petalinux-build -x mrproper -f
 ```
+
+---
+
+## Sizing FSBL
+
+- Inline 
+- Reuse Status int (aka `int Status;`)
