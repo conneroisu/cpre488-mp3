@@ -314,6 +314,21 @@ int fmc_imageon_enable(camera_config_t *config) {
   XVprocSs proc_ss_444_to_422;
   XVprocSs_Config *Config_ptr;
   XVprocSs_Config *Config_ptr_422;
+  XVtc_Signal Signal; /* VTC Signal configuration */
+  XVtc_Signal *SignalCfgPtr = &Signal;
+  XVtc_Polarity Polarity;       /* Polarity configuration */
+  XVtc_HoriOffsets HoriOffsets; /* Horizontal offsets configuration */
+  XVtc_SourceSelect SourceSelect; /* Source Selection configuration */
+  vres_timing_t VideoTiming;
+
+  int HFrontPorch;
+  int HSyncWidth;
+  int HBackPorch;
+  int VFrontPorch;
+  int VSyncWidth;
+  int VBackPorch;
+  int LineWidth;
+  int FrameHeight;
   XVtc *pVtc = &(config->vtc_tpg);
   Xuint32 storage_size =
       config->uNumFrames_HdmiFrameBuffer * ((1920 * 1080) << 1);
@@ -396,21 +411,6 @@ int fmc_imageon_enable(camera_config_t *config) {
   sleep(1);
   XVtc_EnableGenerator(&(config->vtc_tpg));
   // vgen_config :start:
-  XVtc_Signal Signal; /* VTC Signal configuration */
-  XVtc_Signal *SignalCfgPtr = &Signal;
-  XVtc_Polarity Polarity;       /* Polarity configuration */
-  XVtc_HoriOffsets HoriOffsets; /* Horizontal offsets configuration */
-  XVtc_SourceSelect SourceSelect; /* Source Selection configuration */
-  vres_timing_t VideoTiming;
-
-  int HFrontPorch;
-  int HSyncWidth;
-  int HBackPorch;
-  int VFrontPorch;
-  int VSyncWidth;
-  int VBackPorch;
-  int LineWidth;
-  int FrameHeight;
   sleep(5);
   /* Set up Polarity of all outputs */
   memset((void *)&Polarity, 0, sizeof(Polarity));
@@ -567,12 +567,11 @@ int fmc_imageon_enable(camera_config_t *config) {
   // # Re-Sampling Subsystem IP Setup (PG231)
   // 444 => 422
 
-  Config_ptr_422 = XVprocSs_LookupConfig(XPAR_XVPROCSS_1_DEVICE_ID);
+  Config_ptr_422 = XVprocSs_LookupConfig(1);
 
   result = XVprocSs_CfgInitialize(&proc_ss_444_to_422, Config_ptr_422,
-                                  XPAR_XVPROCSS_1_BASEADDR //
-  );
-  if (result != XST_SUCCESS) {
+                                  0x43C10000);
+  if (result != 0L) {
     return -1;
   }
 
@@ -600,7 +599,7 @@ int fmc_imageon_enable(camera_config_t *config) {
 
   result = XVprocSs_CfgInitialize(&proc_ss_RGB_YCrCb_444, Config_ptr,
                                   0x43C00000);
-  if (result != XST_SUCCESS) {
+  if (result != 0L) {
     return -1;
   }
 
@@ -611,12 +610,12 @@ int fmc_imageon_enable(camera_config_t *config) {
                                1, //
                                2  //
   );
-  if (result != 0) {
+  if (result != 0L) {
     return -1;
   }
 
   result = XVprocSs_SetSubsystemConfig(&proc_ss_RGB_YCrCb_444);
-  if (result != 0) {
+  if (result != 0L) {
     return -1;
   }
   result = XV_CscSetColorspace(proc_ss_RGB_YCrCb_444.CscPtr,
@@ -626,7 +625,7 @@ int fmc_imageon_enable(camera_config_t *config) {
                                1, //
                                2  //
   );
-  if (result != 0) {
+  if (result != 0L) {
     return -1;
   }
   XVprocSs_Start(&proc_ss_RGB_YCrCb_444);
