@@ -644,7 +644,7 @@ int camera_main() {
 
 int main() {
   camera_main();
-  xil_printf("while");
+  xil_printf("while fckin");
   while (1) {
   }
 

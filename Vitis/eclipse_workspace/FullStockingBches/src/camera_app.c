@@ -406,7 +406,7 @@ int fmc_imageon_enable(camera_config_t *config) {
   // FMC Module Validation
   if (fmc_ipmi_detect(&(config->fmc_ipmi_iic), "FMC-IMAGEON",
                       FMC_ID_ALL)) {
-    fmc_ipmi_enable(&(config->fmc_ipmi_iic), FMC_ID_SLOT1);
+    fmc_ipmi_enable(&(config->fmc_ipmi_iic), 1);
   } else {
     return 1;
   }
