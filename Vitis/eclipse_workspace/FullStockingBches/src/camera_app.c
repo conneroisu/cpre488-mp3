@@ -5,12 +5,9 @@
 #include "xaxis_switch.h"
 #include "xil_cache.h"
 #include "xv_hcresampler.h"
-#include "xv_letterbox.h"
-#include "xv_letterbox_l2.h"
 #include "xv_vcresampler.h"
 #include "xvidc.h"
-#include "xvprocss_coreinit.h"
-#include "xvprocss_router.h"
+
 #include "xvprocss_vdma.h"
 
 camera_config_t camera_config;

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="ASCII"?>
+<sdkproject:SdkProject xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sdkproject="http://www.xilinx.com/sdkproject" name="Non_FSBL" location="C:/Users/connero/Downloads/cpre488-mp3/Vitis/eclipse_workspace/Non_FSBL" platform="C:/Users/connero/Downloads/cpre488-mp3/Vitis/eclipse_workspace/ME_HW/export/ME_HW/ME_HW.xpfm" platformUID="xilinx:zed::0.0(custom)" systemProject="Non_FSBL_system" sysConfig="ME_HW" runtime="C/C++" cpu="standalone_domain" cpuInstance="ps7_cortexa9_0" os="standalone" mssSignature="56d6f986b292a685eac9253c442b0e7e">
+  <configuration name="Debug" id="xilinx.gnu.armv7.exe.debug.498058706">
+    <configBuildOptions xsi:type="sdkproject:SdkOptions"/>
+    <lastBuildOptions xsi:type="sdkproject:SdkOptions"/>
+  </configuration>
+  <configuration name="Release" id="xilinx.gnu.armv7.exe.release.744204640" dirty="true">
+    <configBuildOptions xsi:type="sdkproject:SdkOptions"/>
+  </configuration>
+  <template appTemplateName="hello_world"/>
+</sdkproject:SdkProject>
