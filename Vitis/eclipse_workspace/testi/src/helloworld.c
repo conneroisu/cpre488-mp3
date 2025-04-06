@@ -258,17 +258,6 @@ int vfb_rx_setup(XAxiVdma *pAxiVdma,
   return 0L;
 }
 
-int vfb_rx_start(XAxiVdma *pAxiVdma) {
-  int Status;
-  Status = XAxiVdma_DmaStart(pAxiVdma, 1);
-  if (Status != 0L) {
-    return 1L;
-  }
-
-  return 0L;
-}
-
-
 int fmc_imageon_enable(camera_config_t *config) {
   Xuint32 i;
   int Status;
@@ -512,7 +501,7 @@ int fmc_imageon_enable(camera_config_t *config) {
   if (Status != 0L) {
     return 1;
   }
-  Status = vfb_rx_start(&(config->vdma_hdmi));
+  Status = XAxiVdma_DmaStart(&(config->vdma_hdmi), 1);
   if (Status != 0L) {
     return 1;
   }
@@ -547,7 +536,7 @@ int fmc_imageon_enable(camera_config_t *config) {
         (vita_rate == 0)) {
       vita_enabled_error = 1;
     } else {
-        vita_enabled_error = 0;
+      vita_enabled_error = 0;
     }
 
     if (vita_enable_attempt > 3) {
@@ -571,13 +560,9 @@ int fmc_imageon_enable(camera_config_t *config) {
   }
 
   // Set Up HW REG Width for SS1
-  Xil_Out16((0x43C10010),
-            (u16)(1920) // Number of Active Pixels per Scanline
-  );
+  Xil_Out16((0x43C10010), (u16)(1920)); // Active Pixels per Scanline
   // Set Up HW REG Height for SS1
-  Xil_Out16((0x43C10018),
-            (u16)(1080) // Number of Active Lines per Frame
-  );
+  Xil_Out16((0x43C10018), (u16)(1080)); // Active Lines per Frame
   // Set HW REG Input Video Format for SS1
   Xil_Out8((0x43C10020), (u8)(0x01));
   // Set HW REG Output Video Format for SS1
