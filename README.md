@@ -3,7 +3,7 @@
 - [x] Explain how this Make process was configured to appropriately use a cross-compiler targeting the ARM architecture.
 - [x] Explanatory annotation of the boot messages that print as PetaLinux starts up. 
 - [x] Include the kernel messages that result from the plugging in the of the usb missle launcher.
-- [ ] Describe changes made to the usb driver `usb-skeletion.c`
+- [x] Describe changes made to the usb driver `usb-skeletion.c`
 - [x] Describe the operation of the `launcher_fire.c` file.
 - [x] Describe algorithm used to detect the target.
 
@@ -299,7 +299,7 @@ Attempting to configure network via DHCP, but it doesn't receive a lease (no DHC
 Starting Dropbear SSH server: 
 [...]
 Public key portion is:
-ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFi2F+hJ58qyEF5ZI0VNshOIuSYHRUfMaMcRfvd7yR/ilXnshWpyT49fqkJ7ZiofJ2LtHc3i8+98yDtk3WWk9FFOiVFgum9rEiRh+lVimeRX1zv0AA+GZiwQYmzFxxyPJgRxisuWOgZJ7VR8zZwdd/mizMBczpsTKv22QSx2ymgJUQQBnnr2fkeDZEhK34mh1m+c/n+B0uLIvjBiy9SJeL38CVWsTzN0bmL26o2DKjwYTU+j//QWUC02r1kodxS4d9cr0GZyg91/xtPHqk5+jVgbtTe2iapT0d+YFZFI/x4HkJSj7fp25qnGpc3hNczqUobnLy9KL0F4bpfOjwIcGt root@avnet-digilent-zedboard-2020_1
+	ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFi2F+hJ58qyEF5ZI0VNshOIuSYHRUfMaMcRfvd7yR/ilXnshWpyT49fqkJ7ZiofJ2LtHc3i8+98yDtk3WWk9FFOiVFgum9rEiRh+lVimeRX1zv0AA+GZiwQYmzFxxyPJgRxisuWOgZJ7VR8zZwdd/mizMBczpsTKv22QSx2ymgJUQQBnnr2fkeDZEhK34mh1m+c/n+B0uLIvjBiy9SJeL38CVWsTzN0bmL26o2DKjwYTU+j//QWUC02r1kodxS4d9cr0GZyg91/xtPHqk5+jVgbtTe2iapT0d+YFZFI/x4HkJSj7fp25qnGpc3hNczqUobnLy9KL0F4bpfOjwIcGt root@avnet-digilent-zedboard-2020_1
 ```
 
 Starting the SSH server (Dropbear) and generating SSH host keys.

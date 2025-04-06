@@ -3,7 +3,7 @@
 	<name>FullStockingBches</name>
 	<comment>Created by Vitis v2020.1</comment>
 	<projects>
-		<project>FSBLme_HW</project>
+		<project>FSBL_HW</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
