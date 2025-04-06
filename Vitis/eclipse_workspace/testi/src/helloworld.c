@@ -307,7 +307,6 @@ int fmc_imageon_enable(camera_config_t *config) {
   XVtc_Config *VtcCfgPtr;
   int vita_enabled_error = 0;
   int vita_enable_attempt = 1;
-  int re;
   Xuint32 value;
   int result;
   XVprocSs proc_ss_RGB_YCrCb_444;
@@ -346,10 +345,10 @@ int fmc_imageon_enable(camera_config_t *config) {
   config->vita_again = 0;     // 1.0
   config->vita_dgain = 128;   // 1.0
   config->vita_exposure = 90; // 90% of frame period
-  re = fmc_iic_axi_init(&(config->fmc_ipmi_iic),
+  Status = fmc_iic_axi_init(&(config->fmc_ipmi_iic),
                         "FMC-IPMI I2C Controller",
                         config->uBaseAddr_IIC_FmcIpmi);
-  if (!re) {
+  if (!Status) {
     return 1;
   }
   // FMC Module Validation
@@ -359,10 +358,10 @@ int fmc_imageon_enable(camera_config_t *config) {
   } else {
     return 1;
   }
-  re = fmc_iic_axi_init(&(config->fmc_imageon_iic),
+  Status = fmc_iic_axi_init(&(config->fmc_imageon_iic),
                         "FMC-IMAGEON I2C Controller",
                         config->uBaseAddr_IIC_FmcImageon);
-  if (!re) {
+  if (!Status) {
     return 1;
   }
   fmc_imageon_init(&(config->fmc_imageon), "FMC-IMAGEON",
@@ -473,9 +472,9 @@ int fmc_imageon_enable(camera_config_t *config) {
   XVtc_SetSource(pVtc, &SourceSelect);
 // vgen_config :end:
 
-  re = fmc_imageon_hdmio_init(&(config->fmc_imageon), 1,
+  Status = fmc_imageon_hdmio_init(&(config->fmc_imageon), 1,
                               &(config->hdmio_timing), 0);
-  if (!re) {
+  if (!Status) {
     return 1;
   }
   onsemi_vita_init(               //
