@@ -2029,7 +2029,7 @@ CONFIG_run-postinsts=y
 #
 # opencv 
 #
-CONFIG_opencv=y
+# CONFIG_opencv is not set
 CONFIG_opencv-dev=y
 CONFIG_opencv-apps=y
 CONFIG_opencv-samples=y
@@ -4002,13 +4002,9 @@ CONFIG_imagefeature-debug-tweaks=y
 # apps 
 #
 # CONFIG_gpio-demo is not set
+# CONFIG_launch-ctrl is not set
 # CONFIG_peekpoke is not set
 CONFIG_vision-app=y
-
-#
-# modules 
-#
-CONFIG_launcher-driver=y
 
 #
 # modules 
