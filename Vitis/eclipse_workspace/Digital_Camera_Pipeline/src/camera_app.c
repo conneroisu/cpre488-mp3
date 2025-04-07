@@ -1,527 +1,671 @@
 #include "camera_app.h"
-#include "include/controls/control.h"
-#include "platform.h"
-#include "xil_io.h"
-#include "xil_types.h"
-#include "xscugic.h"
-#include "xtime_l.h"
-#include "xvprocss.h"
-#include <stdio.h>
-#include <stdlib.h>
-
-typedef enum settings_state {
-  CONTRAST = 0x1,
-  BRIGHTNESS = 0x2,
-  SATURATION = 0x3,
-} t_settings_state;
-
-t_settings_state settings_state = CONTRAST;
-
-void print_state(t_settings_state settings_state) {
-  switch (settings_state) {
-  case CONTRAST:
-    xil_printf("Contrast\n\r");
-    break;
-  case BRIGHTNESS:
-    xil_printf("Brightness\n\r");
-    break;
-  case SATURATION:
-    xil_printf("Saturation\n\r");
-    break;
-  default:
-
-    xil_printf("Unknown\n\r");
-    break;
-  }
-}
-#define MAX_FPS_ENTRIES 100
-#define OUTPUT_FPS 0
-
-typedef struct fps {
-  int next_to_write;
-  int size;
-  float entries[MAX_FPS_ENTRIES];
-} fps_t;
-
-// Timing globals
-static fps_t fps;
-
-static XTime tStart, tEnd = 0;
-
-// In seconds
-static float fps_reading = 0;
-
-static int rec_flag = 0;
-static u8 prev_frame = 255;
-
-// To store frame time message
-static char *fps_msg = 0;
 
 camera_config_t camera_config;
 
-void fps_init(fps_t *f) {
-  f->next_to_write = 0;
-  f->size = 0;
+vres_timing_t vres_resolutions[8] = { { "VGA", 480, 10, 2, 33, 0, 640, 16, 96,
+		48, 0 },		// VIDEO_RESOLUTION_VGA
+		{ "NTSC", 480, 9, 6, 30, 1, 720, 16, 62, 60, 1 },// VIDEO_RESOLUTION_NTSC
+		{ "SVGA", 600, 1, 4, 23, 1, 800, 40, 128, 88, 1 },// VIDEO_RESOLUTION_SVGA
+		{ "XGA", 768, 3, 6, 29, 0, 1024, 24, 136, 160, 0 },	// VIDEO_RESOLUTION_XGA
+		{ "720P", 720, 5, 5, 20, 1, 1280, 110, 40, 220, 1 },// VIDEO_RESOLUTION_720P
+		{ "SXGA", 1024, 1, 3, 26, 0, 1280, 48, 184, 200, 0 }, // VIDEO_RESOLUTION_SXGA
+		{ "1080P", 1080, 4, 5, 36, 1, 1920, 88, 44, 148, 1 }, // VIDEO_RESOLUTION_1080P
+		{ "UXGA", 1200, 1, 3, 46, 0, 1600, 64, 192, 304, 0 }// VIDEO_RESOLUTION_UXGA
+};
 
-  for (int i = 0; i < MAX_FPS_ENTRIES; ++i) {
-    f->entries[i] = 0;
-  }
+char *vres_get_name(Xuint32 resolutionId) {
+	if (resolutionId < 8) {
+		return vres_resolutions[resolutionId].pName;
+	} else {
+		return "{UNKNOWN}";
+	}
 }
 
-void fps_time_store(fps_t *f, float time) {
-  f->entries[f->next_to_write] = time;
 
-  if (f->next_to_write == (MAX_FPS_ENTRIES - 1)) {
-    f->next_to_write = 0;
-  } else {
-    f->next_to_write++;
-  }
+static void SignalSetup(XVtc *pVtc, Xuint32 ResolutionId, XVtc_Signal *SignalCfgPtr) {
+	memset((void *) SignalCfgPtr, 0, sizeof(XVtc_Signal));
+	SignalCfgPtr->HFrontPorchStart = 1920;
+	SignalCfgPtr->HTotal = 2200;
+	SignalCfgPtr->HBackPorchStart = 2052;
+	SignalCfgPtr->HSyncStart = 2008;
+	SignalCfgPtr->HActiveStart = 0;
+	SignalCfgPtr->V0FrontPorchStart = 1080;
+	SignalCfgPtr->V0Total =1125;
+	SignalCfgPtr->V0BackPorchStart =1089;
+	SignalCfgPtr->V0SyncStart =1084;
+	SignalCfgPtr->V0ChromaStart = 0;
+	SignalCfgPtr->V0ActiveStart = 0;
 
-  if (f->size != MAX_FPS_ENTRIES) {
-    f->size++;
-  }
+	return;
 }
 
-float fps_calculate(fps_t *f) {
-  float sum = 0;
-
-  for (int i = 0; i < f->size; ++i) {
-    sum += f->entries[i];
-  }
-
-  return f->size / sum;
+int vgen_init(XVtc *pVtc, u16 VtcDeviceID) {
+	int Status;
+	XVtc_Config *VtcCfgPtr;
+	VtcCfgPtr = XVtc_LookupConfig(VtcDeviceID);
+	if (VtcCfgPtr == NULL) {
+		return 1;
+	}
+	Status = XVtc_CfgInitialize(pVtc, VtcCfgPtr, VtcCfgPtr->BaseAddress);
+	if (Status != 0L) {
+		return 1;
+	}
+	XVtc_DisableSync(pVtc);
+	sleep(1);
+	XVtc_EnableGenerator(pVtc);
+	return 0;
 }
+int vgen_config(XVtc *pVtc, int ResolutionId, int bVerbose) {
+	XVtc_Signal Signal; /* VTC Signal configuration */
+	XVtc_Polarity Polarity; /* Polarity configuration */
+	XVtc_HoriOffsets HoriOffsets; /* Horizontal offsets configuration */
+	XVtc_SourceSelect SourceSelect; /* Source Selection configuration */
+	sleep(5);
+	memset((void *) &Polarity, 0, sizeof(Polarity));
+	Polarity.ActiveChromaPol = 1;
+	Polarity.ActiveVideoPol = 1;
+	Polarity.FieldIdPol = 0;
+	Polarity.VBlankPol = 1;
+	Polarity.VSyncPol = 1;
+	Polarity.HBlankPol = 1;
+	Polarity.HSyncPol = 1;
+	XVtc_SetPolarity(pVtc, &Polarity);
+	memset((void *) &HoriOffsets, 0, sizeof(HoriOffsets));
+	HoriOffsets.V0BlankHoriEnd = 1920;
+	HoriOffsets.V0BlankHoriStart = 1920;
+	HoriOffsets.V0SyncHoriEnd = 1920;
+	HoriOffsets.V0SyncHoriStart = 1920;
+	XVtc_SetGeneratorHoriOffset(pVtc, &HoriOffsets);
+	SignalSetup(pVtc, ResolutionId, &Signal);
+	XVtc_SetGenerator(pVtc, &Signal);
+	memset((void *) &SourceSelect, 0, sizeof(SourceSelect));
+	SourceSelect.VChromaSrc = 0;
+	SourceSelect.VActiveSrc = 1;
+	SourceSelect.VBackPorchSrc = 1;
+	SourceSelect.VSyncSrc = 1;
+	SourceSelect.VFrontPorchSrc = 1;
+	SourceSelect.VTotalSrc = 1;
+	SourceSelect.HActiveSrc = 1;
+	SourceSelect.HBackPorchSrc = 1;
+	SourceSelect.HSyncSrc = 1;
+	SourceSelect.HFrontPorchSrc = 1;
+	SourceSelect.HTotalSrc = 1;
+	XVtc_SetSource(pVtc, &SourceSelect);
+	return 0;
+}
+int vfb_common_init(u16 uDeviceId, XAxiVdma *pAxiVdma) {
+	int Status;
+	XAxiVdma_Config *Config;
+	Config = XAxiVdma_LookupConfig(uDeviceId);
+	if (!Config) {
+		return 1;
+	}
+	Status = XAxiVdma_CfgInitialize(pAxiVdma, Config, Config->BaseAddress);
+	if (Status != 0L) {
+		return 1;
+	}
+	XAxiVdma_FrameCounter f;
+	f.ReadDelayTimerCount = 0;
+	f.WriteDelayTimerCount = 0;
+	f.ReadFrameCount = 1;
+	f.WriteFrameCount = 1;
+	Status = XAxiVdma_SetFrameCounter(pAxiVdma, &f);
+	if (Status != 0L) {
+		return 1;
+	}
+	return 0;
+}
+
+int vfb_rx_init(XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pWriteCfg,
+		Xuint32 uVideoResolution, Xuint32 uStorageResolution, Xuint32 uMemAddr,
+		Xuint32 uNumFrames) {
+	int Status;
+	Status = vfb_rx_setup(pAxiVdma, pWriteCfg, uVideoResolution,
+			uStorageResolution, uMemAddr, uNumFrames);
+	if (Status != 0L) {
+		return 1;
+	}
+	Status = vfb_rx_start(pAxiVdma);
+	if (Status != 0L) {
+		return 1;
+	}
+	XAxiVdma_FsyncSrcSelect(pAxiVdma, 2, 2);
+	return 0;
+}
+
+int vfb_tx_init(XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pReadCfg,
+		Xuint32 uVideoResolution, Xuint32 uStorageResolution, Xuint32 uMemAddr,
+		Xuint32 uNumFrames) {
+	int Status;
+	u32 uBaseAddr;
+	u32 uDMACR;
+
+	/* Setup the read channel */
+	Status = vfb_tx_setup(pAxiVdma, pReadCfg, uVideoResolution,
+			uStorageResolution, uMemAddr, uNumFrames);
+	if (Status != 0L) {
+		return 1;
+	}
+
+	/* Start the DMA engine to transfer
+	 */
+	Status = vfb_tx_start(pAxiVdma);
+	if (Status != 0L) {
+		return 1;
+	}
+
+#if 0
+	// This function returns prematurely due to (!Channel->GenLock) evaluating to false
+	XAxiVdma_GenLockSourceSelect(pAxiVdma, 1, 2);
+#else
+	uBaseAddr = pAxiVdma->BaseAddr;
+	uDMACR = *((volatile int *) (uBaseAddr));
+	uDMACR |= 0x00000080;
+	*((volatile int *) (uBaseAddr)) = uDMACR;
+#endif
+	return 0;
+}
+
+int vfb_rx_setup(XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pWriteCfg,
+		Xuint32 uVideoResolution, Xuint32 uStorageResolution, Xuint32 uMemAddr,
+		Xuint32 uNumFrames) {
+	int i;
+	int Status;
+	pWriteCfg->VertSizeInput = 1080;
+	pWriteCfg->HoriSizeInput = 3840;
+	pWriteCfg->Stride = 3840;
+	pWriteCfg->FrameDelay = 0; /* This example does not test frame delay */
+	pWriteCfg->EnableCircularBuf = 1;
+	pWriteCfg->EnableSync = 1;
+	pWriteCfg->PointNum = 1;
+	pWriteCfg->EnableFrameCounter = 0; /* Endless transfers */
+	pWriteCfg->FixedFrameStoreAddr = 0; /* We are not doing parking */
+	Status = XAxiVdma_DmaConfig(pAxiVdma, 1, pWriteCfg);
+	if (Status != 0L) {
+		return 1L;
+	}
+	for (i = 0; i < uNumFrames; i++) {
+		pWriteCfg->FrameStoreStartAddr[i] = uMemAddr;
+
+		uMemAddr += 4147200;
+	}
+	Status = XAxiVdma_DmaSetBufferAddr(pAxiVdma, 1,
+			pWriteCfg->FrameStoreStartAddr);
+	if (Status != 0L) {
+		return 1L;
+	}
+
+	return 0L;
+}
+
+int vfb_tx_setup(XAxiVdma *pAxiVdma, XAxiVdma_DmaSetup *pReadCfg,
+		Xuint32 uVideoResolution, Xuint32 uStorageResolution, Xuint32 uMemAddr,
+		Xuint32 uNumFrames) {
+	int i;
+	int Status;
+	pReadCfg->VertSizeInput = 1080;
+	pReadCfg->HoriSizeInput = 3840;
+	pReadCfg->Stride = 3840;
+	pReadCfg->FrameDelay = 0;
+	pReadCfg->EnableCircularBuf = 1;
+	pReadCfg->EnableSync = 1;
+	pReadCfg->PointNum = 1;
+	pReadCfg->EnableFrameCounter = 0;
+	pReadCfg->FixedFrameStoreAddr = 0;
+	Status = XAxiVdma_DmaConfig(pAxiVdma, 2, pReadCfg);
+	if (Status != 0L) {
+		return 1L;
+	}
+	for (i = 0; i < uNumFrames; i++) {
+		pReadCfg->FrameStoreStartAddr[i] = uMemAddr;
+		uMemAddr += 4147200;
+	}
+	// Set the buffer addresses for transfer in the DMA engine
+	Status = XAxiVdma_DmaSetBufferAddr(pAxiVdma, 2,
+			pReadCfg->FrameStoreStartAddr);
+	if (Status != 0L) {
+		return 1L;
+	}
+	return 0L;
+}
+
+int vfb_rx_start(XAxiVdma *pAxiVdma) {
+	int Status;
+	// S2MM Startup
+	Status = XAxiVdma_DmaStart(pAxiVdma, 1);
+	if (Status != 0L) {
+		return 1L;
+	}
+	return 0L;
+}
+
+int vfb_tx_start(XAxiVdma *pAxiVdma) {
+	int Status;
+	// MM2S Startup
+	Status = XAxiVdma_DmaStart(pAxiVdma, 2);
+	if (Status != 0L) {
+		return 1L;
+	}
+	return 0L;
+}
+
+int vfb_rx_stop(XAxiVdma *pAxiVdma) {
+	// S2MM Stop
+	XAxiVdma_DmaStop(pAxiVdma, 1);
+	return 0L;
+}
+
+int vfb_tx_stop(XAxiVdma *pAxiVdma) {
+	// MM2S Stop
+	XAxiVdma_DmaStop(pAxiVdma, 2);
+	return 0L;
+}
+
+
+int vfb_check_errors(XAxiVdma *pAxiVdma, u8 bClearErrors) {
+	u32 uBaseAddr = pAxiVdma->BaseAddr;
+	Xuint32 inErrors;
+	Xuint32 outErrors;
+	Xuint32 Errors;
+	inErrors = *((volatile int *) (uBaseAddr + 0x00000034)) & 0x0000CFF0;
+	outErrors = *((volatile int *) (uBaseAddr + 0x00000004)) & 0x000046F0;
+	Errors = (inErrors << 16) | (outErrors);
+	if (Errors) {
+		// Clear error flags
+		*((volatile int *) (uBaseAddr + 0x00000034))=
+				0x0000CFF0; // XAXIVDMA_SR_ERR_ALL_MASK;
+		*((volatile int *) (uBaseAddr + 0x00000004)) =
+				0x000046F0; // XAXIVDMA_SR_ERR_ALL_MASK;
+	}
+
+	return Errors;
+}
+
+/// @brief fmc_imageon_enable Enable the FMC Imageon camera
+/// @param config the camera configuration to enable the camera with.
+/// @return 0 if successful, -1 if not
+int fmc_imageon_enable(camera_config_t *config) {
+	int ret;
+	config->bVerbose = 0;
+	config->vita_aec = 0;		// off
+	config->vita_again = 0;		// 1.0
+	config->vita_dgain = 128;	// 1.0
+	config->vita_exposure = 90; // 90% of frame period
+	ret = fmc_iic_axi_init(&(config->fmc_ipmi_iic), "FMC-IPMI I2C Controller",
+			config->uBaseAddr_IIC_FmcIpmi);
+	if (!ret) {
+		exit(1);
+	}
+	// FMC Module Validation
+	if (fmc_ipmi_detect(&(config->fmc_ipmi_iic), "FMC-IMAGEON", 0)) {
+		fmc_ipmi_enable(&(config->fmc_ipmi_iic), 1);
+	} else {
+		exit(1);
+	}
+
+	ret = fmc_iic_axi_init(&(config->fmc_imageon_iic),
+			"FMC-IMAGEON I2C Controller", config->uBaseAddr_IIC_FmcImageon);
+	if (!ret) {
+		exit(1);
+	}
+
+	fmc_imageon_init(&(config->fmc_imageon), "FMC-IMAGEON",
+			&(config->fmc_imageon_iic));
+	fmc_imageon_vclk_init(&(config->fmc_imageon));
+	fmc_imageon_vclk_config(&(config->fmc_imageon), 6);
+
+	reset_dcms(config);
+	config->hdmio_width = 1920;
+	config->hdmio_height = 1080;
+	config->hdmio_timing.IsHDMI = 0; // DVI Mode
+	config->hdmio_timing.IsEncrypted = 0;
+	config->hdmio_timing.IsInterlaced = 0;
+	config->hdmio_timing.ColorDepth = 8;
+	config->hdmio_timing.HActiveVideo = 1920;
+	config->hdmio_timing.HFrontPorch = 88;
+	config->hdmio_timing.HSyncWidth = 44;
+	config->hdmio_timing.HSyncPolarity = 1;
+	config->hdmio_timing.HBackPorch = 148;
+	config->hdmio_timing.VActiveVideo = 1080;
+	config->hdmio_timing.VFrontPorch = 4;
+	config->hdmio_timing.VSyncWidth = 5;
+	config->hdmio_timing.VSyncPolarity = 1;
+	config->hdmio_timing.VBackPorch = 36;
+
+	config->hdmio_resolution = 6;
+	vgen_init(&(config->vtc_tpg), config->uDeviceId_VTC_tpg);
+	vgen_config(&(config->vtc_tpg), config->hdmio_resolution, 1);
+
+	// FMC-IMAGEON HDMI Output Initialization
+	ret = fmc_imageon_hdmio_init(&(config->fmc_imageon), 1,
+			&(config->hdmio_timing), 0);
+	if (!ret) {
+		exit(0);
+	}
+
+	// FMC-IMAGEON VITA Camera Receiver Initialization
+	onsemi_vita_init(&(config->onsemi_vita), "VITA-2000",
+			config->uBaseAddr_VITA_SPI, config->uBaseAddr_VITA_CAM);
+	config->onsemi_vita.uManualTap = 25;
+	// Assuming a 75 MHz AXI-Lite SPI bus
+	onsemi_vita_spi_config(&(config->onsemi_vita), 7);
+
+	// Enable spread-spectrum clocking (SSC)
+	enable_ssc(config);
+	Xil_DCacheFlush();
+
+	// Initialize Output Side of AXI VDMA
+	vfb_common_init(config->uDeviceId_VDMA_HdmiFrameBuffer,
+			&(config->vdma_hdmi)
+			);
+	vfb_tx_init(&(config->vdma_hdmi),
+			&(config->vdmacfg_hdmi_read),
+			config->hdmio_resolution,
+			config->hdmio_resolution,
+			config->uBaseAddr_MEM_HdmiFrameBuffer,
+			config->uNumFrames_HdmiFrameBuffer
+			);
+	sleep(5);
+	vfb_rx_init(&(config->vdma_hdmi),
+			&(config->vdmacfg_hdmi_write),
+			config->hdmio_resolution,
+			config->hdmio_resolution,
+			config->uBaseAddr_MEM_HdmiFrameBuffer,
+			config->uNumFrames_HdmiFrameBuffer
+			);
+
+	int vita_enabled_error = 0;
+	int vita_enable_attempt = 1;
+	do {
+		vita_enabled_error = fmc_imageon_enable_vita(config);
+		if (vita_enable_attempt > 3) {
+			return -1;
+		}
+	} while (vita_enabled_error != 0);
+	fmc_imageon_enable_ipipe(config);
+	vfb_check_errors(&(config->vdma_hdmi), 1);
+	sleep(1);
+	return 0;
+}
+
+int fmc_imageon_enable_vita(camera_config_t *config) {
+	int ret;
+	ret = onsemi_vita_sensor_initialize(&(config->onsemi_vita), 101,0);
+	if (ret == 0) {
+		return -1;
+	}
+	onsemi_vita_sensor_initialize(&(config->onsemi_vita), 103,0);
+	sleep(1);
+	ret = onsemi_vita_sensor_1080P60(&(config->onsemi_vita), 0);
+	if (ret == 0) {
+		return -1;
+	}
+	sleep(1);
+	onsemi_vita_get_status(&(config->onsemi_vita), &(config->vita_status_t1),
+			0);
+	sleep(1);
+	onsemi_vita_get_status(&(config->onsemi_vita), &(config->vita_status_t2),
+			0);
+
+	int vita_width, vita_height, vita_rate;
+	vita_width = config->vita_status_t1.cntImagePixels * 4;
+	vita_height = config->vita_status_t1.cntImageLines;
+	vita_rate = config->vita_status_t2.cntFrames
+			- config->vita_status_t1.cntFrames;
+
+	if (config->bVerbose) {
+		onsemi_vita_get_status(&(config->onsemi_vita), &(config->vita_status_t2), 0);
+	}
+	if ((vita_width != 1920) || (vita_height != 1080) || (vita_rate == 0)) {
+		return 1;
+	}
+	return 0;
+}
+
+int fmc_imageon_enable_ipipe(camera_config_t *config) {
+	// Set Up HW REG Width for SS1
+	Xil_Out16((0x43C10010), (u16) (1920));
+	// Set Up HW REG Height for SS1
+	Xil_Out16((0x43C10018), (u16) (1080));
+	// Set HW REG Input Video Format for SS1
+	Xil_Out8(0x43C10020, (u8) (0x01));
+	// Set HW REG Output Video Format for SS1
+	Xil_Out8((0x43C10028), (u8) (0x02));
+
+	*(volatile u32 *)0x43C10000 = 0x81;
+	*(volatile u32 *)0x43C00010 = 0x0;
+	*(volatile u32 *)0x43C00018 = 0x1;
+	*(volatile u32 *)0x43C00050 = 0x2EB;
+	*(volatile u32 *)0x43C00058 = 0x9D3;
+	*(volatile u32 *)0x43C00060 = 0xFD;
+	*(volatile u32 *)0x43C00068 = 0xFFFFFE64;
+	*(volatile u32 *)0x43C00070 = 0xFFFFFA96;
+	*(volatile u32 *)0x43C00078 = 0x706;
+	*(volatile u32 *)0x43C00080 = 0x706;
+	*(volatile u32 *)0x43C00088 = 0xFFFFF99F;
+	*(volatile u32 *)0x43C00090 = 0xFFFFFF5B;
+	*(volatile u32 *)0x43C00098 = 0x0;
+	*(volatile u32 *)0x43C000A0 = 0x0;
+	*(volatile u32 *)0x43C000A8 = 0x0;
+	*(volatile u32 *)0x43C000B0 = 0x0;
+	*(volatile u32 *)0x43C000B8 = 0x0;
+	*(volatile u32 *)0x43C00050 = 0x0;
+	*(volatile u32 *)0x43C00058 = 0x0;
+	*(volatile u32 *)0x43C00060 = 0x0;
+	*(volatile u32 *)0x43C00068 = 0x0;
+	*(volatile u32 *)0x43C00070 = 0x0;
+	*(volatile u32 *)0x43C00078 = 0x0;
+	*(volatile u32 *)0x43C00080 = 0x0;
+	*(volatile u32 *)0x43C00088 = 0x0;
+	*(volatile u32 *)0x43C00090 = 0x0;
+	*(volatile u32 *)0x43C00098 = 0x0;
+	*(volatile u32 *)0x43C000A0 = 0x0;
+	*(volatile u32 *)0x43C000A8 = 0x0;
+	*(volatile u32 *)0x43C000B0 = 0x0;
+	*(volatile u32 *)0x43C000B8 = 0x0;
+	*(volatile u32 *)0x43C00010 = 0x0;
+	*(volatile u32 *)0x43C00018 = 0x0;
+	*(volatile u32 *)0x43C00050 = 0x1000;
+	*(volatile u32 *)0x43C00058 = 0x0;
+	*(volatile u32 *)0x43C00060 = 0x0;
+	*(volatile u32 *)0x43C00068 = 0x0;
+	*(volatile u32 *)0x43C00070 = 0x1000;
+	*(volatile u32 *)0x43C00078 = 0x0;
+	*(volatile u32 *)0x43C00080 = 0x0;
+	*(volatile u32 *)0x43C00088 = 0x0;
+	*(volatile u32 *)0x43C00090 = 0x1000;
+	*(volatile u32 *)0x43C00098 = 0x0;
+	*(volatile u32 *)0x43C000A0 = 0x0;
+	*(volatile u32 *)0x43C000A8 = 0x0;
+	*(volatile u32 *)0x43C000B0 = 0x0;
+	*(volatile u32 *)0x43C000B8 = 0xFF;
+	*(volatile u32 *)0x43C00050 = 0x1000;
+	*(volatile u32 *)0x43C00058 = 0x0;
+	*(volatile u32 *)0x43C00060 = 0x0;
+	*(volatile u32 *)0x43C00068 = 0x0;
+	*(volatile u32 *)0x43C00070 = 0x1000;
+	*(volatile u32 *)0x43C00078 = 0x0;
+	*(volatile u32 *)0x43C00080 = 0x0;
+	*(volatile u32 *)0x43C00088 = 0x0;
+	*(volatile u32 *)0x43C00090 = 0x1000;
+	*(volatile u32 *)0x43C00098 = 0x0;
+	*(volatile u32 *)0x43C000A0 = 0x0;
+	*(volatile u32 *)0x43C000A8 = 0x0;
+	*(volatile u32 *)0x43C000B0 = 0x0;
+	*(volatile u32 *)0x43C000B8 = 0xFF;
+	*(volatile u32 *)0x43C00020 = 0x780;
+	*(volatile u32 *)0x43C00028 = 0x438;
+	*(volatile u32 *)0x43C00000 = 0x80;
+	*(volatile u32 *)0x43C00000 = 0x81;
+	*(volatile u32 *)0x43C00010 = 0x0;
+	*(volatile u32 *)0x43C00018 = 0x1;
+	*(volatile u32 *)0x43C00050 = 0x2EB;
+	*(volatile u32 *)0x43C00058 = 0x9D3;
+	*(volatile u32 *)0x43C00060 = 0xFD;
+	*(volatile u32 *)0x43C00068 = 0xFFFFFE64;
+	*(volatile u32 *)0x43C00070 = 0xFFFFFA96;
+	*(volatile u32 *)0x43C00078 = 0x706;
+	*(volatile u32 *)0x43C00080 = 0x706;
+	*(volatile u32 *)0x43C00088 = 0xFFFFF99F;
+	*(volatile u32 *)0x43C00090 = 0xFFFFFF5B;
+	*(volatile u32 *)0x43C00098 = 0x10;
+	*(volatile u32 *)0x43C000A0 = 0x80;
+	*(volatile u32 *)0x43C000A8 = 0x80;
+	*(volatile u32 *)0x43C000B0 = 0x0;
+	*(volatile u32 *)0x43C000B8 = 0xFF;
+	*(volatile u32 *)0x43C00050 = 0x2EB;
+	*(volatile u32 *)0x43C00058 = 0x9D3;
+	*(volatile u32 *)0x43C00060 = 0xFD;
+	*(volatile u32 *)0x43C00068 = 0xFFFFFE64;
+	*(volatile u32 *)0x43C00070 = 0xFFFFFA96;
+	*(volatile u32 *)0x43C00078 = 0x706;
+	*(volatile u32 *)0x43C00080 = 0x706;
+	*(volatile u32 *)0x43C00088 = 0xFFFFF99F;
+	*(volatile u32 *)0x43C00090 = 0xFFFFFF5B;
+	*(volatile u32 *)0x43C00098 = 0x10;
+	*(volatile u32 *)0x43C000A0 = 0x80;
+	*(volatile u32 *)0x43C000A8 = 0x80;
+	*(volatile u32 *)0x43C000B0 = 0x0;
+	*(volatile u32 *)0x43C000B8 = 0xFF;
+	*(volatile u32 *)0x43C40010 = 0x780;
+	*(volatile u32 *)0x43C40018 = 0x438;
+	*(volatile u32 *)0x43C40028 = 0x0;
+	*(volatile u32 *)0x43C40000 = 0x81;
+
+	return 0;
+}
+
+void enable_ssc(camera_config_t *config) {
+	int i;
+	Xuint8 iic_cdce913_ssc_on[3][2] = { { 0x10, 0x6D }, // SSC = 011 (0.75%)
+			{ 0x11, 0xB6 }, //
+			{ 0x12, 0xDB }  //
+	};
+
+	fmc_imageon_iic_mux(&(config->fmc_imageon), 3);
+
+	for (i = 0; i < 3; i++) {
+		config->fmc_imageon.pIIC->fpIicWrite(config->fmc_imageon.pIIC, 0x65,
+				(0x80 | iic_cdce913_ssc_on[i][0]), &(iic_cdce913_ssc_on[i][1]),
+				1 //
+				);
+	}
+
+	return;
+}
+
+// Toggles the reset on the DCM core (clock generator)
+void reset_dcms(camera_config_t *config) {
+
+	Xuint32 value;
+
+	// Force reset high
+	config->fmc_ipmi_iic.fpGpoRead(&(config->fmc_ipmi_iic), &value);
+	value = value | 0x00000004; // Force bit 2 to 1
+	config->fmc_ipmi_iic.fpGpoWrite(&(config->fmc_ipmi_iic), value);
+	usleep(200000);
+
+	// Force reset low
+	config->fmc_ipmi_iic.fpGpoRead(&(config->fmc_ipmi_iic), &value);
+	value = value & ~0x00000004; // Force bit 2 to 0
+	config->fmc_ipmi_iic.fpGpoWrite(&(config->fmc_ipmi_iic), value);
+	usleep(500000);
+}
+
+camera_config_t camera_config;
 
 // Swaps the memory addresses associated with the frame pointers
 void set_start_address(XAxiVdma *vdma, u16 dir, u8 frame, u16 *addr) {
-  u32 start_addr_offset = dir == XAXIVDMA_WRITE ? 0xAC : 0x5C;
-  u32 vsize_offset = dir == XAXIVDMA_WRITE ? 0xA0 : 0x50;
-  frame &= 0x1F;
+	u32 start_addr_offset = dir == 1 ? 0xAC : 0x5C;
+	u32 vsize_offset = dir == 1 ? 0xA0 : 0x50;
+	frame &= 0x1F;
 
-#define START_ADDR                                                   \
-  *((volatile u32 *)(vdma->BaseAddr + start_addr_offset +            \
-                     (frame * 0x4)))
+#define START_ADDR *((volatile u32 *)(vdma->BaseAddr + start_addr_offset + (frame * 0x4)))
 #define VSIZE *((volatile u32 *)(vdma->BaseAddr + vsize_offset))
-
-  START_ADDR = (u32)addr;
-
-  // Apply the change
-  VSIZE = VSIZE;
-
+	START_ADDR = (u32) addr;
+	VSIZE = VSIZE;
 #undef START_ADDR
 #undef VSIZE
 }
 
 u16 *get_start_address(XAxiVdma *vdma, u16 dir, u8 frame) {
-  u32 start_addr_offset = dir == XAXIVDMA_WRITE ? 0xAC : 0x5C;
-  frame &= 0x1F;
+	u32 start_addr_offset = dir == 1 ? 0xAC : 0x5C;
+	frame &= 0x1F;
 
-#define START_ADDR                                                   \
-  *((volatile u32 *)(vdma->BaseAddr + start_addr_offset +            \
-                     (frame * 0x4)))
+#define START_ADDR *((volatile u32 *)(vdma->BaseAddr + start_addr_offset + (frame * 0x4)))
 
-  return (u16 *)START_ADDR;
+	return (u16 *) START_ADDR;
 
 #undef START_ADDR
 }
 
 u8 get_current_frame_pointer(XAxiVdma *vdma, u16 dir) {
-
-  u8 result = 0;
-
-  u32 mask = 0;
-  u32 shift_amt = 0;
-
-  if (dir == XAXIVDMA_READ) {
-    mask = 0x1F0000;
-    shift_amt = 16;
-  } else if (dir == XAXIVDMA_WRITE) {
-    mask = 0x1F00000;
-    shift_amt = 24;
-  }
-
-  result =
-      (*((volatile u32 *)(vdma->BaseAddr + XAXIVDMA_PARKPTR_OFFSET)) &
-       mask) >>
-      shift_amt;
-
-  return result;
+	u8 result = 0;
+	u32 mask, shift_amt = 0;
+	if (dir == 2) {
+		mask = 0x1F0000;
+		shift_amt = 16;
+	} else if (dir == 1) {
+		mask = 0x1F00000;
+		shift_amt = 24;
+	}
+	result = (*((volatile u32 *) (vdma->BaseAddr + 0x00000028)) & mask)
+			>> shift_amt;
+	return result;
 }
 
 void set_park_frame(XAxiVdma *vdma, u8 frame, u16 dir) {
-#define PARK                                                         \
-  *((volatile u32 *)(vdma->BaseAddr + XAXIVDMA_PARKPTR_OFFSET))
+#define PARK *((volatile u32 *)(vdma->BaseAddr + 0x00000028))
 
-  u32 mask = 0;
-  u32 shift_amt = 0;
+	u32 mask, shift_amt = 0;
 
-  if (dir == XAXIVDMA_READ) {
-    mask = ~0x1F;
-  } else if (dir == XAXIVDMA_WRITE) {
-    mask = ~0x1F0;
-    shift_amt = 8;
-  }
+	if (dir == 2) {
+		mask = ~0x1F;
+	} else if (dir == 1) {
+		mask = ~0x1F0;
+		shift_amt = 8;
+	}
 
-  PARK = (PARK & mask) | ((u32)(frame & 0x1F) << shift_amt);
+	PARK = (PARK & mask) | ((u32) (frame & 0x1F) << shift_amt);
 
 #undef PARK
 }
 
-camera_config_t camera_config;
-
-void error_isr(void *CallBackRef, u32 InterruptTypes) {
-  xil_printf("VDMA error %X occurred!!!\n\r", InterruptTypes);
-}
-
-void video_frame_output_isr(void *CallBackRef, u32 InterruptTypes) {
-  switch (InterruptTypes) {
-  case XAXIVDMA_IXR_FRMCNT_MASK: {
-    u8 current_frame = get_current_frame_pointer(
-        (XAxiVdma *)CallBackRef, XAXIVDMA_READ);
-
-    // Make sure we received something before recording that we wrote
-    // it.
-    if (rec_flag && (current_frame != prev_frame)) {
-      // If first frame, start only
-      if (!tStart) {
-        XTime_GetTime(&tStart);
-      } else {
-        XTime_GetTime(&tEnd);
-
-        fps_reading = (tEnd - tStart) / (float)COUNTS_PER_SECOND;
-
-        fps_time_store(&fps, fps_reading);
-
-#if OUTPUT_FPS
-        sprintf(fps_msg, "Average FPS: %.5f", fps_calculate(&fps));
-
-        xil_printf("%s\n\r", fps_msg);
-#endif
-
-        // Start the timer back up!
-        XTime_GetTime(&tStart);
-      }
-
-      rec_flag = 0;
-    }
-
-    prev_frame = current_frame;
-  }
-
-  default: {
-    break;
-  }
-  }
-}
-
-// Does nothing as of now. All timer operations are done when a frame
-// is drawn to the screen.
-void camera_input_isr(void *CallBackRef, u32 InterruptTypes) {
-  switch (InterruptTypes) {
-  case XAXIVDMA_IXR_FRMCNT_MASK: {
-    if (!rec_flag) {
-      rec_flag = 1;
-    }
-    break;
-  }
-
-  default: {
-    break;
-  }
-  }
-}
-
-u32 button_state, switch_state = 0;
-
-// Picture data
-#define MAX_PICTURE_COUNT 32
-#define PIXELS 2073600
-u16 *pictures[MAX_PICTURE_COUNT];
-int picture_count = 0;
-int next_picture_write = 0;
-int current_picture = 0;
-int gallery_enabled = 0;
-
-void enable_gallery(XAxiVdma *vdma) {
-  // Make sure a picture is saved first!
-  if (picture_count) {
-    gallery_enabled = 1;
-
-    set_start_address(vdma, XAXIVDMA_READ, 0,
-                      pictures[current_picture]);
-    while (get_start_address(vdma, XAXIVDMA_READ, 0) !=
-           pictures[current_picture]) {
-    }
-
-    // Update the read park to be on 0.
-    set_park_frame(vdma, 0, XAXIVDMA_READ);
-
-    // Wait for the change to go through.
-    while (get_current_frame_pointer(vdma, XAXIVDMA_READ)) {
-    }
-
-    xil_printf("Gallery Enabled! Viewing picture %d\n\r",
-               current_picture + 1);
-  } else {
-    xil_printf("Can't enable gallery since no pictures have been "
-               "taken! Please take a picture and try again!\n\r");
-  }
-}
-
-void disable_gallery(XAxiVdma *vdma) {
-  // Update the read park to be on 1.
-  set_park_frame(vdma, 1, XAXIVDMA_READ);
-
-  // Wait for the change to go through.
-  while (!get_current_frame_pointer(vdma, XAXIVDMA_READ)) {
-  }
-
-  gallery_enabled = 0;
-
-  xil_printf("Gallery Disabled!\n\r");
-}
-
-void change_picture(XAxiVdma *vdma, int forward) {
-  // Only allow in gallery mode
-  if (gallery_enabled) {
-    if (forward) {
-      if (current_picture == (picture_count - 1)) {
-        current_picture = 0;
-      } else {
-        current_picture++;
-      }
-    } else {
-      if (current_picture == 0) {
-        current_picture = (picture_count - 1);
-      } else {
-        current_picture--;
-      }
-    }
-
-    set_start_address(vdma, XAXIVDMA_READ, 0,
-                      pictures[current_picture]);
-    while (get_start_address(vdma, XAXIVDMA_READ, 0) !=
-           pictures[current_picture]) {
-    }
-
-    xil_printf("Now viewing picture %d\n\r", current_picture + 1);
-  }
-}
-
-void take_picture(XAxiVdma *vdma) {
-  if (picture_count != MAX_PICTURE_COUNT) {
-    picture_count++;
-  }
-
-  xil_printf("Capturing picture %d\n\r", next_picture_write + 1);
-
-  // Update the start address of frame 0 on the WRITE side.
-  set_start_address(vdma, XAXIVDMA_WRITE, 0,
-                    pictures[next_picture_write]);
-
-  // Wait until the start address has updated.
-  while (get_start_address(vdma, XAXIVDMA_WRITE, 0) !=
-         pictures[next_picture_write]) {
-  }
-
-  // Update the write park to be on 0.
-  set_park_frame(vdma, 0, XAXIVDMA_WRITE);
-
-  // Wait for the change to go through.
-  while (get_current_frame_pointer(vdma, XAXIVDMA_WRITE)) {
-  }
-
-  // Update the write park to be on 1.
-  set_park_frame(vdma, 1, XAXIVDMA_WRITE);
-
-  // Wait for the change to go through.
-  while (!get_current_frame_pointer(vdma, XAXIVDMA_WRITE)) {
-  }
-
-  current_picture = next_picture_write;
-
-  enable_gallery(vdma);
-
-  // Leave for 2 seconds.
-  sleep(2);
-
-  disable_gallery(vdma);
-
-  // Wrap around if wrote last picture.
-  if (next_picture_write == (MAX_PICTURE_COUNT - 1)) {
-    next_picture_write = 0;
-  } else {
-    next_picture_write++;
-  }
+// Initialize the camera configuration data structure
+void camera_config_init(camera_config_t *config) {
+	config->uBaseAddr_IIC_FmcIpmi = 0x41610000;	// Device for reading HDMI board IPMI EEPROM information
+	config->uBaseAddr_IIC_FmcImageon = 0x41600000; // Device for configuring the HDMI board
+	config->uBaseAddr_VITA_SPI = 0x43C30000; // Device for configuring the Camera sensor
+	config->uBaseAddr_VITA_CAM = 0x43C20000; // Device for receiving Camera sensor data
+	config->uDeviceId_VTC_tpg = 0;// Video Timer Controller (VTC) ID
+	config->uDeviceId_VDMA_HdmiFrameBuffer = 0x0U;		// VDMA ID
+	config->uBaseAddr_MEM_HdmiFrameBuffer = 0x10000000; // VDMA base address for Frame buffers
+	config->uNumFrames_HdmiFrameBuffer = 0x5U;	// NUmber of VDMA Frame buffers
+	return;
 }
 
 // Main function. Initializes the devices and configures VDMA
 int main() {
-  int left_right_pressed = 0;
-  int left_right_released = 0;
+	init_platform();
 
-  init_platform();
-  init_interface();
+	camera_config_init(&camera_config);
+	fmc_imageon_enable(&camera_config);
 
-  // Init FPS
-  fps_init(&fps);
+	set_park_frame(&(camera_config.vdma_hdmi), 1, 1);
+	set_park_frame(&(camera_config.vdma_hdmi), 1, 2);
 
-  fps_msg = (char *)calloc(64, sizeof(char *));
+	// Enable park.
+#define READ_CR *((volatile u32 *)(camera_config.vdma_hdmi.BaseAddr + 0x00000030))
+#define WRITE_CR *((volatile u32 *)(camera_config.vdma_hdmi.BaseAddr))
 
-  // Allocate space for the pictures.
-  for (int i = 0; i < MAX_PICTURE_COUNT; ++i) {
-    pictures[i] = (u16 *)calloc(PIXELS, sizeof(u16));
-  }
-
-  // Camera Init
-  camera_config_init(&camera_config);
-  fmc_imageon_enable(&camera_config);
-  // camera_loop(&camera_config);
-
-  // Park both READ and WRITE channels on frame 1.
-  set_park_frame(&(camera_config.vdma_hdmi), 1, XAXIVDMA_WRITE);
-  set_park_frame(&(camera_config.vdma_hdmi), 1, XAXIVDMA_READ);
-
-  // Enable park.
-#define READ_CR                                                      \
-  *((volatile u32 *)(camera_config.vdma_hdmi.BaseAddr +              \
-                     XAXIVDMA_RX_OFFSET + XAXIVDMA_CR_OFFSET))
-#define WRITE_CR                                                     \
-  *((volatile u32 *)(camera_config.vdma_hdmi.BaseAddr +              \
-                     XAXIVDMA_TX_OFFSET + XAXIVDMA_CR_OFFSET))
-
-  READ_CR &= ~0x2;
-  WRITE_CR &= ~0x2;
+	READ_CR &= ~0x2;
+	WRITE_CR &= ~0x2;
 
 #undef READ_CR
 #undef WRITE_CR
 
-  while (1) {
-    button_state = get_button_states();
-    switch_state = get_switch_states();
+	while (1) {
+	}
 
-    // Determine if LEFT or RIGHT is pressed
-    left_right_pressed = button_pressed(LEFT, button_state) ||
-                         button_pressed(RIGHT, button_state);
-
-    // See if right and left have been released after a press.
-    if (!left_right_pressed) {
-      left_right_released = 1;
-    }
-
-    // SW 0 enables gallery mode.
-    if (switch_state & 0x1) {
-      if (!gallery_enabled) {
-        enable_gallery(&(camera_config.vdma_hdmi));
-      }
-
-      if (left_right_pressed && left_right_released) {
-        left_right_released = 0;
-
-        // Previous image
-        if (button_pressed(LEFT, button_state)) {
-          change_picture(&(camera_config.vdma_hdmi), 0);
-        }
-        // Next image
-        else if (button_pressed(RIGHT, button_state)) {
-          change_picture(&(camera_config.vdma_hdmi), 1);
-        }
-      }
-
-    }
-    // SW 1 enables picture settings.
-    else if (switch_state & 0x2) {
-      // Only adjust when button has been released and then pressed.
-      if (left_right_pressed && left_right_released) {
-        left_right_released = 0;
-        if (button_pressed(RIGHT, button_state)) {
-          settings_state = (settings_state + 1) % 4;
-          print_state(settings_state);
-        } else if (button_pressed(LEFT, button_state)) {
-          settings_state = (settings_state - 1) % 4;
-          print_state(settings_state);
-        }
-      }
-
-      // Allow continous set for picture settings.
-      if (button_pressed(UP, button_state)) {
-        // Increase the value of the current setting
-        switch (settings_state) {
-        case CONTRAST:
-          increase_contrast(&camera_config);
-          break;
-        case BRIGHTNESS:
-          increase_brightness(&camera_config);
-          break;
-        case SATURATION:
-          increase_saturation(&camera_config);
-          break;
-        default:
-          break;
-        }
-      } else if (button_pressed(DOWN, button_state)) {
-        // Decrease the value of the current setting
-        switch (settings_state) {
-        case CONTRAST:
-          decrease_contrast(&camera_config);
-          break;
-        case BRIGHTNESS:
-          decrease_brightness(&camera_config);
-          break;
-        case SATURATION:
-          decrease_saturation(&camera_config);
-          break;
-        default:
-          break;
-        }
-      }
-    }
-    // No modes activated, allow user to take a picture.
-    else {
-      if (button_pressed(CENTER, button_state)) {
-        take_picture(&(camera_config.vdma_hdmi));
-      }
-    }
-
-    // Disable gallery when SW0 is low.
-    if (!(switch_state & 0x1) && gallery_enabled) {
-      disable_gallery(&(camera_config.vdma_hdmi));
-    }
-
-    // Set input polling rate
-    usleep(100000);
-  }
-
-  return 0;
-}
-
-// Initialize the camera configuration data structure
-void camera_config_init(camera_config_t *config) {
-  config->uBaseAddr_IIC_FmcIpmi =
-      XPAR_FMC_IPMI_ID_EEPROM_0_BASEADDR; // Device for reading HDMI
-                                          // board IPMI EEPROM
-                                          // information
-  config->uBaseAddr_IIC_FmcImageon =
-      XPAR_FMC_IMAGEON_IIC_0_BASEADDR; // Device for configuring the
-                                       // HDMI board
-
-  config->uBaseAddr_VITA_SPI =
-      XPAR_ONSEMI_VITA_SPI_0_S00_AXI_BASEADDR; // Device for
-                                               // configuring the
-                                               // Camera sensor
-  config->uBaseAddr_VITA_CAM =
-      XPAR_ONSEMI_VITA_CAM_0_S00_AXI_BASEADDR; // Device for receiving
-                                               // Camera sensor data
-
-  config->uDeviceId_VTC_tpg =
-      XPAR_V_TC_0_DEVICE_ID; // Video Timer Controller (VTC) ID
-  config->uDeviceId_VDMA_HdmiFrameBuffer =
-      XPAR_AXI_VDMA_0_DEVICE_ID; // VDMA ID
-  config->uBaseAddr_MEM_HdmiFrameBuffer =
-      XPAR_DDR_MEM_BASEADDR +
-      0x10000000; // VDMA base address for Frame buffers
-  config->uNumFrames_HdmiFrameBuffer =
-      XPAR_AXIVDMA_0_NUM_FSTORES; // NUmber of VDMA Frame buffers
-
-  return;
+	return 0;
 }
