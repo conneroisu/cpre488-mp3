@@ -75,6 +75,7 @@ petalinux-build -c kernel
 # This produces all files needed for booting Linux
 petalinux-build
 ```
+boot.bin boot.scr image.ub
 
 ### 6. Package for Boot
 
@@ -134,8 +135,6 @@ petalinux-build -c launcher-driver
 
 # Copy launcher-driver.ko to your SD card files directory (e.g., mp3-sdcard-files)
 ```
-
-> **Note**: Follow the MP-3 directions for installing your driver for the USB Nerf Launcher.
 
 ## User Application Development
 
