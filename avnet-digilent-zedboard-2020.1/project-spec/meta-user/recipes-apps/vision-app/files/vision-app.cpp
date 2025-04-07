@@ -47,7 +47,7 @@
 #define FB_DEPTH 3 // RGB format, 3 bytes per pixel
 #define FB_SIZE (FB_WIDTH * FB_HEIGHT * FB_DEPTH)
 #define FB_PHYS_ADDR                                                 \
-  0x10000000 // Adjust based on your FPGA memory map
+  0x10000000 // Adjust based FPGA memory map
 
 // Target recognition parameters
 #define MIN_CONTOUR_AREA 500
