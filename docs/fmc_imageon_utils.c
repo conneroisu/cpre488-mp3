@@ -352,10 +352,9 @@ int fmc_imageon_enable_vita( camera_config_t *config ) {
    return 0;
 }
 
-
 // Uncomment for Hardware Image color Pipeline
- XVprocSs proc_ss_RGB_YCrCb_444;  // To hold info for the Video Processing Subsystem: Color Conversion Only IP core: See xv_procss.h, and xv_csc_l2.h
- XVprocSs_Config *Config_ptr;
+// XVprocSs proc_ss_RGB_YCrCb_444;  // To hold info for the Video Processing Subsystem: Color Conversion Only IP core: See xv_procss.h, and xv_csc_l2.h
+// XVprocSs_Config *Config_ptr;
 
 int fmc_imageon_enable_ipipe( camera_config_t *config ) {
 
@@ -365,10 +364,10 @@ int fmc_imageon_enable_ipipe( camera_config_t *config ) {
    //// TODO:
    // Video Processing Subsystem (Only re-sampling) 4:4:4 to 4:2:2  (See IP documentation for register details)
    // TODO Add additional register assignments here to fully configure this core. See Video Processing Subsystem IP documentation for register details.
-   // Hint 1: You will need to configure 4 additional registers, 
+   // Hint 1: You will need to configure 4 additional registers,
    // Hint 2: You will need to dig through some header files for some of the values,
    // Hint 3: Set up the Demosaic IP block first. It is a good warm up.
-   
+
    // Add assignments here
 
    Xil_Out32(0x43C50000 + 0x10, 1920);  // Width = 1920 pixels
@@ -391,11 +390,71 @@ int fmc_imageon_enable_ipipe( camera_config_t *config ) {
    // This could have been set up with direct register writes, but there are about 20 registers that need to be set for this IP block
 
    // Uncomment to setup Color Conversion IP
-   Config_ptr = XVprocSs_LookupConfig(0);
-   XVprocSs_CfgInitialize(&proc_ss_RGB_YCrCb_444, Config_ptr, 0x43C40000);
-   XVprocSs_SetSubsystemConfig(&proc_ss_RGB_YCrCb_444);
-   XV_CscSetColorspace(proc_ss_RGB_YCrCb_444.CscPtr, XVIDC_CSF_RGB, XVIDC_CSF_YCRCB_444, XVIDC_BT_709, XVIDC_BT_709, XVIDC_CR_0_255);
-   XVprocSs_Start(&proc_ss_RGB_YCrCb_444);
+//   Config_ptr = XVprocSs_LookupConfig(0);
+//   XVprocSs_CfgInitialize(&proc_ss_RGB_YCrCb_444, Config_ptr, 0x43C40000);
+   // Gives base address
+
+   //DONE? //Config_ptr = XVprocSs_LookupConfig(0);
+   //DONE? //XVprocSs_CfgInitialize(&proc_ss_RGB_YCrCb_444, Config_ptr, 0x43C40000);
+   //XVprocSs_SetSubsystemConfig(&proc_ss_RGB_YCrCb_444);
+   //DONE? //XV_CscSetColorspace(proc_ss_RGB_YCrCb_444.CscPtr, XVIDC_CSF_RGB, XVIDC_CSF_YCRCB_444, XVIDC_BT_709, XVIDC_BT_709, XVIDC_CR_0_255);
+   //XVprocSs_Start(&proc_ss_RGB_YCrCb_444);
+
+   ////// XVprocSs_SetSubsystemConfig(&proc_ss_RGB_YCrCb_444);
+   // -> SetupModeCscOnly
+   	   // -> XV_CscSetColorspace (Overriden by next function)
+   	   // -> XV_CscSetActiveSize
+   	   	   // XV_csc_Set_HwReg_width
+   Xil_Out32((0x43C40000) + (0x020), (u32)(1920));
+   	   	   // XV_csc_Set_HwReg_height
+   Xil_Out32((0x43C40000) + (0x028), (u32)(1080));
+
+   ////// XV_CscSetColorspace(InstancePtr, cfmtIn, cfmtOut, cstdIn, cstdOut, cRangeOut)
+   ////// XV_CscSetColorspace(proc_ss_RGB_YCrCb_444.CscPtr, XVIDC_CSF_RGB, XVIDC_CSF_YCRCB_444, XVIDC_BT_709, XVIDC_BT_709, XVIDC_CR_0_255);
+   // XV_csc_Set_HwReg_InVideoFormat
+   Xil_Out32((0x43C40000) + (0x010), (u32)(0x0)); // XVIDC_CSF_RGB
+   // XV_csc_Set_HwReg_OutVideoFormat
+   Xil_Out32((0x43C40000) + (0x018), (u32)(0x1)); // XVIDC_CSF_RGB
+   	   // -> cscUpdateIPReg
+   	   // -> cscFwRGBtoYCbCr -> scale_factor ==> 4096
+   	   //** Status report -> colour depth ==> 8
+   	   //** cscFwRGBtoYCbCr -> bpcScale ==> 1
+   	   	   // -> XV_csc_Set_HwReg_K11(pCsc, K[0][0]);
+   Xil_Out32((0x43C40000) + (0x050), (u32)(747)); // 0.1826*(float)scale_factor
+   	   	   // -> XV_csc_Set_HwReg_K12(pCsc, K[0][1]);
+   Xil_Out32((0x43C40000) + (0x058), (u32)(2515)); // 0.6142*(float)scale_factor
+   	   	   // -> XV_csc_Set_HwReg_K13(pCsc, K[0][2]);
+   Xil_Out32((0x43C40000) + (0x060), (u32)(253)); // 0.0620*(float)scale_factor
+   	   	   // -> XV_csc_Set_HwReg_K21(pCsc, K[1][0]);
+   Xil_Out32((0x43C40000) + (0x068), (u32)(-412)); // -0.1006*(float)scale_factor
+   	   	   // -> XV_csc_Set_HwReg_K22(pCsc, K[1][1]);
+   Xil_Out32((0x43C40000) + (0x070), (u32)(-1386)); // -0.3386*(float)scale_factor
+   	   	   // -> XV_csc_Set_HwReg_K23(pCsc, K[1][2]);
+   Xil_Out32((0x43C40000) + (0x078), (u32)(1798)); // 0.4392*(float)scale_factor
+   	   	   // -> XV_csc_Set_HwReg_K31(pCsc, K[2][0]);
+   Xil_Out32((0x43C40000) + (0x080), (u32)(1798)); // 0.4392*(float)scale_factor
+   	   	   // -> XV_csc_Set_HwReg_K32(pCsc, K[2][1]);
+   Xil_Out32((0x43C40000) + (0x088), (u32)(-1633)); // -0.3989*(float)scale_factor
+   	   	   // -> XV_csc_Set_HwReg_K33(pCsc, K[2][2]);
+   Xil_Out32((0x43C40000) + (0x090), (u32)(-165)); // -0.0403*(float)scale_factor
+   	   	   // -> XV_csc_Set_HwReg_ROffset_V(pCsc,  K[0][3]);
+   Xil_Out32((0x43C40000) + (0x098), (u32)(16)); // 16*bpcScale; //R Offset
+		   // -> XV_csc_Set_HwReg_GOffset_V(pCsc,  K[1][3]);
+   Xil_Out32((0x43C40000) + (0x0a0), (u32)(128)); // 128*bpcScale; //G Offset
+		   // -> XV_csc_Set_HwReg_BOffset_V(pCsc,  K[2][3]);
+   Xil_Out32((0x43C40000) + (0x0a8), (u32)(128)); // 128*bpcScale; //B Offset
+		   // -> XV_csc_Set_HwReg_ClampMin_V(pCsc, clampMin);
+   Xil_Out32((0x43C40000) + (0x0b0), (u32)(0));
+		   // -> XV_csc_Set_HwReg_ClipMax_V(pCsc,  clipMax);
+   Xil_Out32((0x43C40000) + (0x0b8), (u32)(255)); // ((1<<InstancePtr->ColorDepth)-1 ==> (1<<8)-1 = 255
+
+   ////// XVprocSs_Start(&proc_ss_RGB_YCrCb_444);
+   // XV_CscStart
+   	   // -> XV_csc_EnableAutoRestart
+   Xil_Out32((0x43C40000) + (0x000), (u32)(0x80));
+   u32 data = Xil_In32((0x43C40000) + (0x000)) & 0x80;
+   Xil_Out32((0x43C40000) + 0x00, (u32)(data | 0x01));
+
 //   xil_printf("RGB to 4:4:4 IP Configuration and Enable done\r\n");
 
 
@@ -414,6 +473,8 @@ int fmc_imageon_enable_ipipe( camera_config_t *config ) {
 
    return 0;
 }
+
+
 
 
 // Enables Spread-Spectrum Clocking (SSC)
