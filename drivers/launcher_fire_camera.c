@@ -156,6 +156,9 @@ void aim_and_fire(int fd, Target* target) {
         launcher_cmd(fd, LAUNCHER_FIRE);
         usleep(2000000); // Wait for firing to complete
     }
+
+
+    launcher_cmd(fd, LAUNCHER_STOP);
 }
 
 // void launcher_cmd(int fd, int cmd) {
