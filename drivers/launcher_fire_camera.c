@@ -18,7 +18,7 @@
 #define LAUNCHER_LEFT   0x04
 #define LAUNCHER_RIGHT  0x08
 
-// Target detection parameters (adjust these based on your chosen color)
+// Target detection parameters - edit for each color
 #define TARGET_Y_MIN    0
 #define TARGET_Y_MAX    50    // Luminance range
 #define TARGET_U_MIN    160   // Chrominance (red)
