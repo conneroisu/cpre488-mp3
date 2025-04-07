@@ -1,0 +1,12 @@
+/* C:/Users/connero/AppData/Local/Temp/bootgen_FSBL_ME17353059262285230832/sd_card_temp/boot.bif */
+/* Command to create bitstream .bin file:       */
+/*   bootgen -image <bif_file> -split bin -w    */
+/* Command to create BOOT.BIN file:             */
+/*   bootgen  -image <bif_file> -w -o i BOOT.BIN */
+/*ME_HW*/
+the_ROM_image:
+{
+ [bootloader] C:/Users/connero/Downloads/cpre488-mp3/Vitis/eclipse_workspace/ME_HW/export/ME_HW/sw/ME_HW/boot/fsbl.elf
+ C:/Users/connero/Downloads/cpre488-mp3/Vitis/eclipse_workspace/FSBL_ME/_ide/bitstream/dcp_wrapper.bit
+ C:/Users/connero/Downloads/cpre488-mp3/Vitis/eclipse_workspace/FSBL_ME/Debug/FSBL_ME.elf
+}

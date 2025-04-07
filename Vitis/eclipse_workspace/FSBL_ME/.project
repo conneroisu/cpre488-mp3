@@ -3,7 +3,7 @@
 	<name>FSBL_ME</name>
 	<comment>Created by Vitis v2020.1</comment>
 	<projects>
-		<project>M_HW</project>
+		<project>ME_HW</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
