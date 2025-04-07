@@ -617,7 +617,7 @@ void camera_config_init(camera_config_t *config) {
 	config->uDeviceId_VTC_tpg = 0;// Video Timer Controller (VTC) ID
 	config->uDeviceId_VDMA_HdmiFrameBuffer = 0x0U;		// VDMA ID
 	config->uBaseAddr_MEM_HdmiFrameBuffer = 0x10000000; // VDMA base address for Frame buffers
-	config->uNumFrames_HdmiFrameBuffer = 0x5U;	// NUmber of VDMA Frame buffers
+	config->uNumFrames_HdmiFrameBuffer = 0x5U;	// Number of VDMA Frame buffers
 	return;
 }
 
