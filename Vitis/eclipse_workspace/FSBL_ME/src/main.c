@@ -1,104 +1,6 @@
-/******************************************************************************
-* Copyright (c) 2012 - 2020 Xilinx, Inc.  All rights reserved.
-* SPDX-License-Identifier: MIT
-******************************************************************************/
 
-/*****************************************************************************/
-/**
-*
-* @file main.c
-*
-* The main file for the First Stage Boot Loader (FSBL).
-*
-* <pre>
-* MODIFICATION HISTORY:
-*
-* Ver	Who	Date		Changes
-* ----- ---- -------- -------------------------------------------------------
-* 1.00a jz	06/04/11	Initial release
-* 2.00a mb	25/05/12	standalone based FSBL
-* 3.00a np/mb	08/03/12	Added call to FSBL user hook - before handoff.
-*				DDR ECC initialization added
-* 				fsbl print with verbose added
-* 				Performance measurement added
-* 				Flushed the UART Tx buffer
-* 				Added the performance time for ECC DDR init
-* 				Added clearing of ECC Error Code
-* 				Added the watchdog timer value
-* 4.00a sgd 02/28/13	Code Cleanup
-* 						Fix for CR#681014 - ECC init in FSBL should not
-* 						                    call fabric_init()
-* 						Fix for CR#689077 - FSBL hangs at Handoff clearing the
-* 						                    TX UART buffer when using UART0
-* 						                    instead of UART1
-*						Fix for CR#694038 - FSBL debug logs always prints 14.3
-*											as the Revision number - this is
-*										    incorrect
-*						Fix for CR#694039 - FSBL prints "unsupported silicon
-*											version for v3.0" 3.0 Silicon
-*                       Fix for CR#699475 - FSBL functionality is broken and
-*                                           its not able to boot in QSPI/NAND
-*                                           bootmode
-*                       Removed DDR initialization check
-*                       Removed DDR ECC initialization code
-*						Modified hand off address check to 1MB
-*						Added RSA authentication support
-*						Watchdog disabled for AES E-Fuse encryption
-* 5.00a sgd 05/17/13	Fallback support for E-Fuse encryption
-*                       Fix for CR#708728 - Issues seen while making HP
-*                                           interconnect 32 bit wide
-* 6.00a kc  07/30/13    Fix for CR#708316 - PS7_init.tcl file should have
-*                                           Error mechanism for all mask_poll
-*                       Fix for CR#691150 - ps7_init does not check for
-*                                           peripheral initialization failures
-*                                           or timeout on polls
-*                       Fix for CR#724165 - Partition Header used by FSBL is
-*                                           not authenticated
-*                       Fix for CR#724166 - FSBL doesn’t use PPK authenticated
-*                                           by Boot ROM for authenticating
-*                                           the Partition images
-*                       Fix for CR#722979 - Provide customer-friendly
-*                                           changelogs in FSBL
-*                       Fix for CR#732865 - Backward compatibility for ps7_init
-*                       					function
-* 7.00a kc  10/18/13    Integrated SD/MMC driver
-* 8.00a kc  02/20/14	Fix for CR#775631 - FSBL: FsblGetGlobalTimer() 
-*											is not proper
-* 9.00a kc  04/16/14	Fix for CR#724166 - SetPpk() will fail on secure
-*		 									fallback unless FSBL* and FSBL
-*		 									are identical in length
-* 10.00a kc 07/24/14	Fix for CR#809336 - Minor code cleanup
-*        kc 08/27/14	Fix for CR#820356 - FSBL compilation fails with
-* 											IAR compiler
-* 11.00a kv 10/08/14	Fix for CR#826030 - LinearBootDeviceFlag should
-*											be initialized to 0 in IO mode
-*											case
-* 15.00a gan 07/21/16   Fix for CR# 953654 -(2016.3)FSBL -
-* 											In pcap.c/pcap.h/main.c,
-* 											Fabric Initialization sequence
-* 											is modified to check the PL power
-* 											before sequence starts and checking
-* 											INIT_B reset status twice in case
-* 											of failure.
-* 16.00a bsv 03/26/18	Fix for CR# 996973  Add code under JTAG_ENABLE_LEVEL_SHIFTERS macro
-* 											to enable level shifters in jtag boot mode.
-* </pre>
-*
-* @note
-* FSBL runs from OCM, Based on the boot mode selected, FSBL will copy
-* the partitions from the flash device. If the partition is bitstream then
-* the bitstream is programmed in the Fabric and for an partition that is
-* an application , FSBL will copy the application into DDR and does a
-* handoff.The application should not be starting at the OCM address,
-* FSBL does not remap the DDR. Application should use DDR starting from 1MB
-*
-* FSBL can be stitched along with bitstream and application using bootgen
-*
-* Refer to fsbl.h file for details on the compilation flags supported in FSBL
-*
-******************************************************************************/
+#include "camera_app.h"
 
-/***************************** Include Files *********************************/
 
 #include "fsbl.h"
 #include "qspi.h"
@@ -217,6 +119,7 @@ int main(void)
 	u32 HandoffAddress = 0;
 	u32 Status = XST_SUCCESS;
 	u32 RegVal;
+
 	/*
 	 * PCW initialization for MIO,PLL,CLK and DDR
 	 */

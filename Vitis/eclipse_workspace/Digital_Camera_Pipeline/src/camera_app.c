@@ -629,8 +629,7 @@ int main() {
 #undef READ_CR
 #undef WRITE_CR
 
-	while (1) {
-	}
+
 
 	return 0;
 }
