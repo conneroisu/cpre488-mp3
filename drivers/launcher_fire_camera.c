@@ -18,13 +18,14 @@
 #define LAUNCHER_LEFT   0x04
 #define LAUNCHER_RIGHT  0x08
 
-// Target detection parameters - edit for each color
-#define TARGET_Y_MIN    0
-#define TARGET_Y_MAX    50    // Luminance range
-#define TARGET_U_MIN    160   // Chrominance (red)
-#define TARGET_U_MAX    255
-#define TARGET_V_MIN    0
-#define TARGET_V_MAX    130   // Chrominance (blue)
+// Detection parameters - edit for a different color
+// 
+#define TARGET_Y_MIN    35
+#define TARGET_Y_MAX    42    // Luminance range
+#define TARGET_U_MIN    117   // Chrominance (red)
+#define TARGET_U_MAX    125
+#define TARGET_V_MIN    140
+#define TARGET_V_MAX    150   // Chrominance (blue)
 
 typedef struct {
     uint32_t x;
@@ -64,7 +65,6 @@ int main() {
         }
     }
 
-    // Cleanup
     munmap(frame, 1920*1080*2);
     close(fd_launcher);
     return 0;
@@ -76,27 +76,36 @@ int detect_target(uint16_t (*frame)[1920], Target* target) {
     
     // Scan entire frame for target color
     for (int y = 0; y < 1080; y++) {
-        for (int x = 0; x < 1920; x += 2) {
+        for (int x = 0; x < 1728; x += 2) {
             uint16_t pixel1 = frame[y][x];
             uint16_t pixel2 = frame[y][x+1];
             
-            // Extract YUV components (adjust based on your camera format)
+            // Extract YUV components
             uint8_t y1 = pixel1 & 0xFF;
             uint8_t u = (pixel1 >> 8) & 0xFF;
             uint8_t y2 = pixel2 & 0xFF;
             uint8_t v = (pixel2 >> 8) & 0xFF;
             
-            // Check for target color (example for red target)
+            // Detect target color
             if (y1 > TARGET_Y_MIN && y1 < TARGET_Y_MAX &&
                 u > TARGET_U_MIN && v < TARGET_V_MAX) {
                 x_sum += x;
                 y_sum += y;
                 count++;
+                //printf("\n\n\nPixel Color detected\n\n\n\n\n");
             }
+            // if(y > 520 && y < 560 && x > 940 && x < 980 ){
+            //     printf("Pixel: %hhu, %hhu, %hhu \n" , y1,u,v );                
+            // }
+
         }
     }
-    
-    if (count > 1000) { // Minimum pixel threshold
+
+    printf("Picture taken\n");
+    //usleep(2000000);
+
+    // Minimum pixel threshold
+    if (count > 1000) { 
         target->x = x_sum / count;
         target->y = y_sum / count;
         target->count = count;
@@ -106,7 +115,6 @@ int detect_target(uint16_t (*frame)[1920], Target* target) {
 }
 
 void aim_and_fire(int fd, Target* target) {
-    // Center of screen - might need to adjust 
     const uint32_t center_x = 1920 / 2;
     const uint32_t center_y = 1080 / 2;
     
@@ -114,27 +122,32 @@ void aim_and_fire(int fd, Target* target) {
     int y_offset = (int)target->y - (int)center_y;
     
     // Adjust for dart spread? Spread offset
-    center_y += (15000 - target->count) / 300;
+    // center_y += (15000 - target->count) / 300;
     
-    if (x_offset < -50) {
+    printf("center x: %d, Difference x: %d \n", (int)target->x, x_offset);
+    printf("center y: %d, Difference y: %d \n", (int)target->y, y_offset);
+
+    if (x_offset > 50) {
         launcher_cmd(fd, LAUNCHER_LEFT);
-        usleep(abs(x_offset) * 100); // Proportional timing
+        usleep(abs(x_offset) * .1);
         launcher_cmd(fd, LAUNCHER_STOP);
+        printf("Center: LEFT");
     } 
-    else if (x_offset > 50) {
+    else if (x_offset < -50) {
         launcher_cmd(fd, LAUNCHER_RIGHT);
-        usleep(abs(x_offset) * 100);
+        usleep(abs(x_offset) * .1);
         launcher_cmd(fd, LAUNCHER_STOP);
+        printf("Center: RIGHT");
     }
     
     if (y_offset < -50) {
         launcher_cmd(fd, LAUNCHER_UP);
-        usleep(abs(y_offset) * 100);
+        usleep(abs(y_offset) * .1);
         launcher_cmd(fd, LAUNCHER_STOP);
     } 
     else if (y_offset > 50) {
         launcher_cmd(fd, LAUNCHER_DOWN);
-        usleep(abs(y_offset) * 100);
+        usleep(abs(y_offset) * .1);
         launcher_cmd(fd, LAUNCHER_STOP);
     }
     
@@ -145,14 +158,36 @@ void aim_and_fire(int fd, Target* target) {
     }
 }
 
+// void launcher_cmd(int fd, int cmd) {
+//     int ret = write(fd, &cmd, 1);
+//     while (ret != 1) {
+//         if (ret < 0) {
+//             perror("Command failed");
+//             return;
+//         }
+//         usleep(10000);
+//         ret = write(fd, &cmd, 1);
+//     }
+// }
+
+
 void launcher_cmd(int fd, int cmd) {
-    int ret = write(fd, &cmd, 1);
-    while (ret != 1) {
-        if (ret < 0) {
-            perror("Command failed");
-            return;
-        }
-        usleep(10000);
-        ret = write(fd, &cmd, 1);
-    }
+  int retval = 0;
+    printf("Enter launch\n");
+
+  retval = write(fd, &cmd, 1);
+//   while (retval != 1) {
+//     if (retval < 0) {
+//       fprintf(stderr, "Could not send command to %s (error %d)\n",
+//               LAUNCHER_NODE, retval);
+//     }
+
+//     else if (retval == 0) {
+//       fprintf(stdout, "Command busy, waiting...\n");
+//     }
+
+//     printf("While Loop\n");
+//   }
+
+    printf("Exit launch\n");
 }
