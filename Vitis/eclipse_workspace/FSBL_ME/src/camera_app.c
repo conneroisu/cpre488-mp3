@@ -13,14 +13,6 @@ vres_timing_t vres_resolutions[8] = { { "VGA", 480, 10, 2, 33, 0, 640, 16, 96,
 		{ "UXGA", 1200, 1, 3, 46, 0, 1600, 64, 192, 304, 0 }// VIDEO_RESOLUTION_UXGA
 };
 
-char *vres_get_name(Xuint32 resolutionId) {
-	if (resolutionId < 8) {
-		return vres_resolutions[resolutionId].pName;
-	} else {
-		return "{UNKNOWN}";
-	}
-}
-
 
 static void SignalSetup(XVtc *pVtc, Xuint32 ResolutionId, XVtc_Signal *SignalCfgPtr) {
 	memset((void *) SignalCfgPtr, 0, sizeof(XVtc_Signal));
@@ -431,7 +423,6 @@ int fmc_imageon_enable_ipipe(camera_config_t *config) {
 	Xil_Out8(0x43C10020, (u8) (0x01));
 	// Set HW REG Output Video Format for SS1
 	Xil_Out8((0x43C10028), (u8) (0x02));
-
 	*(volatile u32 *)0x43C10000 = 0x81;
 	*(volatile u32 *)0x43C00010 = 0x0;
 	*(volatile u32 *)0x43C00018 = 0x1;
@@ -599,20 +590,6 @@ u16 *get_start_address(XAxiVdma *vdma, u16 dir, u8 frame) {
 #undef START_ADDR
 }
 
-u8 get_current_frame_pointer(XAxiVdma *vdma, u16 dir) {
-	u8 result = 0;
-	u32 mask, shift_amt = 0;
-	if (dir == 2) {
-		mask = 0x1F0000;
-		shift_amt = 16;
-	} else if (dir == 1) {
-		mask = 0x1F00000;
-		shift_amt = 24;
-	}
-	result = (*((volatile u32 *) (vdma->BaseAddr + 0x00000028)) & mask)
-			>> shift_amt;
-	return result;
-}
 
 void set_park_frame(XAxiVdma *vdma, u8 frame, u16 dir) {
 #define PARK *((volatile u32 *)(vdma->BaseAddr + 0x00000028))
