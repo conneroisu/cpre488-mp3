@@ -20,12 +20,12 @@
 
 // Detection parameters - edit for a different color
 // 
-#define TARGET_Y_MIN    35
-#define TARGET_Y_MAX    42    // Luminance range
+#define TARGET_Y_MIN    38
+#define TARGET_Y_MAX    47    // Luminance range
 #define TARGET_U_MIN    117   // Chrominance (red)
-#define TARGET_U_MAX    125
-#define TARGET_V_MIN    140
-#define TARGET_V_MAX    150   // Chrominance (blue)
+#define TARGET_U_MAX    123
+#define TARGET_V_MIN    137
+#define TARGET_V_MAX    144   // Chrominance (blue)
 
 typedef struct {
     uint32_t x;
@@ -57,8 +57,7 @@ int main() {
     
     while (1) {
         if (detect_target(frame, &target)) {
-            printf("Target detected at (%u, %u) with %u pixels\n", 
-                  target.x, target.y, target.count);
+            //printf("Target detected at (%u, %u) with %u pixels\n", target.x, target.y, target.count);
             aim_and_fire(fd_launcher, &target);
         } else {
             usleep(100000);
@@ -87,21 +86,20 @@ int detect_target(uint16_t (*frame)[1920], Target* target) {
             uint8_t v = (pixel2 >> 8) & 0xFF;
             
             // Detect target color
-            if (y1 > TARGET_Y_MIN && y1 < TARGET_Y_MAX &&
-                u > TARGET_U_MIN && v < TARGET_V_MAX) {
+            if (y1 > TARGET_Y_MIN && y1 < TARGET_Y_MAX && u > TARGET_U_MIN  && u < TARGET_U_MAX && v < TARGET_V_MAX && v > TARGET_V_MIN) {
                 x_sum += x;
                 y_sum += y;
                 count++;
                 //printf("\n\n\nPixel Color detected\n\n\n\n\n");
             }
-            // if(y > 520 && y < 560 && x > 940 && x < 980 ){
-            //     printf("Pixel: %hhu, %hhu, %hhu \n" , y1,u,v );                
-            // }
+            //  if(y < 20 && x < 20 ){
+            //      printf("Pixel: %hhu, %hhu, %hhu \n" , y1,u,v );                
+            //  }
 
         }
     }
 
-    printf("Picture taken\n");
+    //printf("Picture taken\n");
     //usleep(2000000);
 
     // Minimum pixel threshold
@@ -124,30 +122,30 @@ void aim_and_fire(int fd, Target* target) {
     // Adjust for dart spread? Spread offset
     // center_y += (15000 - target->count) / 300;
     
-    printf("center x: %d, Difference x: %d \n", (int)target->x, x_offset);
-    printf("center y: %d, Difference y: %d \n", (int)target->y, y_offset);
+    //printf("center x: %d, Difference x: %d \n", (int)target->x, x_offset);
+    //printf("center y: %d, Difference y: %d \n", (int)target->y, y_offset);
 
     if (x_offset > 50) {
-        launcher_cmd(fd, LAUNCHER_LEFT);
-        usleep(abs(x_offset) * .1);
+        launcher_cmd(fd, LAUNCHER_RIGHT);
+        usleep(abs(x_offset) * 50);
         launcher_cmd(fd, LAUNCHER_STOP);
-        printf("Center: LEFT");
+        //printf("Center: RIGHT");
     } 
     else if (x_offset < -50) {
-        launcher_cmd(fd, LAUNCHER_RIGHT);
-        usleep(abs(x_offset) * .1);
+        launcher_cmd(fd, LAUNCHER_LEFT);
+        usleep(abs(x_offset) * 50);
         launcher_cmd(fd, LAUNCHER_STOP);
-        printf("Center: RIGHT");
+        //printf("Center: LEFT");
     }
     
     if (y_offset < -50) {
         launcher_cmd(fd, LAUNCHER_UP);
-        usleep(abs(y_offset) * .1);
+        usleep(abs(y_offset) * .2);
         launcher_cmd(fd, LAUNCHER_STOP);
     } 
     else if (y_offset > 50) {
         launcher_cmd(fd, LAUNCHER_DOWN);
-        usleep(abs(y_offset) * .1);
+        usleep(abs(y_offset) * .2);
         launcher_cmd(fd, LAUNCHER_STOP);
     }
     
@@ -176,7 +174,7 @@ void aim_and_fire(int fd, Target* target) {
 
 void launcher_cmd(int fd, int cmd) {
   int retval = 0;
-    printf("Enter launch\n");
+    //printf("Enter launch\n");
 
   retval = write(fd, &cmd, 1);
 //   while (retval != 1) {
@@ -192,5 +190,5 @@ void launcher_cmd(int fd, int cmd) {
 //     printf("While Loop\n");
 //   }
 
-    printf("Exit launch\n");
+    //printf("Exit launch\n");
 }
