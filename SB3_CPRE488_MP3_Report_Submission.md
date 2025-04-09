@@ -1,11 +1,7 @@
-# cpre488-mp3
+<h1 style="text-align:center">SB-3 CPR E 488 MP-3 Report</h1>
 
-- [x] Explain how this Make process was configured to appropriately use a cross-compiler targeting the ARM architecture.
-- [x] Explanatory annotation of the boot messages that print as PetaLinux starts up. 
-- [x] Include the kernel messages that result from the plugging in the of the usb missle launcher.
-- [x] Describe changes made to the usb driver `usb-skeletion.c`
-- [x] Describe the operation of the `launcher_fire.c` file.
-- [x] Describe algorithm used to detect the target.
+*Nolan Eastburn, Conner Ohnesorge, Owen Parker, Jason Xie*
+*Date: 4/9/2025*
 
 ## `launcher_fire.c` Makefile
 
@@ -363,14 +359,15 @@ Structure and Naming Changes
 Modified device structure:
 
 - Replaced bulk_in_urb/bulk_out_endpoint with int_in_urb/int_in_endpoint
+	- However, this int_in_endpoint was not used in the end since we only needed to send commands to endpoint 0, which is the default control endpoint.
 - Removed numerous fields related to bulk transfer processing
 
 ### Functional Changes
 
 #### Read functionality
 
-Original had complex logic for reading data via bulk transfers
-New driver simplifies to immediately return 0 (no reads)
+Original had complex logic for reading data via bulk transfers.
+New driver simplifies to immediately return 0 (no reads).
 
 #### Write functionality
 
@@ -402,7 +399,7 @@ usb_control_msg(dev->udev,
 #### Endpoint detection
 
 Original looked for bulk-in and bulk-out endpoints
-New driver looks for interrupt-in endpoints
+New driver looks for interrupt-in endpoints, even though it is not used. This can be removed!
 
 #### Memory Management
 
@@ -454,7 +451,7 @@ The missile launcher driver improves upon the original skeleton driver by adding
 And later ensuring proper cleanup:
 
 ```c
-Copyexit:
+exit:
     if(sem_downed)
     {
         up(&dev->limit_sem);
