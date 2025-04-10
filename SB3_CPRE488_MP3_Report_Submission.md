@@ -728,3 +728,92 @@ if (fb_mem == MAP_FAILED) {
   return -1;
 }
 ```
+
+## Approach 2: 
+
+### Color-based detection:
+This approach uses entirely color-based detection to determine the target. It uses preset values to determine the intended target. 
+Once detected a target pixel it adds the information to the target variable which holds the center of all pixels found
+
+```cpp
+int detect_target(uint16_t (*frame)[1920], Target* target) {
+    uint64_t x_sum = 0, y_sum = 0;
+    uint32_t count = 0;
+    
+    // Scan entire frame for target color
+    for (int y = 0; y < 1080; y++) {
+        for (int x = 0; x < 1728; x += 2) {
+            uint16_t pixel1 = frame[y][x];
+            uint16_t pixel2 = frame[y][x+1];
+            
+            // Extract YUV components
+            uint8_t y1 = pixel1 & 0xFF;
+            uint8_t u = (pixel1 >> 8) & 0xFF;
+            uint8_t y2 = pixel2 & 0xFF;
+            uint8_t v = (pixel2 >> 8) & 0xFF;
+            
+            // Detect target color
+            if (y1 > TARGET_Y_MIN && y1 < TARGET_Y_MAX && u > TARGET_U_MIN  && u < TARGET_U_MAX && v < TARGET_V_MAX && v > TARGET_V_MIN) {
+                x_sum += x;
+                y_sum += y;
+                count++;
+            }
+        }
+    }
+
+    // Minimum pixel threshold
+    if (count > 1000) { 
+        target->x = x_sum / count;
+        target->y = y_sum / count;
+        target->count = count;
+        return 1;
+    }
+    return 0;
+}
+```
+### Preset values:
+
+```cpp
+// Detection parameters - edit for a different color(red)
+#define TARGET_Y_MIN    38
+#define TARGET_Y_MAX    47
+#define TARGET_U_MIN    117
+#define TARGET_U_MAX    123
+#define TARGET_V_MIN    137
+#define TARGET_V_MAX    144
+```
+
+
+
+### Aim and fire
+Once a target is detected, the code then moves the camera in line with the target and fires if the center matches the target
+
+```cpp
+void aim_and_fire(int fd, Target* target) {
+    const uint32_t center_x = 1920 / 2;
+    const uint32_t center_y = 1080 / 2;
+    
+    int x_offset = (int)target->x - (int)center_x;
+    int y_offset = (int)target->y - (int)center_y;
+
+    // Movement
+    if (x_offset > 50) {
+        launcher_cmd(fd, LAUNCHER_RIGHT);
+        usleep(abs(x_offset) * 50);
+        launcher_cmd(fd, LAUNCHER_STOP);
+        //printf("Center: RIGHT");
+	}
+...
+    
+    // Fire if centered
+    if (abs(x_offset) < 50 && abs(y_offset) < 50) {
+        launcher_cmd(fd, LAUNCHER_FIRE);
+        usleep(2000000); // Wait for firing to complete
+    }
+
+```
+
+
+
+
+
