@@ -771,6 +771,19 @@ int detect_target(uint16_t (*frame)[1920], Target* target) {
     return 0;
 }
 ```
+### Preset values:
+
+```cpp
+// Detection parameters - edit for a different color(red)
+#define TARGET_Y_MIN    38
+#define TARGET_Y_MAX    47
+#define TARGET_U_MIN    117
+#define TARGET_U_MAX    123
+#define TARGET_V_MIN    137
+#define TARGET_V_MAX    144
+```
+
+
 
 ### Aim and fire
 Once a target is detected, the code then moves the camera in line with the target and fires if the center matches the target
