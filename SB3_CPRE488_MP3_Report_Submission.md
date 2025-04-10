@@ -508,6 +508,8 @@ The system combines computer vision processing with physical hardware control, s
 4. **Targeting Logic**: Once targets are detected, the system performs depth estimation and aims the launcher accordingly.
 
 ## Target Detection Algorithm
+## Sub-Group B's Implementation
+**NOTE: Since we could not get Petalinux to work with OpenCV (ran into boot issues), this implementation was not functional on the Zedboard. However, we have ran this implementation on a laptop with its webcam and it works as expected. Refer to sub-group A's implementation for grading as it is functional on the Zedboard.**
 
 The detection algorithm employs a dual-method approach to maximize reliability:
 
@@ -729,7 +731,8 @@ if (fb_mem == MAP_FAILED) {
 }
 ```
 
-## Approach 2: 
+## Sub-Group A's Implementation
+**This is a working implementation**
 
 ### Color-based detection:
 This approach uses entirely color-based detection to determine the target. It uses preset values to determine the intended target. 
