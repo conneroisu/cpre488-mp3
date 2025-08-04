@@ -816,7 +816,74 @@ void aim_and_fire(int fd, Target* target) {
 
 ```
 
+# Developing in docker
 
+Iowa state provides virtualize lab computers via vmware horizon client (vdi) which our peers suggested that we use. We found the addition of a whole new machine/os to work with to be a pain so Conner dockerized the petalinux 2021 cli so that we could use it on our machines. See the Dockerfile and the non-interactive install script.
+
+To run it on our own filesystems on our laptops or pcs, we used the following command:
+```bash
+docker run -it --rm -v $(pwd):/workspace <image-name> bash
+``` 
+This Docker command creates and runs a new container with several specific configurations.
+
+## Component Breakdown
+
+**`docker run`**
+- The base command to create and start a new container from a Docker image
+- This is the primary Docker command for launching containers
+
+**`-it`**
+- This is actually two flags combined: `-i` and `-t`
+- **`-i` (--interactive)**: Keeps STDIN open even if not attached, allowing you to send input to the container
+- **`-t` (--tty)**: Allocates a pseudo-TTY (terminal), which provides a terminal-like interface
+- Together, `-it` gives you an interactive terminal session inside the container
+
+**`--rm`**
+- Automatically removes (deletes) the container when it exits
+- Without this flag, stopped containers remain on your system and accumulate over time
+- This is useful for temporary containers where you don't need to preserve the container after use
+- The container's filesystem changes are lost when removed (unless you've mounted volumes)
+
+**`-v $(pwd):/workspace`**
+- **`-v` (--volume)**: Mounts a volume, creating a bind mount between host and container
+- **`$(pwd)`**: A shell command substitution that gets the current working directory path
+  - `pwd` stands for "print working directory"
+  - The `$()` syntax executes the command and substitutes its output
+- **`:/workspace`**: The colon separates host path from container path
+- **`/workspace`**: The directory path inside the container where the host directory will be mounted
+- This creates a two-way sync between your current directory and `/workspace` inside the container
+
+**`<image-name>`**
+- Placeholder for the actual Docker image name you want to run
+- Could be something like `ubuntu:latest`, `node:18`, `python:3.9`, etc.
+- Docker will pull this image from a registry (like Docker Hub) if it's not already present locally
+
+**`bash`**
+- The command to execute inside the container once it starts
+- Launches the Bash shell, giving you a command prompt inside the container
+- This overrides any default command specified in the Docker image
+
+## What This Command Does
+
+When executed, this command:
+
+1. **Creates a new container** from the specified image
+2. **Mounts your current directory** into the container at `/workspace`
+3. **Starts an interactive terminal session** inside the container
+4. **Launches Bash shell** for you to run commands
+5. **Automatically cleans up** the container when you exit
+
+## Example Usage
+```bash
+# Run Ubuntu container with current directory mounted
+docker run -it --rm -v $(pwd):/workspace ubuntu:latest bash
+
+# Inside the container, you can now:
+ls                   # See your current directory contents
+exit                 # Exit and auto-remove container
+```
+
+The combination of these flags makes this a very common pattern for development and experimentation with Docker containers.
 
 
 
