@@ -1,10 +1,10 @@
 // (c) Copyright 1995-2020 Xilinx, Inc. All rights reserved.
-// 
+//
 // This file contains confidential and proprietary information
 // of Xilinx, Inc. and is protected under U.S. and
 // international copyright and other intellectual property
 // laws.
-// 
+//
 // DISCLAIMER
 // This disclaimer is not a license and does not grant any
 // rights to the materials distributed herewith. Except as
@@ -26,7 +26,7 @@
 // by a third party) even if such damage or loss was
 // reasonably foreseeable or Xilinx had been advised of the
 // possibility of the same.
-// 
+//
 // CRITICAL APPLICATIONS
 // Xilinx products are not designed or intended to be fail-
 // safe, or for use in any application requiring fail-safe
@@ -40,12 +40,11 @@
 // liability of any use of Xilinx products in Critical
 // Applications, subject only to applicable laws and
 // regulations governing limitations on product liability.
-// 
+//
 // THIS COPYRIGHT NOTICE AND DISCLAIMER MUST BE RETAINED AS
 // PART OF THIS FILE AT ALL TIMES.
-// 
+//
 // DO NOT MODIFY THIS FILE.
-
 
 #include "project_1_SMART_CON_0_0_sc.h"
 
@@ -54,29 +53,34 @@
 #include <map>
 #include <string>
 
-project_1_SMART_CON_0_0_sc::project_1_SMART_CON_0_0_sc(const sc_core::sc_module_name& nm) : sc_core::sc_module(nm), mp_impl(NULL)
-{
+project_1_SMART_CON_0_0_sc::project_1_SMART_CON_0_0_sc(
+    const sc_core::sc_module_name &nm)
+    : sc_core::sc_module(nm), mp_impl(NULL) {
   // configure connectivity manager
-  xsc::utils::xsc_sim_manager::addInstance("project_1_SMART_CON_0_0", this);
+  xsc::utils::xsc_sim_manager::addInstance("project_1_SMART_CON_0_0",
+                                           this);
 
   // initialize module
-    xsc::common_cpp::properties model_param_props;
-    model_param_props.addLong("HAS_RESET", "1");
-    model_param_props.addString("TLM_COMPONENT_NAME", "project_1_SMART_CON_0_0");
+  xsc::common_cpp::properties model_param_props;
+  model_param_props.addLong("HAS_RESET", "1");
+  model_param_props.addString("TLM_COMPONENT_NAME",
+                              "project_1_SMART_CON_0_0");
 
   mp_impl = new smartconnect("inst", model_param_props);
 
   // initialize sockets
-  S00_AXI_tlm_aximm_read_socket = mp_impl->S00_AXI_tlm_aximm_read_socket;
-  S00_AXI_tlm_aximm_write_socket = mp_impl->S00_AXI_tlm_aximm_write_socket;
-  M00_AXI_tlm_aximm_read_socket = mp_impl->M00_AXI_tlm_aximm_read_socket;
-  M00_AXI_tlm_aximm_write_socket = mp_impl->M00_AXI_tlm_aximm_write_socket;
+  S00_AXI_tlm_aximm_read_socket =
+      mp_impl->S00_AXI_tlm_aximm_read_socket;
+  S00_AXI_tlm_aximm_write_socket =
+      mp_impl->S00_AXI_tlm_aximm_write_socket;
+  M00_AXI_tlm_aximm_read_socket =
+      mp_impl->M00_AXI_tlm_aximm_read_socket;
+  M00_AXI_tlm_aximm_write_socket =
+      mp_impl->M00_AXI_tlm_aximm_write_socket;
 }
 
-project_1_SMART_CON_0_0_sc::~project_1_SMART_CON_0_0_sc()
-{
+project_1_SMART_CON_0_0_sc::~project_1_SMART_CON_0_0_sc() {
   xsc::utils::xsc_sim_manager::clean();
 
   delete mp_impl;
 }
-

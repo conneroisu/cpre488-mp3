@@ -1,15 +1,22 @@
+/*
+ * CPRE 488 MP3 - Digital Camera Pipeline
+ * Authors: Conner Ohnesorge, Nolan Eastburn, Owen Parker, Jason Xie
+ * Copyright (c) 2025
+ */
+
 #ifndef __GPIO_INTERFACE_H
 #define __GPIO_INTERFACE_H
 
+#include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <sys/mman.h>
-#include <fcntl.h>
+#include <unistd.h>
 
 #define REG_SIZE_BYTES 4
-#define ERROR_GPIO_ADDR_MAPS ((gpio_addr_maps_t) {.button_addr = 0x0, .sw_addr = 0x0})
-#define ERROR_U32_PTR ((uint32_t*) 0xFFFFFFFF)
+#define ERROR_GPIO_ADDR_MAPS                                         \
+  ((gpio_addr_maps_t){.button_addr = 0x0, .sw_addr = 0x0})
+#define ERROR_U32_PTR ((uint32_t *)0xFFFFFFFF)
 
 #define BUTTON_BASE_ADDR 0x41210000
 #define BUTTON_REG_COUNT 2
@@ -19,17 +26,19 @@
 
 #define MEM_DEVICE "/dev/mem"
 
-typedef struct gpio_addr_maps
-{
-	uint32_t* button_addr;
-	uint32_t* sw_addr;
+typedef struct gpio_addr_maps {
+  uint32_t *button_addr;
+  uint32_t *sw_addr;
 } gpio_addr_maps_t;
 
-typedef enum buttons
-{
-	CENTER = 0x1, DOWN = 0x2, LEFT = 0x4, RIGHT = 0x8, UP = 0x10, NONE = 0x0
+typedef enum buttons {
+  CENTER = 0x1,
+  DOWN = 0x2,
+  LEFT = 0x4,
+  RIGHT = 0x8,
+  UP = 0x10,
+  NONE = 0x0
 } t_buttons;
-
 
 gpio_addr_maps_t init_interface();
 void cleanup_interface(gpio_addr_maps_t maps);

@@ -1,29 +1,35 @@
+/*
+ * CPRE 488 MP3 - Digital Camera Pipeline
+ * Authors: Conner Ohnesorge, Nolan Eastburn, Owen Parker, Jason Xie
+ * Copyright (c) 2025
+ */
+
 /******************************************************************************
-* Copyright (c) 2012 - 2020 Xilinx, Inc.  All rights reserved.
-* SPDX-License-Identifier: MIT
-******************************************************************************/
+ * Copyright (c) 2012 - 2020 Xilinx, Inc.  All rights reserved.
+ * SPDX-License-Identifier: MIT
+ ******************************************************************************/
 
 /*****************************************************************************/
 /**
-*
-* @file qspi.h
-*
-* This file contains the interface for the QSPI FLASH functionality
-*
-* <pre>
-* MODIFICATION HISTORY:
-*
-* Ver	Who	Date		Changes
-* ----- ---- -------- -------------------------------------------------------
-* 1.00a ecm	01/10/10 Initial release
-* 3.00a mb  01/09/12 Added the Delay Values defines for qspi
-* 5.00a sgd	05/17/13 Added Flash Size > 128Mbit support
-* 					 Dual Stack support
-* </pre>
-*
-* @note
-*
-******************************************************************************/
+ *
+ * @file qspi.h
+ *
+ * This file contains the interface for the QSPI FLASH functionality
+ *
+ * <pre>
+ * MODIFICATION HISTORY:
+ *
+ * Ver	Who	Date		Changes
+ * ----- ---- --------
+ *------------------------------------------------------- 1.00a ecm
+ *01/10/10 Initial release 3.00a mb  01/09/12 Added the Delay Values
+ *defines for qspi 5.00a sgd	05/17/13 Added Flash Size > 128Mbit
+ *support Dual Stack support
+ * </pre>
+ *
+ * @note
+ *
+ ******************************************************************************/
 #ifndef ___QSPI_H___
 #define ___QSPI_H___
 
@@ -32,14 +38,16 @@
 extern "C" {
 #endif
 
-/***************************** Include Files *********************************/
+/***************************** Include Files
+ * *********************************/
 #include "fsbl.h"
 
-/************************** Constant Definitions *****************************/
-#define SINGLE_FLASH_CONNECTION			0
-#define DUAL_STACK_CONNECTION			1
-#define DUAL_PARALLEL_CONNECTION		2
-#define FLASH_SIZE_16MB					0x1000000
+/************************** Constant Definitions
+ * *****************************/
+#define SINGLE_FLASH_CONNECTION 0
+#define DUAL_STACK_CONNECTION 1
+#define DUAL_PARALLEL_CONNECTION 2
+#define FLASH_SIZE_16MB 0x1000000
 
 /*
  * Bank mask
@@ -60,52 +68,51 @@ extern "C" {
  * 128Mbit : 0x18; 256Mbit : 0x19; 512Mbit : 0x20
  */
 
-#define MICRON_ID		0x20
-#define SPANSION_ID		0x01
-#define WINBOND_ID		0xEF
-#define MACRONIX_ID		0xC2
-#define ISSI_ID			0x9D
+#define MICRON_ID 0x20
+#define SPANSION_ID 0x01
+#define WINBOND_ID 0xEF
+#define MACRONIX_ID 0xC2
+#define ISSI_ID 0x9D
 
-#define FLASH_SIZE_ID_8M		0x14
-#define FLASH_SIZE_ID_16M		0x15
-#define FLASH_SIZE_ID_32M		0x16
-#define FLASH_SIZE_ID_64M		0x17
-#define FLASH_SIZE_ID_128M		0x18
-#define FLASH_SIZE_ID_256M		0x19
-#define FLASH_SIZE_ID_512M		0x20
-#define FLASH_SIZE_ID_1G		0x21
+#define FLASH_SIZE_ID_8M 0x14
+#define FLASH_SIZE_ID_16M 0x15
+#define FLASH_SIZE_ID_32M 0x16
+#define FLASH_SIZE_ID_64M 0x17
+#define FLASH_SIZE_ID_128M 0x18
+#define FLASH_SIZE_ID_256M 0x19
+#define FLASH_SIZE_ID_512M 0x20
+#define FLASH_SIZE_ID_1G 0x21
 /* Macronix size constants are different for 512M and 1G */
-#define MACRONIX_FLASH_SIZE_ID_512M		0x1A
-#define MACRONIX_FLASH_SIZE_ID_1G		0x1B
-#define MACRONIX_FLASH_1_8_V_MX66_ID_512        (0x3A)
+#define MACRONIX_FLASH_SIZE_ID_512M 0x1A
+#define MACRONIX_FLASH_SIZE_ID_1G 0x1B
+#define MACRONIX_FLASH_1_8_V_MX66_ID_512 (0x3A)
 /*
  * Size in bytes
  */
-#define FLASH_SIZE_8M			0x0100000
-#define FLASH_SIZE_16M			0x0200000
-#define FLASH_SIZE_32M			0x0400000
-#define FLASH_SIZE_64M			0x0800000
-#define FLASH_SIZE_128M			0x1000000
-#define FLASH_SIZE_256M			0x2000000
-#define FLASH_SIZE_512M			0x4000000
-#define FLASH_SIZE_1G			0x8000000
+#define FLASH_SIZE_8M 0x0100000
+#define FLASH_SIZE_16M 0x0200000
+#define FLASH_SIZE_32M 0x0400000
+#define FLASH_SIZE_64M 0x0800000
+#define FLASH_SIZE_128M 0x1000000
+#define FLASH_SIZE_256M 0x2000000
+#define FLASH_SIZE_512M 0x4000000
+#define FLASH_SIZE_1G 0x8000000
 
-/************************** Function Prototypes ******************************/
+/************************** Function Prototypes
+ * ******************************/
 u32 InitQspi(void);
 
-u32 QspiAccess( u32 SourceAddress,
-		u32 DestinationAddress,
-		u32 LengthBytes);
+u32 QspiAccess(u32 SourceAddress,
+               u32 DestinationAddress,
+               u32 LengthBytes);
 
 u32 FlashReadID(void);
 u32 SendBankSelect(u8 BankSel);
-/************************** Variable Definitions *****************************/
-
+/************************** Variable Definitions
+ * *****************************/
 
 #ifdef __cplusplus
 }
 #endif
 
-
 #endif /* ___QSPI_H___ */
-

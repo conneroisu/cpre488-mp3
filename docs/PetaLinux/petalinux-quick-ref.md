@@ -1,3 +1,9 @@
+<!--
+CPRE 488 MP3 - Digital Camera Pipeline
+Authors: Conner Ohnesorge, Nolan Eastburn, Owen Parker, Jason Xie
+Copyright (c) 2025
+-->
+
 # PetaLinux Quick Reference Guide
 
 ## Table of Contents

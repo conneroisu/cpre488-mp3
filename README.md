@@ -1,3 +1,9 @@
+<!--
+CPRE 488 MP3 - Digital Camera Pipeline
+Authors: Conner Ohnesorge, Nolan Eastburn, Owen Parker, Jason Xie
+Copyright (c) 2025
+-->
+
 <h1 style="text-align:center">SB-3 CPR E 488 MP-3 Report</h1>
 
 *Nolan Eastburn, Conner Ohnesorge, Owen Parker, Jason Xie*

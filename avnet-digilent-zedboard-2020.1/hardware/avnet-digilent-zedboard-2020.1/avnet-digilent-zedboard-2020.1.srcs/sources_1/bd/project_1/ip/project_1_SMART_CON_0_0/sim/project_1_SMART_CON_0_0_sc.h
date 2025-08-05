@@ -2,12 +2,12 @@
 #define IP_PROJECT_1_SMART_CON_0_0_SC_H_
 
 // (c) Copyright 1995-2020 Xilinx, Inc. All rights reserved.
-// 
+//
 // This file contains confidential and proprietary information
 // of Xilinx, Inc. and is protected under U.S. and
 // international copyright and other intellectual property
 // laws.
-// 
+//
 // DISCLAIMER
 // This disclaimer is not a license and does not grant any
 // rights to the materials distributed herewith. Except as
@@ -29,7 +29,7 @@
 // by a third party) even if such damage or loss was
 // reasonably foreseeable or Xilinx had been advised of the
 // possibility of the same.
-// 
+//
 // CRITICAL APPLICATIONS
 // Xilinx products are not designed or intended to be fail-
 // safe, or for use in any application requiring fail-safe
@@ -43,12 +43,11 @@
 // liability of any use of Xilinx products in Critical
 // Applications, subject only to applicable laws and
 // regulations governing limitations on product liability.
-// 
+//
 // THIS COPYRIGHT NOTICE AND DISCLAIMER MUST BE RETAINED AS
 // PART OF THIS FILE AT ALL TIMES.
-// 
+//
 // DO NOT MODIFY THIS FILE.
-
 
 #ifndef XTLM
 #include "xtlm.h"
@@ -60,36 +59,32 @@
 #if defined(_MSC_VER)
 #define DllExport __declspec(dllexport)
 #elif defined(__GNUC__)
-#define DllExport __attribute__ ((visibility("default")))
+#define DllExport __attribute__((visibility("default")))
 #else
 #define DllExport
 #endif
 
 class smartconnect;
 
-class DllExport project_1_SMART_CON_0_0_sc : public sc_core::sc_module
-{
+class DllExport project_1_SMART_CON_0_0_sc
+    : public sc_core::sc_module {
 public:
-
-  project_1_SMART_CON_0_0_sc(const sc_core::sc_module_name& nm);
+  project_1_SMART_CON_0_0_sc(const sc_core::sc_module_name &nm);
   virtual ~project_1_SMART_CON_0_0_sc();
 
 public: // module socket-to-socket TLM interface
-
-  xtlm::xtlm_aximm_target_socket* S00_AXI_tlm_aximm_read_socket;
-  xtlm::xtlm_aximm_target_socket* S00_AXI_tlm_aximm_write_socket;
-  xtlm::xtlm_aximm_initiator_socket* M00_AXI_tlm_aximm_read_socket;
-  xtlm::xtlm_aximm_initiator_socket* M00_AXI_tlm_aximm_write_socket;
+  xtlm::xtlm_aximm_target_socket *S00_AXI_tlm_aximm_read_socket;
+  xtlm::xtlm_aximm_target_socket *S00_AXI_tlm_aximm_write_socket;
+  xtlm::xtlm_aximm_initiator_socket *M00_AXI_tlm_aximm_read_socket;
+  xtlm::xtlm_aximm_initiator_socket *M00_AXI_tlm_aximm_write_socket;
 
 protected:
-
-  smartconnect* mp_impl;
+  smartconnect *mp_impl;
 
 private:
-
-  project_1_SMART_CON_0_0_sc(const project_1_SMART_CON_0_0_sc&);
-  const project_1_SMART_CON_0_0_sc& operator=(const project_1_SMART_CON_0_0_sc&);
-
+  project_1_SMART_CON_0_0_sc(const project_1_SMART_CON_0_0_sc &);
+  const project_1_SMART_CON_0_0_sc &
+  operator=(const project_1_SMART_CON_0_0_sc &);
 };
 
 #endif // IP_PROJECT_1_SMART_CON_0_0_SC_H_

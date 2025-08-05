@@ -1,3 +1,9 @@
+/*
+ * CPRE 488 MP3 - Digital Camera Pipeline
+ * Authors: Conner Ohnesorge, Nolan Eastburn, Owen Parker, Jason Xie
+ * Copyright (c) 2025
+ */
+
 #include <fcntl.h>
 #include <iostream>
 #include <math.h>
@@ -46,8 +52,7 @@
 #define FB_HEIGHT 480
 #define FB_DEPTH 3 // RGB format, 3 bytes per pixel
 #define FB_SIZE (FB_WIDTH * FB_HEIGHT * FB_DEPTH)
-#define FB_PHYS_ADDR                                                 \
-  0x10000000 // Adjust based FPGA memory map
+#define FB_PHYS_ADDR 0x10000000 // Adjust based FPGA memory map
 
 // Target recognition parameters
 #define MIN_CONTOUR_AREA 500

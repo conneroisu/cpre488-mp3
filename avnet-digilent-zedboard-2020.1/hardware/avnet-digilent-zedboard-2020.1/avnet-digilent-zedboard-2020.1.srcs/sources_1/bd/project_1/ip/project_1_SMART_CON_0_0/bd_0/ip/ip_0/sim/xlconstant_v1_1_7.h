@@ -1,10 +1,10 @@
 // (c) Copyright 1995-2014 Xilinx, Inc. All rights reserved.
-// 
+//
 // This file contains confidential and proprietary information
 // of Xilinx, Inc. and is protected under U.S. and
 // international copyright and other intellectual property
 // laws.
-// 
+//
 // DISCLAIMER
 // This disclaimer is not a license and does not grant any
 // rights to the materials distributed herewith. Except as
@@ -26,7 +26,7 @@
 // by a third party) even if such damage or loss was
 // reasonably foreseeable or Xilinx had been advised of the
 // possibility of the same.
-// 
+//
 // CRITICAL APPLICATIONS
 // Xilinx products are not designed or intended to be fail-
 // safe, or for use in any application requiring fail-safe
@@ -40,12 +40,11 @@
 // liability of any use of Xilinx products in Critical
 // Applications, subject only to applicable laws and
 // regulations governing limitations on product liability.
-// 
+//
 // THIS COPYRIGHT NOTICE AND DISCLAIMER MUST BE RETAINED AS
 // PART OF THIS FILE AT ALL TIMES.
-// 
+//
 // DO NOT MODIFY THIS FILE.
-
 
 // IP VLNV: xilinx.com:ip:xlconstant:1.1
 // IP Revision: 1
@@ -54,16 +53,12 @@
 #define _xlconstant_v1_1_7_H_
 
 #include "systemc.h"
-template<int CONST_WIDTH,int CONST_VAL>
+template <int CONST_WIDTH, int CONST_VAL>
 SC_MODULE(xlconstant_v1_1_7) {
-  public:
-  sc_out< sc_bv<CONST_WIDTH> > dout;
-  void init() {
-    dout.write(CONST_VAL);
-  }
-  SC_CTOR(xlconstant_v1_1_7) {
-    SC_METHOD(init);  
-  }
+public:
+  sc_out<sc_bv<CONST_WIDTH>> dout;
+  void init() { dout.write(CONST_VAL); }
+  SC_CTOR(xlconstant_v1_1_7) { SC_METHOD(init); }
 };
 
 #endif

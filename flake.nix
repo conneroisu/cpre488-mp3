@@ -8,6 +8,8 @@
     flake-utils.url = "github:numtide/flake-utils";
     flake-utils.inputs.systems.follows = "systems";
     systems.url = "github:nix-systems/default";
+    treefmt-nix.url = "github:numtide/treefmt-nix";
+    treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
   nixConfig = {
     extra-substituters = ''
@@ -22,7 +24,11 @@
     '';
     extra-experimental-features = "nix-command flakes";
   };
-  outputs = inputs @ {flake-utils, ...}:
+  outputs = inputs @ {
+    flake-utils,
+    treefmt-nix,
+    ...
+  }:
     flake-utils.lib.eachSystem [
       "x86_64-linux"
       "i686-linux"
@@ -51,7 +57,18 @@
         enableTbb = true; # Thread Building Blocks for performance
         enableCuda = false; # Disable CUDA to avoid dependencies
       };
+
+      # treefmt configuration
+      treefmtEval = treefmt-nix.lib.evalModule pkgs {
+        projectRootFile = "flake.nix";
+        programs = {
+          alejandra.enable = true; # Nix formatter
+          clang-format.enable = true; # C/C++ formatter
+        };
+      };
     in {
+      formatter = treefmtEval.config.build.wrapper;
+
       devShells.default = pkgs.mkShell {
         shellHook = ''
           export REPO_ROOT=$(git rev-parse --show-toplevel)

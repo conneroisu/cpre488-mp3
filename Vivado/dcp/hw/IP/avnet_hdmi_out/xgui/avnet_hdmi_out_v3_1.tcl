@@ -1,3 +1,9 @@
+#
+# CPRE 488 MP3 - Digital Camera Pipeline
+# Authors: Conner Ohnesorge, Nolan Eastburn, Owen Parker, Jason Xie
+# Copyright (c) 2025
+#
+
 #Definitional proc to organize widgets for parameters.
 proc init_gui { IPINST } {
 	set Page0 [ ipgui::add_page $IPINST  -name "Page 0" -layout vertical]

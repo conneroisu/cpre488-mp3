@@ -1,3 +1,9 @@
+#
+# CPRE 488 MP3 - Digital Camera Pipeline
+# Authors: Conner Ohnesorge, Nolan Eastburn, Owen Parker, Jason Xie
+# Copyright (c) 2025
+#
+
 #*****************************************************************************************
 # Vivado (TM) v2020.1 (64-bit)
 #

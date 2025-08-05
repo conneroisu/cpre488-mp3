@@ -1,3 +1,9 @@
+--
+-- CPRE 488 MP3 - Digital Camera Pipeline
+-- Authors: Conner Ohnesorge, Nolan Eastburn, Owen Parker, Jason Xie
+-- Copyright (c) 2025
+--
+
 --------------------------------------------------------------------------------
 -- Copyright (C) 1999-2008 Easics NV.
 -- This source file may be used and distributed without restriction
