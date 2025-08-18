@@ -3,23 +3,6 @@
  * Authors: Conner Ohnesorge, Nolan Eastburn, Owen Parker, Jason Xie
  * Copyright (c) 2025
  */
-
-/*
- * Missle Launcher driver
- *
- * Derrived from USB Skeleton Driver:
- * Copyright (C) 2001-2004 Greg Kroah-Hartman (greg@kroah.com)
- *
- *	This program is free software; you can redistribute it and/or
- *	modify it under the terms of the GNU General Public License as
- *	published by the Free Software Foundation, version 2.
- *
- * This driver is based on the 2.6.3 version of
- *drivers/usb/usb-skeleton.c but has been rewritten to be easier to
- *read and use.
- *
- */
-
 #include "launcher-commands.h"
 #include <linux/errno.h>
 #include <linux/init.h>
