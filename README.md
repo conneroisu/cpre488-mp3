@@ -6,8 +6,12 @@ Copyright (c) 2025
 
 <h1 style="text-align:center">SB-3 CPR E 488 MP-3 Report</h1>
 A ZedBoard-based automated sentry system for CprE 488 MP-3: ports Linux 5.4 with U-Boot/FIT, adds a custom char driver + user-space app to control a USB missile launcher, and includes an OpenCV targeting prototype designed to read directly from the framebuffer. Project includes Vivado/Vitis sources, reproducible Nix/Docker setup, and full boot/driver notes. 
+
 *Nolan Eastburn, Conner Ohnesorge, Owen Parker, Jason Xie*
+
 *Date: 4/9/2025*
+
+
 ## `launcher_fire.c` Makefile
 
 This Makefile is configured to build both a Linux kernel module (`launcher_driver.ko`) and a user-space program (`launcher_fire`) using a cross-compiler for ARM architecture. 
